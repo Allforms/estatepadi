@@ -48,9 +48,6 @@ INTERNAL_IPS = [
 # INSTALLED_APPS += ['debug_toolbar']
 # MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware']
 
-# Console email backend for development (emails will be printed to console)
-if config('USE_CONSOLE_EMAIL', default=False, cast=bool):
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Development-specific logging
 LOGGING = {

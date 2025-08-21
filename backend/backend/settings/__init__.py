@@ -1,16 +1,23 @@
 """
 Django settings package initialization.
+With Simple Railway-compatible settings initialization
 Automatically imports the appropriate settings module based on environment.
 """
 
-from decouple import config
+import os
 
-# Get the environment setting (defaults to 'development')
-ENVIRONMENT = config('DJANGO_ENVIRONMENT', default='development')
+# Railway automatically sets environment variables
+# Check if we're in production based on common Railway indicators
+IS_PRODUCTION = (
+    os.environ.get('RAILWAY_ENVIRONMENT') == 'production' or
+    os.environ.get('DJANGO_ENVIRONMENT') == 'production' or
+    'railway.app' in os.environ.get('RAILWAY_PUBLIC_DOMAIN', '') or
+    os.environ.get('PORT') is not None  # Railway sets PORT for production
+)
 
-if ENVIRONMENT == 'production':
+if IS_PRODUCTION:
+    print("Loading production settings...")
     from .production import *
-elif ENVIRONMENT == 'development':
-    from .development import *
 else:
-    raise ValueError(f"Unknown environment: {ENVIRONMENT}")
+    print("Loading development settings...")
+    from .development import *
