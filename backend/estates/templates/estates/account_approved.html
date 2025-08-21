@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Account Approved</title>
+  </head>
+  <body style="margin: 0; padding: 0; background-color: #f9fafb; font-family: Arial, sans-serif; color: #111827;">
+    <div style="max-width: 600px; margin: 40px auto; background-color: white; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 32px;">
+      <div style="text-align: center;">
+        <div style="margin-bottom: 20px;">
+          <img src="https://www.svgrepo.com/show/379340/building.svg" alt="Building Icon" width="48" height="48" />
+        </div>
+        <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 10px; color: #1f2937;">Your Account Has Been Approved</h2>
+        <p style="font-size: 14px; color: #6b7280;">You can now access all features available to estate residents.</p>
+      </div>
+
+      <div style="margin-top: 32px;">
+        <p style="font-size: 16px;">Hello <strong>{{ first_name }}</strong>,</p>
+
+        <p style="font-size: 16px; margin-top: 16px;">
+          Congratulations! Your resident account has been approved by the estate administrator.
+        </p>
+
+        <p style="font-size: 16px; margin-top: 16px;">
+          You can now log into the platform and access all resident features.
+        </p>
+
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="{{ login_url }}" style="background-color: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">
+            Log In to Your Account
+          </a>
+        </div>
+
+        <p style="font-size: 14px; margin-top: 24px; color: #6b7280;">If you have any questions, feel free to reply to this email or contact support.</p>
+        <p style="font-size: 14px; color: #6b7280;">Support Email: <a href="mailto:{{ support_email }}" style="color: #2563eb;">{{ support_email }}</a></p>
+        <p style="font-size: 14px; color: #6b7280;">Support Phone: <a href="tel:{{ support_phone }}" style="color: #2563eb;">{{ support_phone }}</a></p>
+
+      </div>
+
+      <div style="margin-top: 40px; text-align: center; font-size: 12px; color: #9ca3af;">
+        <p>&copy; {{ current_year }} EstatePadi. All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>
