@@ -5,7 +5,48 @@ Contains common settings shared between development and production.
 
 from pathlib import Path
 import os
-from decouple import config
+
+# Smart config function that works for both local and production
+def smart_config(key, default=None, cast=None):
+    """
+    Hybrid config function:
+    - Uses os.environ for production (Railway, Docker, etc.)
+    - Falls back to python-decouple for local development
+    """
+    value = None
+    
+    # Check if we're in production environment (Railway, Docker, etc.)
+    is_production = any([
+        os.environ.get('RAILWAY_ENVIRONMENT'),
+        os.environ.get('PORT'),
+        os.environ.get('DJANGO_ENVIRONMENT') == 'production'
+    ])
+    
+    if is_production:
+        # Production: use os.environ directly
+        value = os.environ.get(key, default)
+    else:
+        # Local development: try decouple first, fallback to os.environ
+        try:
+            from decouple import config as decouple_config
+            value = decouple_config(key, default=default)
+        except (ImportError, Exception):
+            value = os.environ.get(key, default)
+    
+    # Apply casting if provided
+    if value is not None and cast:
+        if cast == bool:
+            return str(value).lower() in ('true', '1', 'yes', 'on')
+        else:
+            try:
+                return cast(value)
+            except (ValueError, TypeError):
+                return default
+    
+    return value
+
+# Use the smart config function
+config = smart_config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -86,9 +127,9 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Session settings
 SESSION_COOKIE_AGE = 1209600  # 2 weeks
 
-# Email settings (Postmark)
-POSTMARK_TOKEN = config('POSTMARK_TOKEN')
-POSTMARK_SENDER = config("POSTMARK_SENDER") 
+# Email settings (Postmark) - with defaults for missing vars
+POSTMARK_TOKEN = config('POSTMARK_TOKEN', default='')
+POSTMARK_SENDER = config('POSTMARK_SENDER', default='noreply@localhost') 
 EMAIL_BACKEND = 'postmarker.django.EmailBackend'
 POSTMARK = {
     'TOKEN': POSTMARK_TOKEN,
@@ -102,14 +143,14 @@ CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://localho
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 
-# Paystack settings
-PAYSTACK_SECRET_KEY = config('PAYSTACK_SECRET_KEY')
-PAYSTACK_PUBLIC_KEY = config('PAYSTACK_PUBLIC_KEY')
+# Paystack settings - with defaults
+PAYSTACK_SECRET_KEY = config('PAYSTACK_SECRET_KEY', default='')
+PAYSTACK_PUBLIC_KEY = config('PAYSTACK_PUBLIC_KEY', default='')
 
-# Bunny storage settings
-BUNNY_STORAGE_ZONE = config('BUNNY_STORAGE_ZONE')
-BUNNY_STORAGE_PASSWORD = config('BUNNY_STORAGE_PASSWORD')
-BUNNY_CDN_URL = config('BUNNY_CDN_URL')
+# Bunny storage settings - with defaults
+BUNNY_STORAGE_ZONE = config('BUNNY_STORAGE_ZONE', default='')
+BUNNY_STORAGE_PASSWORD = config('BUNNY_STORAGE_PASSWORD', default='')
+BUNNY_CDN_URL = config('BUNNY_CDN_URL', default='')
 BUNNY_REGION = ''
 
 STORAGES = {
