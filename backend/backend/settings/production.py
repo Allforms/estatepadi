@@ -12,7 +12,7 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 
 # Production allowed hosts
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
 
 # Database
 DATABASES = {
@@ -36,8 +36,8 @@ SECURE_HSTS_PRELOAD = True
 
 # CORS settings for production
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='').split(',')
-CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='').split(',')
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS').split(',')
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS').split(',')
 
 # Production-specific Celery settings (use external Redis/RabbitMQ)
 CELERY_BROKER_URL = config('CELERY_BROKER_URL')
