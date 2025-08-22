@@ -18,7 +18,7 @@ ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_RAW.split(',') if host.s
 # Database
 DATABASES = {
     "default": dj_database_url.config(
-        default= os.environ.get("DATABASE_URL")
+        default=config("DATABASE_URL")
     )
 }
 
