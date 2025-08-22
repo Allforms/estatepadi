@@ -16,13 +16,10 @@ ALLOWED_HOSTS_RAW = config('ALLOWED_HOSTS', default='*.railway.app')
 ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_RAW.split(',') if host.strip()]
 
 # Database
-# Alternative database config
-DATABASE_URL = os.environ.get('DATABASE_URL')
-if not DATABASE_URL:
-    raise Exception(f"DATABASE_URL not found! Available env vars: {[k for k in os.environ.keys() if 'DATA' in k or 'PG' in k]}")
-
 DATABASES = {
-    "default": dj_database_url.config(default=DATABASE_URL)
+    "default": dj_database_url.config(
+        default= os.environ.get("DATABASE_URL")
+    )
 }
 
 # Security settings for production
