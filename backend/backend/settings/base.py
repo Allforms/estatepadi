@@ -124,6 +124,7 @@ REST_FRAMEWORK = {
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+
 # Session settings
 SESSION_COOKIE_AGE = 1209600  # 2 weeks
 
@@ -158,8 +159,9 @@ STORAGES = {
         'BACKEND': 'estates.bunny_storage.BunnyStorage',
     },
     'staticfiles': {
-        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        'BACKEND': "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
+    
 }
 
 MEDIA_URL = BUNNY_CDN_URL + '/'
