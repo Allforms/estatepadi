@@ -31,6 +31,7 @@ import RequestPasswordReset from './pages/RequestPasswordReset';
 import AnnouncementManagement from './pages/admin/AnnouncementManagement';
 import PoliciesLayout from './pages/policies/PoliciesLayout';
 import PricingPage from './pages/PricingPage';
+import NotFoundPage from './pages/NotFoundPage';
 export function App() {
   useEffect(() => {
     api.get('/api/csrf-cookie/').catch(console.error);
@@ -52,6 +53,7 @@ export function App() {
             <Route path="/subscription-required" element={<SubscriptionRequiredPage />} />
             <Route path="/estates" element={<EstatesPage />} />
             <Route path="/pricing" element={<PricingPage />} />
+            <Route path="*" element={<NotFoundPage />} />
 
             {/* policies route */}
             <Route path="/terms" element={<PoliciesLayout />}/>

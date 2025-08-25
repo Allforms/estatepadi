@@ -26,8 +26,12 @@ from django.conf import settings
 import uuid
 from .tasks import send_account_approved_email, send_payment_approved_email
 from .decorators import subscription_required, admin_subscription_required
-import requests
+from django.core.cache import cache
 from estates.tasks import sync_subscriptions_from_paystack
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 
 
@@ -118,6 +122,77 @@ class VerifyEmailView(generics.GenericAPIView):
         request.session.pop('pending_verification_email', None)
 
         return Response({'detail': 'Email verified successfully.'}, status=status.HTTP_200_OK)
+class ResendVerificationView(generics.GenericAPIView):
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request, *args, **kwargs):
+        email = request.session.get('pending_verification_email')
+        
+        if not email:
+            # Allow manual email input as fallback
+            email = request.data.get('email')
+            if not email:
+                return Response({
+                    'detail': 'No pending verification or email provided.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({'detail': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.is_active:
+            return Response({'detail': 'Email already verified.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Rate limiting
+        rate_limit_key = f'resend_verification_{email}'
+        last_sent = cache.get(rate_limit_key)
+        
+        if last_sent and timezone.now() - last_sent < timedelta(minutes=1):
+            return Response({
+                'detail': 'Please wait 1 minute before requesting another code.',
+                'retry_after': 60
+            }, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
+        # Generate new code
+        new_code = ''.join(random.choices(string.digits, k=6))
+        user.verification_code = new_code
+        user.save()
+
+        try:
+            # Send email using Postmarker
+            client = PostmarkClient(server_token=settings.POSTMARK_TOKEN)
+            client.emails.send(
+                From=settings.POSTMARK_SENDER,
+                To=user.email,
+                Subject='Verify Your Estate Account',
+                HtmlBody=render_to_string("estates/verify-email.html", {
+                    "first_name": user.first_name,
+                    "verification_code": user.verification_code,
+                    "current_year": timezone.now().year,
+                }),
+
+                TextBody=f"Hello {user.first_name},\nYour verification code is: {user.verification_code}",
+                MessageStream='outbound'  
+            )
+            
+            # Set rate limit
+            cache.set(rate_limit_key, timezone.now(), timeout=300)  # 5 minutes
+            
+            # Update session
+            request.session['pending_verification_email'] = email
+            
+            return Response({
+                'detail': 'Verification code sent successfully.',
+                'email': email
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Failed to send verification email to {email}: {str(e)}")
+            return Response({
+                'detail': 'Failed to send verification email. Please try again.'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class PasswordResetRequestView(generics.GenericAPIView):
     serializer_class = PasswordResetRequestSerializer
@@ -128,14 +203,42 @@ class PasswordResetRequestView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
 
         email = serializer.validated_data['email']
-        user = User.objects.get(email=email)
 
-        # Generate code
-        code = str(uuid.uuid4()).replace('-', '')[:6].upper()
-        user.password_reset_code = code
-        user.password_reset_code_created_at = timezone.now()
-        user.save()
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            # Always return 200 to prevent email enumeration
+            return Response({"detail": "If this email exists, a reset code will be sent."}, status=status.HTTP_200_OK)
 
+        # Expiry & cooldown windows
+        expiry_minutes = 10      # for how long a code stays valid
+        cooldown_minutes = 2     # for how soon they can request another email
+
+        # Enforce cooldown (too soon since last request?)
+        if (
+            user.password_reset_code_created_at 
+            and timezone.now() < user.password_reset_code_created_at + timedelta(minutes=cooldown_minutes)
+        ):
+            return Response(
+                {"detail": f"Please wait at least {cooldown_minutes} minutes before requesting another code."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS
+            )
+
+        # Reuse existing valid code if not expired
+        if (
+            user.password_reset_code 
+            and user.password_reset_code_created_at 
+            and timezone.now() < user.password_reset_code_created_at + timedelta(minutes=expiry_minutes)
+        ):
+            code = user.password_reset_code
+        else:
+            # Generate a new code
+            code = str(uuid.uuid4()).replace('-', '')[:6].upper()
+            user.password_reset_code = code
+            user.password_reset_code_created_at = timezone.now()
+            user.save()
+
+        # Send email
         postmark = PostmarkClient(server_token=settings.POSTMARK_TOKEN)
         postmark.emails.send(
             From=settings.DEFAULT_FROM_EMAIL,
@@ -150,8 +253,8 @@ class PasswordResetRequestView(generics.GenericAPIView):
             MessageStream='outbound'
         )
 
+        return Response({"detail": "If this email exists, a reset code has been sent."}, status=status.HTTP_200_OK)
 
-        return Response({"detail": "Password reset code sent."}, status=status.HTTP_200_OK)
 
 
 class PasswordResetConfirmView(generics.GenericAPIView):
