@@ -29,6 +29,7 @@ from .decorators import subscription_required, admin_subscription_required
 from django.core.cache import cache
 from estates.tasks import sync_subscriptions_from_paystack
 import logging
+import json 
 
 logger = logging.getLogger(__name__)
 
@@ -95,32 +96,109 @@ def register_view(request):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
 class VerifyEmailView(generics.GenericAPIView):
-    serializer_class = VerifyEmailSerializer  # only takes 'code' now
+    serializer_class = VerifyEmailSerializer
     permission_classes = [permissions.AllowAny] 
 
     def post(self, request, *args, **kwargs):
-        email = request.session.get('pending_verification_email')
-        code = request.data.get('code')
+        # DETAILED DEBUG LOGGING
+        logger.error(f"=== VERIFY EMAIL DETAILED DEBUG ===")
+        logger.error(f"Request method: {request.method}")
+        logger.error(f"Request content type: {request.content_type}")
+        logger.error(f"Request META: {dict(request.META)}")
+        logger.error(f"Raw request body: {request.body}")
+        logger.error(f"Request data: {request.data}")
+        logger.error(f"Request POST: {request.POST}")
+        logger.error(f"Request FILES: {request.FILES}")
+        logger.error(f"Session exists: {hasattr(request, 'session')}")
+        
+        if hasattr(request, 'session'):
+            logger.error(f"Session key: {request.session.session_key}")
+            logger.error(f"Session is empty: {request.session.is_empty()}")
+            logger.error(f"Session keys: {list(request.session.keys())}")
+            logger.error(f"Session items: {dict(request.session)}")
+            logger.error(f"Session engine: {request.session.__class__}")
+        
+        # Try to parse JSON manually if needed
+        try:
+            if request.content_type == 'application/json' and request.body:
+                body_data = json.loads(request.body.decode('utf-8'))
+                logger.error(f"Manually parsed JSON: {body_data}")
+            else:
+                body_data = {}
+        except Exception as e:
+            logger.error(f"Failed to parse JSON: {e}")
+            body_data = {}
+
+        # Get email and code from multiple sources
+        email_from_session = request.session.get('pending_verification_email') if hasattr(request, 'session') else None
+        email_from_request_data = request.data.get('email')
+        email_from_post = request.POST.get('email')
+        email_from_body = body_data.get('email')
+        
+        code_from_request_data = request.data.get('code')
+        code_from_post = request.POST.get('code')
+        code_from_body = body_data.get('code')
+
+        logger.error(f"Email sources - Session: {repr(email_from_session)}, Request.data: {repr(email_from_request_data)}, POST: {repr(email_from_post)}, Body: {repr(email_from_body)}")
+        logger.error(f"Code sources - Request.data: {repr(code_from_request_data)}, POST: {repr(code_from_post)}, Body: {repr(code_from_body)}")
+
+        # Use the first available email and code
+        email = email_from_session or email_from_request_data or email_from_post or email_from_body
+        code = code_from_request_data or code_from_post or code_from_body
+
+        logger.error(f"Final values - Email: {repr(email)}, Code: {repr(code)}")
 
         if not email or not code:
-            return Response({'detail': 'Missing email or code.'}, status=status.HTTP_400_BAD_REQUEST)
+            error_response = {
+                'detail': 'Missing email or code.',
+                'debug_info': {
+                    'email_sources': {
+                        'session': repr(email_from_session),
+                        'request_data': repr(email_from_request_data),
+                        'post': repr(email_from_post),
+                        'body': repr(email_from_body),
+                    },
+                    'code_sources': {
+                        'request_data': repr(code_from_request_data),
+                        'post': repr(code_from_post),
+                        'body': repr(code_from_body),
+                    },
+                    'final_values': {
+                        'email': repr(email),
+                        'code': repr(code),
+                    },
+                    'request_info': {
+                        'method': request.method,
+                        'content_type': request.content_type,
+                        'has_session': hasattr(request, 'session'),
+                        'session_key': request.session.session_key if hasattr(request, 'session') else None,
+                        'raw_body': request.body.decode('utf-8', errors='ignore')[:200] + '...' if len(request.body) > 200 else request.body.decode('utf-8', errors='ignore'),
+                    }
+                }
+            }
+            logger.error(f"Returning error response: {error_response}")
+            return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             user = User.objects.get(email=email)
+            logger.error(f"Found user: {user.email}, verification_code: {user.verification_code}")
         except User.DoesNotExist:
+            logger.error(f"User not found for email: {email}")
             return Response({'detail': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 
         if user.verification_code != code:
+            logger.error(f"Code mismatch - Expected: {repr(user.verification_code)}, Got: {repr(code)}")
             return Response({'detail': 'Invalid verification code.'}, status=status.HTTP_400_BAD_REQUEST)
 
         user.is_active = True
         user.verification_code = None
         user.save()
+        logger.error(f"User verified successfully: {email}")
 
-        # Optionally clear session after verification
-        request.session.pop('pending_verification_email', None)
+        # Clear session after verification
+        if hasattr(request, 'session'):
+            request.session.pop('pending_verification_email', None)
 
         return Response({'detail': 'Email verified successfully.'}, status=status.HTTP_200_OK)
 class ResendVerificationView(generics.GenericAPIView):
