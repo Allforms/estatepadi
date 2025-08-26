@@ -6,6 +6,8 @@ from .base import *
 import dj_database_url
 import os
 
+
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY')
 
@@ -23,14 +25,17 @@ DATABASES = {
     )
 }
 
+SECURE_SSL_HOST = None  # Let Railway handle SSL
+
+
 # ===== SESSION CONFIGURATION =====
 # This is crucial for session persistence in serverless environments
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-SESSION_COOKIE_AGE = 1800  # 30 minutes
 SESSION_SAVE_EVERY_REQUEST = True  # Save session on every request
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access
 SESSION_COOKIE_SAMESITE = 'Lax'  # Allow cross-site requests
+SESSION_COOKIE_DOMAIN = None  # Let Django auto-detect
 
 # Security settings for production
 SECURE_BROWSER_XSS_FILTER = True

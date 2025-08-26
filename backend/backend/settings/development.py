@@ -44,10 +44,6 @@ INTERNAL_IPS = [
     'localhost',
 ]
 
-# Optionally add django-debug-toolbar for development
-# INSTALLED_APPS += ['debug_toolbar']
-# MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware']
-
 
 # Development-specific logging
 LOGGING = {
