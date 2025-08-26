@@ -77,8 +77,9 @@ def register_view(request):
 
         # Store email in session for verification
         request.session['pending_verification_email'] = user.email
+        request.session.save()
 
-        # Log activity (optional)
+        # Log activity
         ActivityLog.objects.create(
             user=user,
             estate=user.estate,
@@ -126,15 +127,19 @@ class ResendVerificationView(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
     
     def post(self, request, *args, **kwargs):
-        email = request.session.get('pending_verification_email')
+        email_from_session = request.session.get('pending_verification_email')
+        email_from_request = request.data.get('email')
+        email = email_from_session or email_from_request
         
         if not email:
-            # Allow manual email input as fallback
-            email = request.data.get('email')
-            if not email:
-                return Response({
-                    'detail': 'No pending verification or email provided.'
-                }, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'detail': 'No pending verification or email provided.',
+                'debug': {
+                    'has_session_email': bool(email_from_session),
+                    'has_request_email': bool(email_from_request),
+                    'session_keys': list(request.session.keys()),
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             user = User.objects.get(email=email)
