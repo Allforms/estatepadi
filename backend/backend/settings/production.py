@@ -31,11 +31,9 @@ SECURE_SSL_HOST = None  # Let Railway handle SSL
 # ===== SESSION CONFIGURATION =====
 # This is crucial for session persistence in serverless environments
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-SESSION_SAVE_EVERY_REQUEST = True  # Save session on every request
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access
-SESSION_COOKIE_SAMESITE = 'Lax'  # Allow cross-site requests
-SESSION_COOKIE_DOMAIN = None  # Let Django auto-detect
+SESSION_COOKIE_SAMESITE = 'None'  # Allow cross-site requests
+
 
 # Security settings for production
 SECURE_BROWSER_XSS_FILTER = True
