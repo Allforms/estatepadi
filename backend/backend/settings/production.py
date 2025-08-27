@@ -36,11 +36,17 @@ CSRF_COOKIE_HTTPONLY = False  # Frontend needs to read CSRF token
 CSRF_COOKIE_SAMESITE = 'None'  # Must match session cookie for cross-origin
 CSRF_COOKIE_SECURE = True  # HTTPS only
 CSRF_USE_SESSIONS = False  # Use cookies instead of sessions for CSRF tokens
-CSRF_COOKIE_NAME = 'csrftoken'  # Explicit name (optional but good practice)
+CSRF_COOKIE_NAME = 'csrftoken'  # Explicit name
+CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'  # Header name Django expects
+CSRF_COOKIE_AGE = 31449600  # 1 year in seconds
 
-# CSRF Trusted Origins
+# CSRF Trusted Origins - MAKE SURE TO SET THIS IN YOUR ENVIRONMENT
 CSRF_TRUSTED_ORIGINS_RAW = config('CSRF_TRUSTED_ORIGINS', default='')
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in CSRF_TRUSTED_ORIGINS_RAW.split(',') if origin.strip()] if CSRF_TRUSTED_ORIGINS_RAW else []
+
+# Debug: Print the actual values being used
+print(f"DEBUG - CSRF_TRUSTED_ORIGINS_RAW: {repr(CSRF_TRUSTED_ORIGINS_RAW)}")
+print(f"DEBUG - CSRF_TRUSTED_ORIGINS: {CSRF_TRUSTED_ORIGINS}")
 
 # Security settings for production
 SECURE_BROWSER_XSS_FILTER = True
@@ -56,7 +62,7 @@ SECURE_HSTS_PRELOAD = True
 
 # ===== CORS SETTINGS =====
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS_RAW = config('CORS_ALLOWED_ORIGINS', default='')
+CORS_ALLOWED_ORIGINS_RAW = config('CORS_ALLOWED_ORIGINS', default='https://estatepadi.com,https://www.estatepadi.com')
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ALLOWED_ORIGINS_RAW.split(',') if origin.strip()] if CORS_ALLOWED_ORIGINS_RAW else []
 
 # ===== ADDITIONAL CORS HEADERS =====
@@ -70,6 +76,11 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
+]
+
+# CORS expose headers so frontend can access them
+CORS_EXPOSE_HEADERS = [
+    'Set-Cookie',
 ]
 
 # Production-specific Celery settings
