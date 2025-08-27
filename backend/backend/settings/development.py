@@ -5,8 +5,6 @@ Django development settings.
 from .base import *
 import dj_database_url
 
-# SECURITY WARNING: keep the secret key used in production secret!
-# Use a different secret key for development
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-)!8sh3=qk2^!nd6*%tu39lpx3*8xpvdnql9z+(h=soz6#4u!yu')
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -44,6 +42,8 @@ INTERNAL_IPS = [
     'localhost',
 ]
 
+ADMIN_ALLOWED_IPS = []  # Not used in development
+
 
 # Development-specific logging
 LOGGING = {
@@ -63,5 +63,10 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'DEBUG',
         },
+        "admin_security": {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        }
     },
 }

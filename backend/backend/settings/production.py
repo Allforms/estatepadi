@@ -40,7 +40,7 @@ CSRF_COOKIE_NAME = 'csrftoken'  # Explicit name
 CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'  # Header name Django expects
 CSRF_COOKIE_AGE = 31449600  # 1 year in seconds
 
-# CSRF Trusted Origins - MAKE SURE TO SET THIS IN YOUR ENVIRONMENT
+# CSRF Trusted Origins - MAKE SURE TO SET THIS IN ENVIRONMENT PRD
 CSRF_TRUSTED_ORIGINS_RAW = config('CSRF_TRUSTED_ORIGINS', default='')
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in CSRF_TRUSTED_ORIGINS_RAW.split(',') if origin.strip()] if CSRF_TRUSTED_ORIGINS_RAW else []
 
@@ -62,7 +62,7 @@ SECURE_HSTS_PRELOAD = True
 
 # ===== CORS SETTINGS =====
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS_RAW = config('CORS_ALLOWED_ORIGINS', default='https://estatepadi.com,https://www.estatepadi.com')
+CORS_ALLOWED_ORIGINS_RAW = config('CORS_ALLOWED_ORIGINS', default='')
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ALLOWED_ORIGINS_RAW.split(',') if origin.strip()] if CORS_ALLOWED_ORIGINS_RAW else []
 
 # ===== ADDITIONAL CORS HEADERS =====
@@ -86,6 +86,35 @@ CORS_EXPOSE_HEADERS = [
 # Production-specific Celery settings
 CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='')
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='')
+
+# ===== ADMIN IP WHITELIST (PRODUCTION ONLY) =====
+# Get individual IPs from environment variables
+HOME_IP = config('HOME_IP', default='').strip()
+OFFICE_IP = config('OFFICE_IP', default='').strip()
+
+# Get comma-separated list from environment variable
+ADMIN_IPS_STRING = config('ADMIN_ALLOWED_IPS', default='').strip()
+
+# Build the final list
+ADMIN_ALLOWED_IPS = []
+
+# Add individual IPs if they exist
+if HOME_IP:
+    ADMIN_ALLOWED_IPS.append(HOME_IP)
+if OFFICE_IP:
+    ADMIN_ALLOWED_IPS.append(OFFICE_IP)
+
+# Add comma-separated IPs if they exist
+if ADMIN_IPS_STRING:
+    additional_ips = [ip.strip() for ip in ADMIN_IPS_STRING.split(',') if ip.strip()]
+    ADMIN_ALLOWED_IPS.extend(additional_ips)
+
+# Remove duplicates
+ADMIN_ALLOWED_IPS = list(set(ADMIN_ALLOWED_IPS))
+
+# Debug: Print the IPs being used (remove this after confirming it works)
+print(f"DEBUG - ADMIN_ALLOWED_IPS: {ADMIN_ALLOWED_IPS}")
+
 
 # Logging for production
 LOGGING = {
@@ -131,6 +160,12 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
+        'admin_security': {
+            'handlers': ['file', 'console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        
     },
 }
 
