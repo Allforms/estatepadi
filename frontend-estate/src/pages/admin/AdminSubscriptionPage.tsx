@@ -32,7 +32,7 @@ const AdminSubscriptionPage: React.FC = () => {
       key: PAYSTACK_PUBLIC_KEY,
       email: user.email,
       plan: plan.paystack_plan_code, // Using Paystack plan code for subscription
-      callback: function (response: any) {
+      callback: function () {
         // console.log('Payment successful:', response);
         alert('Subscription payment initiated. Your account will update shortly after Paystack confirmation.');
         window.location.reload();
