@@ -51,9 +51,9 @@ const VisitorCodes: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      console.log(`Fetching visitor codes - Page ${page}...`);
+      // console.log(`Fetching visitor codes - Page ${page}...`);
       const res = await api.get(`/api/visitor-codes/?page=${page}`);
-      console.log('API Response:', res.data);
+      // console.log('API Response:', res.data);
   
       let dataArray: VisitorCode[] = [];
       let count = 0;
@@ -69,10 +69,9 @@ const VisitorCodes: React.FC = () => {
         dataArray = res.data.data;
         count = res.data.count || res.data.data.length;
       } else {
-        console.warn('Unexpected API response structure:', res.data);
+        // console.warn('Unexpected API response structure:', res.data);
       }
   
-      console.log('Processed visitor codes:', dataArray);
       setVisitorCodes(dataArray);
       setCurrentPage(page);
       setTotalPages(Math.ceil(count / 10)); // Assuming 10 per page (default from DRF)
@@ -95,9 +94,8 @@ const VisitorCodes: React.FC = () => {
     e.preventDefault();
     setError(null);
     try {
-      console.log('Submitting form data:', formData);
       const res = await api.post('/api/visitor-codes/', formData);
-      console.log('Generated code response:', res.data);
+      // console.log('Generated code response:', res.data);
       
       setGeneratedCode(res.data.code);
       

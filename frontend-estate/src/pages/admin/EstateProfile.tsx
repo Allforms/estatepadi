@@ -221,7 +221,6 @@ const EstateProfile: React.FC = () => {
           });
         }
       } catch (endpointError) {
-        console.log('Individual bank account endpoints not available, using estate update instead');
         
         // Option 2: Fallback to updating through estate endpoint
         // This requires backend to accept nested bank_accounts in estate update

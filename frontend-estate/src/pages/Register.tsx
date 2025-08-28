@@ -53,7 +53,7 @@ const Register: React.FC = () => {
     const fetchEstates = async () => {
       try {
         const res = await api.get('/api/estates/');
-        console.log('Estate response:', res.data);
+        // console.log('Estate response:', res.data);
   
         if (Array.isArray(res.data)) {
           setEstates(res.data);
@@ -62,7 +62,7 @@ const Register: React.FC = () => {
         } else if (Array.isArray(res.data.estates)) {
           setEstates(res.data.estates);
         } else {
-          console.error('Unexpected estate response:', res.data);
+          // console.error('Unexpected estate response:', res.data);
         }
       } catch (err) {
         console.error('Failed to fetch estates:', err);

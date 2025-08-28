@@ -57,7 +57,7 @@ const ResidentDashboard: React.FC = () => {
   const fetchAnnouncements = async () => {
     try {
       const res = await api.get('/api/announcements/');
-      console.log('Announcements API Response:', res.data); // Debug log
+      // console.log('Announcements API Response:', res.data); 
       
       // Handle both paginated and non-paginated responses
       const dataArray = Array.isArray(res.data)
@@ -66,7 +66,7 @@ const ResidentDashboard: React.FC = () => {
           ? res.data.results
           : [];
       
-      console.log('Processed announcements:', dataArray); // Debug log
+      // console.log('Processed announcements:', dataArray); // Debug log
       setAnnouncements(dataArray);
     } catch (err) {
       console.error('Error fetching announcements:', err);

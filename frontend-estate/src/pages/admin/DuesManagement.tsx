@@ -144,7 +144,6 @@ const DuesManagement: React.FC = () => {
   };
 
   const handleSendReminder = (id: number, title: string) => {
-    console.log(`Send reminder for due ID: ${id}`);
     showNotification('success', `Reminder sent for "${title}"`);
   };
 

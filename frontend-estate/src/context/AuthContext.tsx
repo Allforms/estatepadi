@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await api.get('/api/csrf-cookie/');
     } catch (error) {
-      console.error('Failed to fetch CSRF token:', error);
+      // console.error('Failed to fetch CSRF token:', error);
       throw new Error('Could not fetch CSRF token.');
     }
   };
@@ -69,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await getCsrfToken();
   
       const response = await api.post('/api/auth/login/', { email, password });
-      console.log('Login response:', response.data);
+      // console.log('Login response:', response.data);
   
       const { id, first_name, last_name, email: userEmail, role, estate, subscription_active } = response.data.user;
   
@@ -120,7 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await getCsrfToken();
       await api.post('/api/auth/logout/');
     } catch (error) {
-      console.error('Logout error (possibly session expired):', error);
+      // console.error('Logout error (possibly session expired):', error);
     } finally {
       setUser(null);
       setIsAuthenticated(false);
