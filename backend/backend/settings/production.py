@@ -83,6 +83,8 @@ CORS_EXPOSE_HEADERS = [
     'Set-Cookie',
 ]
 
+CSRF_COOKIE_DOMAIN = '.estatepadi.com'  
+
 # Production-specific Celery settings
 CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='')
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='')
