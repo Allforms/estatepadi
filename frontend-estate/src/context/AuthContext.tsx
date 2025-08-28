@@ -122,6 +122,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       // console.error('Logout error (possibly session expired):', error);
     } finally {
+      // Clear the CSRF token cookie
+      document.cookie = "csrftoken=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+      
       setUser(null);
       setIsAuthenticated(false);
       localStorage.removeItem('user');
