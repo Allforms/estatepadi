@@ -29,7 +29,7 @@ def send_account_approved_email(email, first_name):
     context = {
         'first_name': first_name,
         'current_year': timezone.now().year,
-        'login_url': 'https://yourdomain.com/login', 
+        'login_url': 'https://estatepadi.com/login', 
         "support_email": settings.DEFAULT_FROM_EMAIL,
         'support_phone': '08137343312'
     }
