@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.contrib.auth import authenticate, login, logout
 from django.utils import timezone
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
@@ -12,24 +12,18 @@ from io import BytesIO
 from .models import *
 from .serializers import *
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.http import JsonResponse
 from django.utils.translation import gettext as _
 from io import BytesIO
-from django.http import HttpResponse
-from django.utils import timezone
 from .permissions import IsEstateAdmin
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework import status, permissions
 from postmarker.core import PostmarkClient
 from django.conf import settings
-import uuid
 from .tasks import send_account_approved_email, send_payment_approved_email
 from .decorators import subscription_required, admin_subscription_required
 from django.core.cache import cache
 from estates.tasks import sync_subscriptions_from_paystack
-import logging
-import json 
+import json, logging, uuid
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -1006,3 +1000,45 @@ class AnnouncementRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIVie
 def sync_subscriptions_view(request):
     results = sync_subscriptions_from_paystack()  # run synchronously
     return JsonResponse({"results": results})
+
+
+class ContactSupportView(generics.CreateAPIView):
+    serializer_class = ContactSupportSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        data = serializer.validated_data
+
+        # metadata
+        timestamp = timezone.now()
+
+        # prepare context for email template
+        context = {
+            "user": user,
+            "email": data.get("email") or user.email,
+            "subject": data["subject"],
+            "message": data["message"],
+            "timestamp": timestamp,
+        }
+
+        # Initialize Postmark client
+        client = PostmarkClient(server_token=settings.POSTMARK_TOKEN)
+
+        # 1. Confirmation email to the user
+        client.emails.send(
+            From=settings.POSTMARK_SENDER,
+            To=data.get("email") or user.email,
+            Subject="We've received your support request",
+            HtmlBody=render_to_string("estates/support-email-received.html", context),
+            MessageStream="outbound",
+        )
+
+        # 2. Forward the message to your support team
+        client.emails.send(
+            From=settings.POSTMARK_SENDER,
+            To=settings.SUPPORT_EMAIL,
+            Subject=f"New Support Request from {data.get('email') or user.email}",
+            HtmlBody=render_to_string("estates/support-email-received.html", context),
+            MessageStream="outbound",
+        )

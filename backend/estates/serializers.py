@@ -310,3 +310,9 @@ class AnnouncementSerializer(serializers.ModelSerializer):
             'created_by_name',
         ]
         read_only_fields = ['id', 'created_at', 'created_by', 'created_by_name', 'estate']
+
+
+class ContactSupportSerializer(serializers.Serializer):
+    subject = serializers.CharField(max_length=255)
+    message = serializers.CharField()
+    email = serializers.EmailField(required=False)  # optional, if user is authenticated we can use request.user.email

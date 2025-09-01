@@ -17,7 +17,7 @@ export default function Navbar() {
   const links = [
     // { label: "Testimonials", href: "#" },
     // { label: "Pricing", href: "/pricing" },
-    { label: "Contact Us", href: "#contact" },
+    { label: "Contact Us", href: "/contact-support" },
   ];
 
   return (

@@ -74,6 +74,9 @@ urlpatterns = [
 
    #paystack subscription sync
     path("paystack/sync-subscriptions/", views.sync_subscriptions_view, name="sync_subscriptions"),
+
+    #contact support views
+    path("contact-support/", views.ContactSupportView.as_view(), name="contact-support"),
     
     
 ]

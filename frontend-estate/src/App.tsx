@@ -32,6 +32,8 @@ import AnnouncementManagement from './pages/admin/AnnouncementManagement';
 import PoliciesLayout from './pages/policies/PoliciesLayout';
 import PricingPage from './pages/PricingPage';
 import NotFoundPage from './pages/NotFoundPage';
+import AdminProfile from './pages/admin/AdminProfile';
+import ContactSupport from './pages/ContactSupport';
 export function App() {
   useEffect(() => {
     api.get('/api/csrf-cookie/').catch(console.error);
@@ -54,6 +56,7 @@ export function App() {
             <Route path="/estates" element={<EstatesPage />} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="*" element={<NotFoundPage />} />
+            <Route path="/contact-support" element={<ContactSupport />} />
 
             {/* policies route */}
             <Route path="/terms" element={<PoliciesLayout />}/>
@@ -113,6 +116,14 @@ export function App() {
               element={
                 <ProtectedRoute requiredRole="admin">
                   <AdminSubscriptionPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/profile"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminProfile />
                 </ProtectedRoute>
               }
             />

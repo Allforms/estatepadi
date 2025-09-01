@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { HomeIcon, KeyIcon, CreditCardIcon, UserIcon, BuildingIcon, LogOutIcon, MenuIcon, XIcon, BellIcon, SettingsIcon, ShieldCheckIcon } from 'lucide-react';
+import { HomeIcon, KeyIcon, CreditCardIcon, UserIcon, BuildingIcon, LogOutIcon, MenuIcon, XIcon, BellIcon, SettingsIcon, ShieldCheckIcon, Contact2Icon } from 'lucide-react';
 import Logo from '../../assets/estatepadilogo.png';
 
 interface ResidentLayoutProps {
@@ -68,7 +68,13 @@ const ResidentLayout: React.FC<ResidentLayoutProps> = ({
     path: '/resident/estate',
     color: 'text-orange-600',
     bgColor: 'bg-orange-50'
-  },];
+  }, {
+    name: 'Contact Support',
+    icon: <Contact2Icon size={20} />,
+    path: '/contact-support',
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-50'
+  }];
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">

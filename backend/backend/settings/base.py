@@ -147,6 +147,7 @@ POSTMARK = {
     'SENDER': POSTMARK_SENDER,
 }
 DEFAULT_FROM_EMAIL = 'info@estatepadi.com'
+SUPPORT_EMAIL = 'allformslimited@gmail.com'
 
 # Celery settings
 CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/0')

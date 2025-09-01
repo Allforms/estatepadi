@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Support Request Received</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f9fafb; font-family: Arial, sans-serif; color: #111827;">
+  <div style="max-width: 600px; margin: 40px auto; background-color: white; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 32px;">
+    <div style="text-align: center;">
+      <div style="margin-bottom: 20px;">
+        <img src="https://estatepadi.vercel.app/assets/estatepadilogo-Bf59u12M.png" alt="EstatePadiIcon" width="100" />
+      </div>
+      <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 10px; color: #1f2937;">We’ve Received Your Request</h2>
+      <p style="font-size: 14px; color: #6b7280;">Our support team will get back to you shortly.</p>
+    </div>
+
+    <div style="margin-top: 32px;">
+      <p style="font-size: 16px;">Hello,</p>
+
+      <p style="font-size: 16px; margin-top: 16px;">Thank you for reaching out to EstatePadi support. We’ve received your request and will review it soon.</p>
+      
+      <p style="font-size: 16px; margin-top: 16px;">Here’s a copy of what you submitted at {{ timestamp}}</p>
+     
+      <div style="background-color: #f3f4f6; padding: 16px; border-radius: 0.375rem; margin-top: 12px;">
+        <p style="font-size: 14px; margin: 0;"><strong>Email:</strong> {{ email }}</p>
+        <p style="font-size: 14px; margin: 0;">Subject:{{ subject }}</p>
+        <p style="font-size: 14px; margin: 0; margin-top: 8px;">{{ message }}</p>
+      </div>
+
+      <p style="font-size: 16px; margin-top: 16px;">Our team typically responds within 24–48 hours. You’ll receive a reply at <strong>{{ email }}</strong>.</p>
+    </div>
+
+    <div style="margin-top: 40px; text-align: center; font-size: 12px; color: #9ca3af;">
+      <p>&copy; {{ current_year }} EstatePadi. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>

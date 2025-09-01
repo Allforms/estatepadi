@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { HomeIcon, UsersIcon, CreditCardIcon, FileTextIcon, BuildingIcon, LogOutIcon, BadgeDollarSign, MenuIcon, XIcon, Megaphone, BellIcon, SettingsIcon } from 'lucide-react';
+import { HomeIcon, UsersIcon, CreditCardIcon, FileTextIcon, BuildingIcon, LogOutIcon, BadgeDollarSign, MenuIcon, XIcon, Megaphone, BellIcon, SettingsIcon, UserIcon, Contact2Icon } from 'lucide-react';
 import Logo from '../../assets/estatepadilogo.png';
 
 interface AdminLayoutProps {
@@ -74,10 +74,22 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
     path: '/admin/announcements',
     color: 'text-purple-600',
     bgColor: 'bg-purple-50'
-  }, {
+  },{
+    name: 'My Profile',
+    icon: <UserIcon size={20} />,
+    path: '/admin/profile',
+    color: 'text-indigo-600',
+    bgColor: 'bg-indigo-50'
+  },{
     name: 'Subscription',
     icon: <BadgeDollarSign size={20} />,
     path: '/admin/subscription',
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-50'
+  },{
+    name: 'Contact Support',
+    icon: <Contact2Icon size={20} />,
+    path: '/contact-support',
     color: 'text-amber-600',
     bgColor: 'bg-amber-50'
   }];
