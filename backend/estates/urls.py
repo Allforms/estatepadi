@@ -60,6 +60,7 @@ urlpatterns = [
     path('activity-log/', views.ActivityLogListView.as_view(), name='activity-log'),
 
     # Subscription Plans
+    path('subscription/cancel/', cancel_subscription, name='cancel-subscription'),
     path('subscription/create/', create_subscription, name='create-subscription'),
     path('subscription/plans/', subscription_plans, name='subscription-plans'),
     path('subscription/status/', subscription_status, name='subscription-status'),

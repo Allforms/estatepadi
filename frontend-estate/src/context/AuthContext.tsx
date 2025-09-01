@@ -31,6 +31,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<User>;
   register: (userData: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -64,6 +65,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const transformUserData = (userData: any): User => {
+    const { id, first_name, last_name, email: userEmail, role, estate, subscription_active } = userData;
+    
+    return {
+      id: id.toString(),
+      name: `${first_name} ${last_name}`,
+      email: userEmail,
+      role: role.toLowerCase() as 'admin' | 'resident' | 'security',
+      estateId: estate?.toString() || undefined,
+      subscription_active: subscription_active ?? true
+    };
+  };
+
   const login = async (email: string, password: string): Promise<User> => {
     try {
       await getCsrfToken();
@@ -71,16 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await api.post('/api/auth/login/', { email, password });
       // console.log('Login response:', response.data);
   
-      const { id, first_name, last_name, email: userEmail, role, estate, subscription_active } = response.data.user;
-  
-      const loggedInUser: User = {
-        id: id.toString(),
-        name: `${first_name} ${last_name}`,
-        email: userEmail,
-        role: role.toLowerCase() as 'admin' | 'resident' | 'security',
-        estateId: estate?.toString() || undefined,
-        subscription_active: subscription_active ?? true
-      };
+      const loggedInUser = transformUserData(response.data.user);
   
       setUser(loggedInUser);
       setIsAuthenticated(true);
@@ -95,6 +100,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         throw new Error('An unexpected error occurred.');
       }
+    }
+  };
+
+  const refreshUser = async (): Promise<void> => {
+    try {
+      // Only attempt refresh if user is currently authenticated
+      if (!isAuthenticated || !user) {
+        return;
+      }
+
+      const response = await api.get('/api/resident/profile/');
+      const refreshedUser = transformUserData(response.data);
+
+      setUser(refreshedUser);
+      localStorage.setItem('user', JSON.stringify(refreshedUser));
+      
+      console.log('User data refreshed successfully');
+    } catch (error: any) {
+      console.error('Failed to refresh user data:', error);
+      
+      // If we get a 401 or 403, the user might be logged out
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        console.log('User session appears to be invalid, logging out...');
+        await logout();
+      }
+      
+      // Don't throw error - this is a background refresh
+      // Just log it and continue with existing user data
     }
   };
   
@@ -132,7 +165,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, register, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isAuthenticated, 
+      login, 
+      register, 
+      logout, 
+      refreshUser 
+    }}>
       {children}
     </AuthContext.Provider>
   );

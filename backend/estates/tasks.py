@@ -83,6 +83,7 @@ def sync_subscriptions_from_paystack():
                 sub.status = latest_sub.get("status", sub.status)
                 sub.next_billing_date = latest_sub.get("next_payment_date") or sub.next_billing_date
                 sub.authorization_code = latest_sub.get("authorization", {}).get("authorization_code", sub.authorization_code)
+                sub.email_token = latest_sub.get("email_token", sub.email_token)
                 sub.updated_at = timezone.now()
                 sub.save()
 

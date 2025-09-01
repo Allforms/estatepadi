@@ -33,9 +33,6 @@ import json
 
 logger = logging.getLogger(__name__)
 
-
-
-
 # Authentication Views
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
@@ -338,8 +335,6 @@ class PasswordResetRequestView(generics.GenericAPIView):
 
         return Response({"detail": "If this email exists, a reset code has been sent."}, status=status.HTTP_200_OK)
 
-
-
 class PasswordResetConfirmView(generics.GenericAPIView):
     serializer_class = PasswordResetConfirmSerializer
     permission_classes = [permissions.AllowAny]
@@ -349,8 +344,6 @@ class PasswordResetConfirmView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({"detail": "Password reset successful."}, status=status.HTTP_200_OK)
-
-
 @api_view(['GET', 'PATCH'])
 @permission_classes([permissions.IsAuthenticated])
 @subscription_required
@@ -368,7 +361,6 @@ def resident_profile(request):
             return Response(serializer.data)
         return Response(serializer.errors, status=400)
 
-# Estate Views
 class EstateListView(generics.ListCreateAPIView):
     queryset = Estate.objects.all()
     serializer_class = EstateSerializer

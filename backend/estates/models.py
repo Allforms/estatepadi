@@ -272,6 +272,7 @@ class EstateSubscription(models.Model):
     status = models.CharField(max_length=20, choices=ESTATE_STATUS, default='active')
     next_billing_date = models.DateTimeField()
     authorization_code = models.CharField(max_length=150, blank=True, null=True)
+    email_token = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

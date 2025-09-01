@@ -92,6 +92,7 @@ def create_subscription(request):
         defaults={
             'paystack_customer_code': customer_code,
             'paystack_subscription_code': subscription_data['subscription_code'],
+            'authorization_code': authorization,  # Store authorization code
             'plan': plan,
             'status': subscription_data.get('status', 'active'),
             'next_billing_date': next_date
@@ -110,6 +111,124 @@ def create_subscription(request):
         }
     }, status=status.HTTP_201_CREATED)
 
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def cancel_subscription(request):
+    """
+    Cancel the user's active subscription
+    """
+    if request.user.role != 'admin':
+        return Response({'error': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
+
+    estate = request.user.estate
+    
+    # Check if estate has an active subscription
+    try:
+        subscription = EstateSubscription.objects.get(
+            estate=estate,
+            status='active'
+        )
+    except EstateSubscription.DoesNotExist:
+        return Response({
+            'error': 'No active subscription found for this estate.'
+        }, status=status.HTTP_404_NOT_FOUND)
+
+    # Handle subscriptions with missing Paystack codes
+    if not subscription.paystack_subscription_code:
+        # Try to fetch the subscription code from Paystack using customer code
+        if subscription.paystack_customer_code:
+            try:
+                # Get customer's subscriptions from Paystack
+                customer_subs = paystack.subscription.list(
+                    customer=subscription.paystack_customer_code
+                )
+                
+                if customer_subs.get('status') and customer_subs.get('data'):
+                    # Find active subscription for this plan
+                    active_subs = [
+                        sub for sub in customer_subs['data'] 
+                        if sub.get('status') == 'active' and 
+                        sub.get('plan', {}).get('plan_code') == subscription.plan.paystack_plan_code
+                    ]
+                    
+                    if active_subs:
+                        # Update our record with the found subscription code
+                        paystack_sub_code = active_subs[0]['subscription_code']
+                        subscription.paystack_subscription_code = paystack_sub_code
+                        subscription.save()
+                        print(f"Found and updated subscription code: {paystack_sub_code}")
+                    else:
+                        # No active subscription found on Paystack, just cancel locally
+                        subscription.status = 'cancelled'
+                        subscription.updated_at = datetime.datetime.now(datetime.timezone.utc)
+                        subscription.save()
+                        
+                        return Response({
+                            'message': 'Subscription cancelled successfully (local only - no active subscription found on Paystack).',
+                            'cancelled_at': subscription.updated_at,
+                            'plan_name': subscription.plan.name
+                        }, status=status.HTTP_200_OK)
+                        
+            except Exception as e:
+                print(f"Error fetching customer subscriptions: {e}")
+                # Fall back to local cancellation
+                subscription.status = 'cancelled'
+                subscription.updated_at = datetime.datetime.now(datetime.timezone.utc)
+                subscription.save()
+                
+                return Response({
+                    'message': 'Subscription cancelled locally (could not verify with Paystack).',
+                    'cancelled_at': subscription.updated_at,
+                    'plan_name': subscription.plan.name,
+                    'warning': 'Could not cancel on Paystack - please verify manually'
+                }, status=status.HTTP_200_OK)
+        else:
+            # No customer code either, just cancel locally
+            subscription.status = 'cancelled'
+            subscription.updated_at = datetime.datetime.now(datetime.timezone.utc)
+            subscription.save()
+            
+            return Response({
+                'message': 'Subscription cancelled locally (no Paystack reference found).',
+                'cancelled_at': subscription.updated_at,
+                'plan_name': subscription.plan.name
+            }, status=status.HTTP_200_OK)
+
+    # Now we should have a subscription code, proceed with Paystack cancellation
+    try:
+        # Use the disable endpoint to cancel the subscription
+        cancel_resp = paystack.subscription.disable(
+            code=subscription.paystack_subscription_code,
+            token=subscription.email_token
+        )
+        
+        print(f"Paystack cancel response: {cancel_resp}")
+        
+    except Exception as e:
+        print(f"Paystack API error: {e}")
+        return Response({
+            'error': f'Failed to cancel subscription with Paystack: {str(e)}'
+        }, status=status.HTTP_502_BAD_GATEWAY)
+
+    # Check if the cancellation was successful
+    if not cancel_resp.get('status'):
+        print(f"Paystack cancel failed: {cancel_resp}")
+        return Response({
+            'error': 'Failed to cancel subscription with Paystack.',
+            'details': cancel_resp.get('message', 'Unknown error')
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Update local subscription status
+    subscription.status = 'cancelled'
+    subscription.updated_at = datetime.datetime.now(datetime.timezone.utc)
+    subscription.save()
+
+    return Response({
+        'message': 'Subscription cancelled successfully.',
+        'subscription_code': subscription.paystack_subscription_code,
+        'cancelled_at': subscription.updated_at,
+        'plan_name': subscription.plan.name
+    }, status=status.HTTP_200_OK)
 
 
 
@@ -143,6 +262,7 @@ def subscription_status(request):
     return Response({
         'status': subscription.status,
         'next_billing_date': subscription.next_billing_date,
+        'can_cancel': subscription.status == 'active',  # Add this to help frontend
         'plan': {
             'name': subscription.plan.name,
             'amount': subscription.plan.amount,
