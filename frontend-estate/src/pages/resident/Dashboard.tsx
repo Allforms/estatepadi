@@ -79,7 +79,7 @@ const ResidentDashboard: React.FC = () => {
     <ResidentLayout title="Dashboard">
       <div className="space-y-6">
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {/* Generate Visitor Code */}
           <div className="bg-blue-50 overflow-hidden shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
@@ -128,7 +128,7 @@ const ResidentDashboard: React.FC = () => {
                   <BellIcon size={24} className="text-purple-600" />
                 </div>
                 <div className="ml-5 flex-1">
-                  <p className="text-sm font-medium text-gray-500 truncate">Estate Information</p>
+                  <p className="text-sm font-medium text-gray-500 truncate">Pay Dues</p>
                   <p className="text-lg font-medium text-gray-900">View estate details</p>
                 </div>
               </div>
@@ -143,7 +143,7 @@ const ResidentDashboard: React.FC = () => {
 
         {/* Upcoming Dues */}
         <div className="bg-white shadow sm:rounded-lg">
-          <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
+          <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
             <div>
               <h3 className="text-lg leading-6 font-medium text-gray-900">Upcoming Dues</h3>
               <p className="mt-1 max-w-2xl text-sm text-gray-500">Payments due in the next 30 days.</p>
@@ -159,17 +159,52 @@ const ResidentDashboard: React.FC = () => {
             ) : upcomingDues.length === 0 ? (
               <p className="p-4 text-gray-500">No upcoming dues.</p>
             ) : (
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+              <div>
+                {/* Desktop Table View */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Note</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {upcomingDues.map((due) => {
+                        let statusBadge;
+                        if (due.latest_payment_status === "approved") {
+                          statusBadge = <span className="px-2 inline-flex text-xs font-semibold rounded-full bg-green-100 text-green-800">Approved</span>;
+                        } else if (due.latest_payment_status === "pending") {
+                          statusBadge = <span className="px-2 inline-flex text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>;
+                        } else if (due.latest_payment_status === "rejected") {
+                          statusBadge = <span className="px-2 inline-flex text-xs font-semibold rounded-full bg-red-100 text-red-800">Rejected</span>;
+                        } else {
+                          statusBadge = <span className="px-2 inline-flex text-xs font-semibold rounded-full bg-gray-100 text-gray-600">Unpaid</span>;
+                        }
+
+                        return (
+                          <tr key={due.id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{due.title}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₦{due.amount}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(due.due_date).toLocaleDateString()}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">{statusBadge}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <a href="/resident/pay-dues" className="text-blue-600 hover:text-blue-900">View</a>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{due.description}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="sm:hidden">
                   {upcomingDues.map((due) => {
                     let statusBadge;
                     if (due.latest_payment_status === "approved") {
@@ -183,19 +218,37 @@ const ResidentDashboard: React.FC = () => {
                     }
 
                     return (
-                      <tr key={due.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{due.title}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₦{due.amount}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(due.due_date).toLocaleDateString()}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{statusBadge}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <a href="/resident/pay-dues" className="text-blue-600 hover:text-blue-900">View</a>
-                        </td>
-                      </tr>
+                      <div key={due.id} className="p-4 border-b border-gray-200 last:border-b-0">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="text-sm font-medium text-gray-900 flex-1">{due.title}</h4>
+                          {statusBadge}
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-xs text-gray-500">Amount:</span>
+                            <span className="text-sm font-medium">₦{due.amount}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-xs text-gray-500">Due Date:</span>
+                            <span className="text-sm">{new Date(due.due_date).toLocaleDateString()}</span>
+                          </div>
+                          {due.description && (
+                            <div className="mt-2">
+                              <span className="text-xs text-gray-500">Note:</span>
+                              <p className="text-sm text-gray-700 mt-1">{due.description}</p>
+                            </div>
+                          )}
+                          <div className="mt-3">
+                            <a href="/resident/pay-dues" className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
+                              View Details
+                            </a>
+                          </div>
+                        </div>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
+                </div>
+              </div>
             )}
           </div>
         </div>
@@ -204,7 +257,7 @@ const ResidentDashboard: React.FC = () => {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Recent Visitors */}
           <div className="bg-white shadow sm:rounded-lg">
-            <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
+            <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
               <div>
                 <h3 className="text-lg leading-6 font-medium text-gray-900">Recent Visitors</h3>
                 <p className="mt-1 max-w-2xl text-sm text-gray-500">Visitor codes generated recently.</p>
@@ -222,14 +275,14 @@ const ResidentDashboard: React.FC = () => {
                 <ul className="divide-y divide-gray-200">
                   {recentVisitors.slice(0, 5).map(visitor => (
                     <li key={visitor.id} className="py-4 px-4 sm:px-6">
-                      <div className="flex items-center justify-between">
-                        <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                        <div className="flex-1">
                           <p className="text-sm font-medium text-gray-900">{visitor.visitor_name}</p>
                           <p className="text-sm text-gray-500">Code: {visitor.code}</p>
                           <p className="text-xs text-gray-500 mt-1">{new Date(visitor.created_at).toLocaleString()}</p>
                         </div>
                         <span className={`
-                          px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                          px-2 inline-flex text-xs leading-5 font-semibold rounded-full self-start sm:self-auto
                           ${visitor.is_used
                             ? 'bg-yellow-100 text-yellow-800'
                             : new Date(visitor.expires_at) < new Date()
@@ -242,7 +295,6 @@ const ResidentDashboard: React.FC = () => {
                             ? 'Expired'
                             : 'Active'}
                         </span>
-
                       </div>
                     </li>
                   ))}
@@ -266,20 +318,18 @@ const ResidentDashboard: React.FC = () => {
                 <ul className="divide-y divide-gray-200">
                   {announcements.slice(0, 5).map(announcement => (
                     <li key={announcement.id} className="py-4 px-4 sm:px-6">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          <CheckCircleIcon size={24} className="text-green-500" />
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0 mt-1">
+                          <CheckCircleIcon size={20} className="text-green-500" />
                         </div>
-                        <div className="ml-3">
-                          <p className="text-sm font-medium text-gray-900">{announcement.title}</p>
-                          <p className="text-xs text-gray-500 mt-1">
+                        <div className="ml-3 flex-1">
+                          <p className="text-sm font-medium text-gray-900 mb-1">{announcement.title}</p>
+                          <p className="text-xs text-gray-500 mb-2">
                             Posted on {new Date(announcement.created_at).toLocaleDateString()}
                             {announcement.created_by_name && ` by ${announcement.created_by_name}`}
                           </p>
+                          <p className="text-sm text-gray-600 leading-relaxed">{announcement.message}</p>
                         </div>
-                      </div>
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-600">{announcement.message}</p>
                       </div>
                     </li>
                   ))}

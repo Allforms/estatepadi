@@ -176,7 +176,7 @@ Expires in ${formatTime(countdown)}
 This code is valid for one-time use and expires in 30 minutes.
 
 Want to enjoy EstatePadi in your estate?
-Email us at support@estatepadi.com
+Email us at info@estatepadi.com
 Powered by EstatePadi 🚀`;
 
     try {
@@ -361,7 +361,7 @@ Powered by EstatePadi 🚀`;
             <div className="mt-6 text-xs text-gray-400">
               Want to enjoy <span className="text-blue-700 font-medium">EstatePadi</span> in your estate?
               <br />
-              Email us at <a href="mailto:support@estatepadi.com" className="text-blue-600 underline">support@estatepadi.com</a>
+              Email us at <a href="mailto:info@estatepadi.com" className="text-blue-600 underline">info@estatepadi.com</a>
               <br />
               <span className="mt-2 block">Powered by EstatePadi 🚀</span>
             </div>

@@ -37,7 +37,7 @@ def login_view(request):
     if email and password:
         user = authenticate(username=email, password=password)
         if user:
-            if user.role == 'resident' and not user.is_approved:
+            if user.role == 'resident' or 'security' and not user.is_approved:
                 return Response({
                     'error': 'Your account is pending approval by estate admin'
                 }, status=status.HTTP_403_FORBIDDEN)
