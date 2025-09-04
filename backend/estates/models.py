@@ -7,7 +7,7 @@ import string
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.base_user import BaseUserManager
 from django.conf import settings
-from .bunny_storage import BunnyStorage
+
 
 class Estate(models.Model):
     name = models.CharField(max_length=255)
@@ -179,6 +179,8 @@ class DuePayment(models.Model):
     due = models.ForeignKey(Due, on_delete=models.CASCADE)
     resident = models.ForeignKey(User, on_delete=models.CASCADE)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_evidence = models.FileField(
+    upload_to='payment_evidence/')
     payment_evidence = models.ImageField(upload_to='payment_evidence/')
     payment_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
