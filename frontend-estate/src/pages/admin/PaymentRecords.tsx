@@ -7,7 +7,9 @@ import {
   XCircleIcon,
   FilterIcon,
   ChevronLeftIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  DownloadIcon,
+  EyeIcon
 } from 'lucide-react';
 import api from '../../api';
 
@@ -23,6 +25,8 @@ interface Payment {
   admin_notes: string;
   approved_by_name: string | null;
   approved_at: string | null;
+  has_receipt?: boolean;
+  receipt_url?: string;
 }
 
 const PaymentRecords: React.FC = () => {
@@ -32,18 +36,45 @@ const PaymentRecords: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<'all'|'approved'|'pending'|'rejected'>('all');
   const [filterMonth, setFilterMonth] = useState<'all'|string>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [receiptLoading, setReceiptLoading] = useState<Record<number, boolean>>({});
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
-    api.get('/api/payments/')
-      .then(res => {
-        // Handle paginated vs array response
-        const data = Array.isArray(res.data) ? res.data : res.data.results;
-        setPayments(data);
-      })
-      .catch(err => console.error('Failed to load payments:', err))
-      .finally(() => setLoading(false));
+    loadPayments();
   }, []);
+
+  const loadPayments = async () => {
+    try {
+      const res = await api.get('/api/payments/');
+      // Handle paginated vs array response
+      const data = Array.isArray(res.data) ? res.data : res.data.results;
+      
+      // Check receipt availability for approved payments
+      const paymentsWithReceipts = await Promise.all(
+        data.map(async (payment: Payment) => {
+          if (payment.status === 'approved') {
+            try {
+              const receiptRes = await api.get(`/api/payments/${payment.id}/receipt/info/`);
+              return {
+                ...payment,
+                has_receipt: receiptRes.data.has_receipt,
+                receipt_url: receiptRes.data.receipt_url
+              };
+            } catch (err) {
+              return { ...payment, has_receipt: false };
+            }
+          }
+          return payment;
+        })
+      );
+      
+      setPayments(paymentsWithReceipts);
+    } catch (err) {
+      console.error('Failed to load payments:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Generate available months dynamically from payment data
   const availableMonths = useMemo(() => {
@@ -88,16 +119,16 @@ const PaymentRecords: React.FC = () => {
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterStatus, filterMonth]);
+  }, [searchTerm, filterStatus, filterMonth, itemsPerPage]);
 
-  const handleVerify = (id: number) => {
-    api.post(`/api/admin/approve-payment/${id}/`)
-      .then(() =>
-        setPayments(ps =>
-          ps.map(p => p.id === id ? { ...p, status: 'approved' } : p)
-        )
-      )
-      .catch(console.error);
+  const handleVerify = async (id: number) => {
+    try {
+      await api.post(`/api/admin/approve-payment/${id}/`);
+      // Reload payments to get updated receipt info
+      loadPayments();
+    } catch (error) {
+      console.error('Error approving payment:', error);
+    }
   };
 
   const handleReject = (id: number) => {
@@ -112,6 +143,41 @@ const PaymentRecords: React.FC = () => {
   };
 
   const handleViewEvidence = (url: string) => window.open(url, '_blank');
+
+  const handleViewReceipt = async (paymentId: number) => {
+    setReceiptLoading(prev => ({ ...prev, [paymentId]: true }));
+    try {
+      const receiptUrl = `${api.defaults.baseURL}/api/payments/${paymentId}/receipt/view/`;
+      window.open(receiptUrl, '_blank');
+    } catch (error) {
+      console.error('Error viewing receipt:', error);
+    } finally {
+      setReceiptLoading(prev => ({ ...prev, [paymentId]: false }));
+    }
+  };
+
+  const handleDownloadReceipt = async (paymentId: number) => {
+    setReceiptLoading(prev => ({ ...prev, [paymentId]: true }));
+    try {
+      const response = await api.get(`/api/payments/${paymentId}/receipt/download/`, {
+        responseType: 'blob'
+      });
+      
+      // Create blob link to download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `receipt_payment_${paymentId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading receipt:', error);
+    } finally {
+      setReceiptLoading(prev => ({ ...prev, [paymentId]: false }));
+    }
+  };
 
   const handleExport = () => {
     window.open(`${api.defaults.baseURL}/api/payments/report/pdf/`, '_blank');
@@ -240,6 +306,21 @@ const PaymentRecords: React.FC = () => {
                 ))}
               </select>
             </div>
+
+            {/* Items per page */}
+            <div className="flex items-center space-x-2">
+              <span className="text-gray-500 text-sm whitespace-nowrap">Per page:</span>
+              <select
+                className="border border-gray-300 rounded-lg py-2 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={itemsPerPage}
+                onChange={e => setItemsPerPage(parseInt(e.target.value))}
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -256,6 +337,7 @@ const PaymentRecords: React.FC = () => {
                     'Date',
                     'Status',
                     'Evidence',
+                    'Receipt',
                     'Actions'
                   ].map(h => (
                     <th
@@ -270,7 +352,7 @@ const PaymentRecords: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {paginatedPayments.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center">
+                    <td colSpan={8} className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center space-y-3">
                         <FileTextIcon size={48} className="text-gray-300" />
                         <p className="text-gray-500 font-medium">
@@ -332,8 +414,32 @@ const PaymentRecords: React.FC = () => {
                           onClick={() => handleViewEvidence(p.payment_evidence)}
                           className="text-blue-600 hover:text-blue-900 text-sm font-medium hover:underline"
                         >
-                          View Receipt
+                          View Evidence
                         </button>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {p.status === 'approved' && p.has_receipt ? (
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleViewReceipt(p.id)}
+                              disabled={receiptLoading[p.id]}
+                              className="text-green-600 hover:text-green-800 p-1 rounded hover:bg-green-50 transition-colors disabled:opacity-50"
+                              title="View receipt"
+                            >
+                              <EyeIcon size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDownloadReceipt(p.id)}
+                              disabled={receiptLoading[p.id]}
+                              className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50 transition-colors disabled:opacity-50"
+                              title="Download receipt"
+                            >
+                              <DownloadIcon size={16} />
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-sm">-</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">

@@ -3,11 +3,14 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.contrib.auth import authenticate, login, logout
 from django.utils import timezone
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, Http404
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import letter, A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from django.core.files.base import ContentFile
+from reportlab.lib.units import inch
+from reportlab.lib.enums import TA_CENTER
 from io import BytesIO
 from .models import *
 from .serializers import *
@@ -22,6 +25,8 @@ from .decorators import subscription_required, admin_subscription_required
 from django.core.cache import cache
 from estates.tasks import sync_subscriptions_from_paystack
 import json, logging, uuid
+from django.shortcuts import get_object_or_404
+import mimetypes
 
 
 
@@ -689,23 +694,181 @@ def pending_payments_view(request):
     serializer = DuePaymentSerializer(pending_payments, many=True)
     return Response(serializer.data)
 
+def generate_payment_receipt(payment):
+    """
+    Generate a PDF receipt for an approved payment
+    """
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72,
+                           topMargin=72, bottomMargin=18)
+    
+    # Container for the 'Flowable' objects
+    elements = []
+    
+    # Define styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        spaceAfter=30,
+        alignment=TA_CENTER,
+        textColor=colors.darkblue
+    )
+    
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=16,
+        spaceAfter=12,
+        textColor=colors.darkblue
+    )
+    
+    normal_style = styles['Normal']
+    
+    # Header
+    title = Paragraph("PAYMENT RECEIPT", title_style)
+    elements.append(title)
+    elements.append(Spacer(1, 20))
+    
+    # Estate Information (if available)
+    if hasattr(payment, 'due') and hasattr(payment.due, 'estate'):
+        estate_info = Paragraph(f"<b>{payment.due.estate.name}</b><br/>"
+                               f"{getattr(payment.due.estate, 'address', '')}", 
+                               normal_style)
+        elements.append(estate_info)
+        elements.append(Spacer(1, 20))
+    
+    # Receipt Details Table
+    receipt_data = [
+        ['Receipt Number:', f'RCP-{payment.id}-{payment.approved_at.strftime("%Y%m%d")}'],
+        ['Date Issued:', payment.approved_at.strftime("%B %d, %Y at %I:%M %p")],
+        ['Status:', 'APPROVED'],
+    ]
+    
+    receipt_table = Table(receipt_data, colWidths=[2*inch, 3*inch])
+    receipt_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 11),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    
+    elements.append(receipt_table)
+    elements.append(Spacer(1, 30))
+    
+    # Payment Information
+    payment_heading = Paragraph("Payment Information", heading_style)
+    elements.append(payment_heading)
+    
+    payment_data = [
+        ['Resident Name:', f"{payment.resident.first_name} {payment.resident.last_name}"],
+        ['Due Title:', payment.due.title],
+        ['Due Description:', getattr(payment.due, 'description', 'N/A')],
+        ['Original Amount:', f"₦{payment.due.amount:,.2f}"],
+        ['Amount Paid:', f"₦{payment.amount_paid:,.2f}"]
+    ]
+    
+    payment_table = Table(payment_data, colWidths=[2*inch, 3.5*inch])
+    payment_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 11),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 1, colors.lightgrey),
+        ('BACKGROUND', (0, 0), (0, -1), colors.lightblue),
+    ]))
+    
+    elements.append(payment_table)
+    elements.append(Spacer(1, 30))
+    
+    # Approval Information
+    approval_heading = Paragraph("Approval Information", heading_style)
+    elements.append(approval_heading)
+    
+    approval_data = [
+        ['Approved By:', f"{payment.approved_by.first_name} {payment.approved_by.last_name}" if payment.approved_by else 'Admin'],
+        ['Approval Date:', payment.approved_at.strftime("%B %d, %Y at %I:%M %p")],
+        ['Admin Notes:', payment.admin_notes if payment.admin_notes else 'No additional notes'],
+    ]
+    
+    approval_table = Table(approval_data, colWidths=[2*inch, 3.5*inch])
+    approval_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 11),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 1, colors.lightgrey),
+        ('BACKGROUND', (0, 0), (0, -1), colors.lightgreen),
+    ]))
+    
+    elements.append(approval_table)
+    elements.append(Spacer(1, 50))
+    
+    # Footer
+    footer_text = Paragraph(
+        "This is an official receipt for the approved payment. "
+        "Please keep this receipt for your records.",
+        ParagraphStyle(
+            'Footer',
+            parent=normal_style,
+            fontSize=10,
+            alignment=TA_CENTER,
+            textColor=colors.grey
+        )
+    )
+    elements.append(footer_text)
+    
+    # Build PDF
+    doc.build(elements)
+    
+    # Get the value of the BytesIO buffer and return it
+    pdf_data = buffer.getvalue()
+    buffer.close()
+    
+    return pdf_data
+
 @api_view(['POST'])
 def approve_payment_view(request, payment_id):
     if request.user.role != 'admin':
-        return Response({'error': 'Admin access required'}, 
-                       status=status.HTTP_403_FORBIDDEN)
+        return Response({'error': 'Admin access required'},
+                        status=status.HTTP_403_FORBIDDEN)
     
     try:
         payment = DuePayment.objects.get(
             id=payment_id, 
             due__estate=request.user.estate
         )
+        
+        # Update payment status
         payment.status = 'approved'
         payment.approved_by = request.user
         payment.approved_at = timezone.now()
         payment.admin_notes = request.data.get('admin_notes', '')
         payment.save()
 
+        # Generate receipt PDF
+        try:
+            pdf_data = generate_payment_receipt(payment)
+            
+            # Create filename
+            receipt_filename = f"receipt_{payment.id}_{payment.approved_at.strftime('%Y%m%d_%H%M%S')}.pdf"
+            
+            # Save the PDF file to the payment model
+            # receipt = models.FileField(upload_to='receipts/', null=True, blank=True)
+            
+            if hasattr(payment, 'receipt'):
+                payment.receipt.save(
+                    receipt_filename,
+                    ContentFile(pdf_data),
+                    save=True
+                )
+            
+        except Exception as e:
+            # Log the error but don't fail the approval process
+            print(f"Error generating receipt: {str(e)}")
+        
+        # Create activity log
         ActivityLog.objects.create(
             user=payment.resident,
             estate=request.user.estate, 
@@ -713,15 +876,15 @@ def approve_payment_view(request, payment_id):
             description=f"Payment for due '{payment.due.title}' approved by admin.",
             related_id=payment.id
         )
-        
-       
+                         
+        # Create notification
         Notification.objects.create(
             recipient=payment.resident,
             title='Payment Approved',
-            message=f'Your payment for {payment.due.title} has been approved.'
+            message=f'Your payment for {payment.due.title} has been approved. Receipt is now available for download.'
         )
 
-        # 📨 Send approval email asynchronously
+        # Send approval email asynchronously
         send_payment_approved_email.delay(
             recipient_email=payment.resident.email,
             resident_name=payment.resident.first_name,
@@ -729,11 +892,15 @@ def approve_payment_view(request, payment_id):
             amount=payment.amount_paid,
             approved_by=str(payment.approved_by.first_name) if payment.approved_by else 'Admin',
         )
+                
+        return Response({
+            'message': 'Payment approved successfully',
+            'receipt_url': payment.receipt.url if hasattr(payment, 'receipt') and payment.receipt else None
+        })
         
-        return Response({'message': 'Payment approved successfully'})
     except DuePayment.DoesNotExist:
-        return Response({'error': 'Payment not found'}, 
-                       status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Payment not found'},
+                        status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
@@ -1042,3 +1209,113 @@ class ContactSupportView(generics.CreateAPIView):
             HtmlBody=render_to_string("estates/support-email-received.html", context),
             MessageStream="outbound",
         )
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def download_receipt_view(request, payment_id):
+    """
+    Download or view payment receipt PDF
+    """
+    try:
+        payment = get_object_or_404(
+            DuePayment, 
+            id=payment_id,
+            due__estate=request.user.estate
+        )
+        
+        # Check if user has permission to view this receipt
+        # Either the resident who made the payment or an admin
+        if request.user.role != 'admin' and payment.resident != request.user:
+            return Response({'error': 'Permission denied'}, 
+                          status=status.HTTP_403_FORBIDDEN)
+        
+        # Check if payment is approved and has a receipt
+        if payment.status != 'approved' or not payment.receipt:
+            return Response({'error': 'Receipt not available'}, 
+                          status=status.HTTP_404_NOT_FOUND)
+        
+        # Get the file
+        receipt_file = payment.receipt
+        
+        # Determine content type
+        content_type, _ = mimetypes.guess_type(receipt_file.name)
+        if content_type is None:
+            content_type = 'application/pdf'
+        
+        # Create response
+        response = HttpResponse(receipt_file.read(), content_type=content_type)
+        
+        # Set filename for download
+        filename = f"receipt_payment_{payment.id}.pdf"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        return response
+        
+    except DuePayment.DoesNotExist:
+        raise Http404("Payment not found")
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def view_receipt_view(request, payment_id):
+    """
+    View payment receipt in browser (inline)
+    """
+    try:
+        payment = get_object_or_404(
+            DuePayment, 
+            id=payment_id,
+            due__estate=request.user.estate
+        )
+        
+        # Check permissions
+        if request.user.role != 'admin' and payment.resident != request.user:
+            return Response({'error': 'Permission denied'}, 
+                          status=status.HTTP_403_FORBIDDEN)
+        
+        # Check if receipt exists
+        if payment.status != 'approved' or not payment.receipt:
+            return Response({'error': 'Receipt not available'}, 
+                          status=status.HTTP_404_NOT_FOUND)
+        
+        # Return file for inline viewing
+        response = HttpResponse(payment.receipt.read(), content_type='application/pdf')
+        response['Content-Disposition'] = 'inline'
+        
+        return response
+        
+    except DuePayment.DoesNotExist:
+        raise Http404("Payment not found")
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def payment_receipt_info(request, payment_id):
+    """
+    Get receipt information (for frontend to check if receipt is available)
+    """
+    try:
+        payment = get_object_or_404(
+            DuePayment, 
+            id=payment_id,
+            due__estate=request.user.estate
+        )
+        
+        # Check permissions
+        if request.user.role != 'admin' and payment.resident != request.user:
+            return Response({'error': 'Permission denied'}, 
+                          status=status.HTTP_403_FORBIDDEN)
+        
+        has_receipt = payment.status == 'approved' and bool(payment.receipt)
+        
+        return Response({
+            'payment_id': payment.id,
+            'has_receipt': has_receipt,
+            'status': payment.status,
+            'approved_at': payment.approved_at,
+            'receipt_url': f'/api/payments/{payment_id}/receipt/view/' if has_receipt else None,
+            'download_url': f'/api/payments/{payment_id}/receipt/download/' if has_receipt else None
+        })
+        
+    except DuePayment.DoesNotExist:
+        return Response({'error': 'Payment not found'}, 
+                      status=status.HTTP_404_NOT_FOUND)

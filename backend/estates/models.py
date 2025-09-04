@@ -183,6 +183,12 @@ class DuePayment(models.Model):
     payment_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
     admin_notes = models.TextField(blank=True)
+    receipt = models.FileField(
+        upload_to='receipts/',
+        null=True, 
+        blank=True,
+        help_text="Generated receipt PDF for approved payments"
+    )
     approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_payments')
     approved_at = models.DateTimeField(null=True, blank=True)
 

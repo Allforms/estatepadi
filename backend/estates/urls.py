@@ -77,6 +77,19 @@ urlpatterns = [
 
     #contact support views
     path("contact-support/", views.ContactSupportView.as_view(), name="contact-support"),
+
+    # Receipt endpoints
+    path('payments/<int:payment_id>/receipt/download/', 
+         views.download_receipt_view, 
+         name='download-receipt'),
+    
+    path('payments/<int:payment_id>/receipt/view/', 
+         views.view_receipt_view, 
+         name='view-receipt'),
+    
+    path('payments/<int:payment_id>/receipt/info/', 
+         views.payment_receipt_info, 
+         name='receipt-info'),
     
     
 ]
