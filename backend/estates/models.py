@@ -181,7 +181,6 @@ class DuePayment(models.Model):
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2)
     payment_evidence = models.FileField(
     upload_to='payment_evidence/')
-    payment_evidence = models.ImageField(upload_to='payment_evidence/')
     payment_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
     admin_notes = models.TextField(blank=True)
