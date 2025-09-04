@@ -726,6 +726,15 @@ def generate_payment_receipt(payment):
     
     normal_style = styles['Normal']
     
+    # Style for wrapping text in table cells
+    wrap_style = ParagraphStyle(
+        'WrapStyle',
+        parent=styles['Normal'],
+        fontSize=11,
+        leading=13,
+        wordWrap='LTR'
+    )
+    
     # Header
     title = Paragraph("PAYMENT RECEIPT", title_style)
     elements.append(title)
@@ -761,22 +770,35 @@ def generate_payment_receipt(payment):
     payment_heading = Paragraph("Payment Information", heading_style)
     elements.append(payment_heading)
     
+    # Get description and format it properly for table display
+    due_description = getattr(payment.due, 'description', 'N/A')
+    if due_description and due_description != 'N/A':
+        # Wrap long descriptions in Paragraph for proper text wrapping
+        description_para = Paragraph(due_description, wrap_style)
+    else:
+        description_para = 'N/A'
+    
     payment_data = [
         ['Resident Name:', f"{payment.resident.first_name} {payment.resident.last_name}"],
         ['Due Title:', payment.due.title],
-        ['Due Description:', getattr(payment.due, 'description', 'N/A')],
+        ['Due Description:', description_para],  # Use Paragraph for text wrapping
         ['Original Amount:', f"₦{payment.due.amount:,.2f}"],
         ['Amount Paid:', f"₦{payment.amount_paid:,.2f}"]
     ]
     
-    payment_table = Table(payment_data, colWidths=[2*inch, 3.5*inch])
+    # Increased column widths, especially for the second column to accommodate longer descriptions
+    payment_table = Table(payment_data, colWidths=[1.8*inch, 4.2*inch])
     payment_table.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),  # Top alignment for better readability
         ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, -1), 11),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),  # Increased padding for better spacing
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
         ('GRID', (0, 0), (-1, -1), 1, colors.lightgrey),
         ('BACKGROUND', (0, 0), (0, -1), colors.lightblue),
+        # Special styling for the description row to allow more height
+        ('ROWBACKGROUNDS', (0, 2), (-1, 2), [colors.white]),  # Description row background
     ]))
     
     elements.append(payment_table)
@@ -786,18 +808,27 @@ def generate_payment_receipt(payment):
     approval_heading = Paragraph("Approval Information", heading_style)
     elements.append(approval_heading)
     
+    # Format admin notes with proper text wrapping
+    admin_notes = payment.admin_notes if payment.admin_notes else 'No additional notes'
+    if admin_notes and len(admin_notes) > 50:
+        notes_para = Paragraph(admin_notes, wrap_style)
+    else:
+        notes_para = admin_notes
+    
     approval_data = [
         ['Approved By:', f"{payment.approved_by.first_name} {payment.approved_by.last_name}" if payment.approved_by else 'Admin'],
         ['Approval Date:', payment.approved_at.strftime("%B %d, %Y at %I:%M %p")],
-        ['Admin Notes:', payment.admin_notes if payment.admin_notes else 'No additional notes'],
+        ['Admin Notes:', notes_para],  # Use Paragraph for text wrapping if needed
     ]
     
-    approval_table = Table(approval_data, colWidths=[2*inch, 3.5*inch])
+    approval_table = Table(approval_data, colWidths=[1.8*inch, 4.2*inch])
     approval_table.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),  # Top alignment for better readability
         ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, -1), 11),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),  # Increased padding
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
         ('GRID', (0, 0), (-1, -1), 1, colors.lightgrey),
         ('BACKGROUND', (0, 0), (0, -1), colors.lightgreen),
     ]))
