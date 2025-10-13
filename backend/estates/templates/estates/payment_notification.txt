@@ -1,0 +1,25 @@
+
+<!-- templates/estates/payment_notification.txt -->
+<!-- Plain text version -->
+
+Hello {{ admin_name }},
+
+ACTION REQUIRED: New Payment Submission
+
+A resident has submitted payment evidence that requires your review.
+
+PAYMENT DETAILS:
+================
+Resident: {{ resident_name }}
+Email: {{ resident_email }}
+Due Item: {{ due_title }}
+Amount: ${{ amount }}
+Estate: {{ estate_name }}
+
+Please log into the admin panel to review and approve or reject this payment submission.
+
+If you have any questions, please contact the system administrator.
+
+---
+This is an automated notification from the Estate Management System.
+Please do not reply to this email.

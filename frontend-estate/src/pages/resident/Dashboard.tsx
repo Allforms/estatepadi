@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import ResidentLayout from '../../components/layouts/ResidentLayout';
-import { KeyIcon, CreditCardIcon, BellIcon, CheckCircleIcon } from 'lucide-react';
+import { KeyIcon, CreditCardIcon, CheckCircleIcon, UserIcon, AlertTriangle } from 'lucide-react';
 import api from '../../api';
-
-
 
 const ResidentDashboard: React.FC = () => {
   const [upcomingDues, setUpcomingDues] = useState<any[]>([]);
   const [recentVisitors, setRecentVisitors] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<any[]>([]);
-  const [loading, setLoading] = useState({ dues: true, visitors: true, announcements: true });
+  const [staffCount, setStaffCount] = useState({ active: 0, total: 0 });
+  const [alertCount, setAlertCount] = useState(0);
+  const [loading, setLoading] = useState({ dues: true, visitors: true, announcements: true, staff: true, alerts: true });
 
   useEffect(() => {
     fetchDues();
     fetchVisitors();
     fetchAnnouncements();
+    fetchStaffCount();
+    fetchAlertCount();
   }, []);
 
   const fetchDues = async () => {
@@ -37,14 +39,13 @@ const ResidentDashboard: React.FC = () => {
     try {
       const res = await api.get('/api/visitor-codes/', {
         params: {
-          ordering: '-created_at', // most recent first
-          page: 1,                 // first page
-          page_size: 5             // adjust this if needed
+          ordering: '-created_at',
+          page: 1,
+          page_size: 5
         }
       });
   
       const results = Array.isArray(res.data.results) ? res.data.results : [];
-  
       setRecentVisitors(results);
     } catch (err) {
       console.error('Error fetching visitors:', err);
@@ -53,20 +54,14 @@ const ResidentDashboard: React.FC = () => {
     }
   };
   
-  
   const fetchAnnouncements = async () => {
     try {
       const res = await api.get('/api/announcements/');
-      // console.log('Announcements API Response:', res.data); 
-      
-      // Handle both paginated and non-paginated responses
       const dataArray = Array.isArray(res.data)
         ? res.data
         : Array.isArray(res.data.results)
           ? res.data.results
           : [];
-      
-      // console.log('Processed announcements:', dataArray); // Debug log
       setAnnouncements(dataArray);
     } catch (err) {
       console.error('Error fetching announcements:', err);
@@ -75,11 +70,45 @@ const ResidentDashboard: React.FC = () => {
     }
   };
 
+  const fetchStaffCount = async () => {
+    try {
+      const res = await api.get('/api/artisans-domestics/');
+      const dataArray = Array.isArray(res.data) 
+        ? res.data 
+        : Array.isArray(res.data.results) 
+          ? res.data.results 
+          : [];
+      
+      const activeCount = dataArray.filter((s: any) => s.status === 'active').length;
+      setStaffCount({ active: activeCount, total: dataArray.length });
+    } catch (err) {
+      console.error('Error fetching staff count:', err);
+    } finally {
+      setLoading(prev => ({ ...prev, staff: false }));
+    }
+  };
+
+  const fetchAlertCount = async () => {
+    try {
+      const res = await api.get('/api/alert/');
+      const dataArray = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data.results)
+          ? res.data.results
+          : [];
+      setAlertCount(dataArray.length);
+    } catch (err) {
+      console.error('Error fetching alert count:', err);
+    } finally {
+      setLoading(prev => ({ ...prev, alerts: false }));
+    }
+  };
+
   return (
     <ResidentLayout title="Dashboard">
       <div className="space-y-6">
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {/* Generate Visitor Code */}
           <div className="bg-blue-50 overflow-hidden shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
@@ -120,21 +149,45 @@ const ResidentDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Estate Information */}
-          <div className="bg-purple-50 overflow-hidden shadow rounded-lg">
+          {/* Artisan & Domestic Staff */}
+          <div className="bg-orange-50 overflow-hidden shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
               <div className="flex items-center">
-                <div className="bg-purple-100 rounded-md p-3">
-                  <BellIcon size={24} className="text-purple-600" />
+                <div className="bg-orange-100 rounded-md p-3">
+                  <UserIcon size={24} className="text-orange-600" />
                 </div>
                 <div className="ml-5 flex-1">
-                  <p className="text-sm font-medium text-gray-500 truncate">Pay Dues</p>
-                  <p className="text-lg font-medium text-gray-900">View estate details</p>
+                  <p className="text-sm font-medium text-gray-500 truncate">Staff Management</p>
+                  <p className="text-lg font-medium text-gray-900">
+                    {loading.staff ? '...' : `${staffCount.active} active staff`}
+                  </p>
                 </div>
               </div>
               <div className="mt-5">
-                <a href="/resident/estate" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
-                  View Estate
+                <a href="/resident/artisans-domestics" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
+                  Manage Staff
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Emergency Alerts - NEW */}
+          <div className="bg-red-50 overflow-hidden shadow rounded-lg border-2 border-red-200">
+            <div className="px-4 py-5 sm:p-6">
+              <div className="flex items-center">
+                <div className="bg-red-100 rounded-md p-3">
+                  <AlertTriangle size={24} className="text-red-600" />
+                </div>
+                <div className="ml-5 flex-1">
+                  <p className="text-sm font-medium text-gray-500 truncate">Emergency Alerts</p>
+                  <p className="text-lg font-medium text-gray-900">
+                    {loading.alerts ? '...' : `${alertCount} sent`}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-5">
+                <a href="/resident/alerts" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                  Send Alert
                 </a>
               </div>
             </div>

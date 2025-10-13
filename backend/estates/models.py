@@ -7,6 +7,7 @@ import string
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.base_user import BaseUserManager
 from django.conf import settings
+import uuid
 
 
 class Estate(models.Model):
@@ -226,11 +227,13 @@ class AuditLog(models.Model):
 
 
 class ActivityLog(models.Model):
-    
+
     class ActivityType(models.TextChoices):
         NEW_RESIDENT = 'new_resident', _('New Resident')
         PAYMENT = 'payment', _('Payment Evidence')
         VISITOR_CODE = 'visitor_code', _('Visitor Code')
+        NEWARTISAN_DOMESTICSTAFF = 'Artisan/Domestic_Staff', _('New Artisan or Domestic Staff')
+        NEW_ALERT = 'new_alert', _('New Alert')
 
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     estate = models.ForeignKey('Estate', on_delete=models.CASCADE)
@@ -246,7 +249,7 @@ class ActivityLog(models.Model):
 #subscription models
 class SubscriptionPlan(models.Model):
     """
-    Model to represent subscription plans for estates. A pricing tier which
+    Model to represent subscription plans for users. A pricing tier which
     i will create in the Paystack dashboard first,
     then mirror each plan code here.
     """
@@ -258,25 +261,24 @@ class SubscriptionPlan(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.interval}) – {self.amount/100:.2f}"
-    
 
-class EstateSubscription(models.Model):
+class UserSubscription(models.Model):
     """
-    Links an Estate to its Paystack subscription status.
+    Links a User to their Paystack subscription status.
     """
-    ESTATE_STATUS = [
+    USER_STATUS = [
         ('active', 'Active'),
         ('paused', 'Paused'),
         ('cancelled', 'Cancelled'),
-        ('past_due', 'Past Due'), 
+        ('past_due', 'Past Due'),
     ]
 
-    estate = models.OneToOneField(
-        'Estate', on_delete=models.CASCADE, related_name='subscription')
+    user = models.OneToOneField(
+        'User', on_delete=models.CASCADE, related_name='subscription')
     paystack_customer_code = models.CharField(max_length=100)
     paystack_subscription_code = models.CharField(max_length=100)
     plan = models.ForeignKey(SubscriptionPlan, on_delete=models.PROTECT)
-    status = models.CharField(max_length=20, choices=ESTATE_STATUS, default='active')
+    status = models.CharField(max_length=20, choices=USER_STATUS, default='active')
     next_billing_date = models.DateTimeField()
     authorization_code = models.CharField(max_length=150, blank=True, null=True)
     email_token = models.CharField(max_length=255, blank=True, null=True)
@@ -284,18 +286,15 @@ class EstateSubscription(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.estate.name}: {self.plan.name} [{self.status}]"
+        return f"{self.user.email}: {self.plan.name} [{self.status}]"
 
     def is_active(self):
         """
         Check if subscription is active and hasn't expired
         """
-        # Must have active status
         if self.status != 'active':
             return False
-        
-        # Must not be past the next billing date (with some grace period)
-        # Adding 1 day grace period in case of processing delays
+                
         grace_period = timezone.timedelta(days=1)
         return timezone.now() < (self.next_billing_date + grace_period)
 
@@ -311,7 +310,7 @@ class EstateSubscription(models.Model):
         """
         if self.is_expired():
             return 0
-        
+                
         delta = self.next_billing_date - timezone.now()
         return delta.days
 
@@ -321,9 +320,90 @@ class EstateSubscription(models.Model):
         """
         if not self.is_expired():
             return False
-        
+                
         grace_period = timezone.timedelta(days=1)
-        return timezone.now() < (self.next_billing_date + grace_period)
+        return timezone.now() < (self.next_billing_date + grace_period)  
+
+class UserSubscriptionHistory(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    plan = models.ForeignKey(SubscriptionPlan, on_delete=models.PROTECT, null=True)
+    paystack_subscription_code = models.CharField(max_length=100)
+    status = models.CharField(max_length=50)  # active, cancelled, non-renewing
+    next_billing_date = models.DateTimeField(blank=True, null=True)
+    authorization_code = models.CharField(max_length=100, blank=True, null=True)
+    email_token = models.CharField(max_length=100, blank=True, null=True)
+    synced_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-synced_at"]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.plan.name if self.plan else 'No Plan'} ({self.status})"
+
+# class EstateSubscription(models.Model):
+    # """
+    # Links an Estate to its Paystack subscription status.
+    # """
+    # ESTATE_STATUS = [
+    #     ('active', 'Active'),
+    #     ('paused', 'Paused'),
+    #     ('cancelled', 'Cancelled'),
+    #     ('past_due', 'Past Due'), 
+    # ]
+
+    # estate = models.OneToOneField(
+    #     'Estate', on_delete=models.CASCADE, related_name='subscription')
+    # paystack_customer_code = models.CharField(max_length=100)
+    # paystack_subscription_code = models.CharField(max_length=100)
+    # plan = models.ForeignKey(SubscriptionPlan, on_delete=models.PROTECT)
+    # status = models.CharField(max_length=20, choices=ESTATE_STATUS, default='active')
+    # next_billing_date = models.DateTimeField()
+    # authorization_code = models.CharField(max_length=150, blank=True, null=True)
+    # email_token = models.CharField(max_length=255, blank=True, null=True)
+    # created_at = models.DateTimeField(auto_now_add=True)
+    # updated_at = models.DateTimeField(auto_now=True)
+
+    # def __str__(self):
+    #     return f"{self.estate.name}: {self.plan.name} [{self.status}]"
+
+    # def is_active(self):
+    #     """
+    #     Check if subscription is active and hasn't expired
+    #     """
+    #     # Must have active status
+    #     if self.status != 'active':
+    #         return False
+        
+    #     # Must not be past the next billing date (with some grace period)
+    #     # Adding 1 day grace period in case of processing delays
+    #     grace_period = timezone.timedelta(days=1)
+    #     return timezone.now() < (self.next_billing_date + grace_period)
+
+    # def is_expired(self):
+    #     """
+    #     Check if subscription has expired
+    #     """
+    #     return timezone.now() > self.next_billing_date
+
+    # def days_until_expiry(self):
+    #     """
+    #     Calculate days until subscription expires
+    #     """
+    #     if self.is_expired():
+    #         return 0
+        
+    #     delta = self.next_billing_date - timezone.now()
+    #     return delta.days
+
+    # def grace_period_active(self):
+    #     """
+    #     Check if we're in the grace period (expired but within 1 day)
+    #     """
+    #     if not self.is_expired():
+    #         return False
+        
+    #     grace_period = timezone.timedelta(days=1)
+    #     return timezone.now() < (self.next_billing_date + grace_period)
 
     
 
@@ -339,3 +419,71 @@ class Announcement(models.Model):
 
     def __str__(self):
         return self.title
+
+
+
+#artisan and domestic staff model
+class ArtisanOrDomesticStaff(models.Model):
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('removed', 'Removed'),
+    ]
+
+    resident = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="artisans_domestics"
+    )
+    estate = models.ForeignKey(
+        Estate, on_delete=models.CASCADE, related_name="artisans_domestics"
+    )
+    name = models.CharField(max_length=255)
+    role = models.CharField(max_length=100, help_text="Artisan/Domestic staff role (e.g. Plumber, Cook, Cleaner)")
+    phone_number = models.CharField(max_length=20)
+    gender = models.CharField(max_length=10, choices=[("male", "Male"), ("female", "Female")])
+    unique_id = models.CharField(max_length=6, unique=True, editable=False)
+    date_of_registration = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="active")
+    removal_reason = models.TextField(blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        if not self.unique_id:
+            self.unique_id = self.generate_unique_id()
+        super().save(*args, **kwargs)
+
+    def generate_unique_id(self):
+        return str(uuid.uuid4().hex[:6]).upper()
+
+    def __str__(self):
+        return f"{self.name} ({self.role}) - {self.unique_id}"
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["estate", "phone_number"], name="unique_staff_in_estate")
+        ]
+
+
+class Alert(models.Model):
+    ALERT_CHOICES = [
+        ('fire', 'Fire'),
+        ('intruder', 'Intruder'),
+        ('medical', 'Medical Emergency'),
+        ('electricity', 'Electricity Issue'),
+        ('water', 'Water Leakage'),
+        ('other', 'Other'),
+    ]
+
+    sender = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="alerts_sent"
+    )
+    estate = models.ForeignKey(
+        Estate,
+        on_delete=models.CASCADE,
+        related_name="alerts"
+    )
+    alert_type = models.CharField(max_length=50, choices=ALERT_CHOICES)
+    other_reason = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Alert: {self.alert_type} from {self.sender.email} ({self.estate.name})"

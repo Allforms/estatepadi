@@ -65,7 +65,7 @@ const Login: React.FC = () => {
       } else if (loggedInUser.role === 'resident') {
         navigate('/resident/dashboard');
       } else if (loggedInUser.role === 'security') {
-        navigate('/security/verify-visitor'); // Assuming security has a specific route
+        navigate('/security/verify-visitor'); 
       } else {
         navigate('/'); // Fallback in case role is missing or unknown
       }

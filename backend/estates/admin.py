@@ -53,6 +53,9 @@ admin.site.register(DuePayment)
 admin.site.register(Notification)
 admin.site.register(ActivityLog)
 admin.site.register(Announcement)
+admin.site.register(UserSubscriptionHistory)
+admin.site.register(ArtisanOrDomesticStaff)
+admin.site.register(Alert)
 
 @admin.register(SubscriptionPlan)
 class SubscriptionPlanAdmin(admin.ModelAdmin):
@@ -60,9 +63,9 @@ class SubscriptionPlanAdmin(admin.ModelAdmin):
     search_fields = ('name', 'paystack_plan_code')
 
 
-@admin.register(EstateSubscription)
+@admin.register(UserSubscription)
 class EstateSubscriptionAdmin(admin.ModelAdmin):
-    list_display = ('estate', 'plan', 'status', 'next_billing_date')
+    list_display = ('user', 'plan', 'status', 'next_billing_date')
     readonly_fields = ('created_at', 'updated_at')
     list_filter  = ('status',)
-    search_fields = ('estate__name', 'paystack_subscription_code')
+    search_fields = ('user__name', 'paystack_subscription_code')

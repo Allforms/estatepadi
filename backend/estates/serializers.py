@@ -6,6 +6,7 @@ from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
 from django.template.loader import render_to_string
+
 class ProfileSerializer(serializers.ModelSerializer):
     estate = serializers.PrimaryKeyRelatedField(read_only=True)
     class Meta:
@@ -197,15 +198,12 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['is_approved', 'role']
 
     def get_subscription_active(self, obj):
-        if not obj.estate:
-            return False
-
-        subscription = getattr(obj.estate, 'subscription', None)
-        
+        subscription = getattr(obj, 'subscription', None)
         if not subscription:
             return False
-        
         return subscription.is_active()
+
+
 
 class VisitorCodeSerializer(serializers.ModelSerializer):
     resident = serializers.SerializerMethodField()
@@ -316,3 +314,51 @@ class ContactSupportSerializer(serializers.Serializer):
     subject = serializers.CharField(max_length=255)
     message = serializers.CharField()
     email = serializers.EmailField(required=False)  # optional, if user is authenticated we can use request.user.email
+
+class ArtisanOrDomesticStaffSerializer(serializers.ModelSerializer):
+    resident_name = serializers.CharField(source="resident.email", read_only=True)
+    estate_name = serializers.CharField(source="estate.name", read_only=True)
+
+    class Meta:
+        model = ArtisanOrDomesticStaff
+        fields = [
+            "id", "name", "role", "phone_number", "gender",
+            "unique_id", "date_of_registration", "status", "removal_reason",
+            "resident", "resident_name", "estate", "estate_name",
+        ]
+        read_only_fields = ["unique_id", "date_of_registration", "resident", "estate"]
+
+    def validate(self, attrs):
+        """
+        Ensure phone_number is unique per estate.
+        """
+        estate = attrs.get("estate") or getattr(self.instance, "estate", None)
+        phone_number = attrs.get("phone_number") or getattr(self.instance, "phone_number", None)
+
+        if estate and phone_number:
+            qs = ArtisanOrDomesticStaff.objects.filter(
+                estate=estate,
+                phone_number=phone_number
+            )
+            if self.instance:  # exclude self when updating
+                qs = qs.exclude(pk=self.instance.pk)
+
+            if qs.exists():
+                raise serializers.ValidationError({
+                    "phone_number": "This phone number is already registered in this estate."
+                })
+
+        return attrs
+
+class AlertSerializer(serializers.ModelSerializer):
+    sender_name = serializers.CharField(source="sender.email", read_only=True)
+    estate_name = serializers.CharField(source="estate.name", read_only=True)
+
+    class Meta:
+        model = Alert
+        fields = [
+            "id", "sender", "sender_name",
+            "estate", "estate_name",
+            "alert_type", "other_reason", "created_at"
+        ]
+        read_only_fields = ["id", "created_at", "sender", "estate"]

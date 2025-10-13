@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 from paystackapi.paystack import Paystack
 
-from .models import SubscriptionPlan, EstateSubscription
+from .models import SubscriptionPlan, UserSubscription
 from .serializers import SubscriptionPlanSerializer
 
 paystack = Paystack(secret_key=settings.PAYSTACK_SECRET_KEY)
@@ -15,9 +15,9 @@ paystack = Paystack(secret_key=settings.PAYSTACK_SECRET_KEY)
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def create_subscription(request):
-    if request.user.role != 'admin':
-        return Response({'error': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
-
+    """
+    Create a subscription for the authenticated user
+    """
     plan_id = request.data.get('plan_id')
     reference = request.data.get('reference')
 
@@ -27,7 +27,7 @@ def create_subscription(request):
         return Response({'error': 'reference is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
     plan = get_object_or_404(SubscriptionPlan, pk=plan_id)
-    estate = request.user.estate
+    user = request.user
 
     # Verify the payment with Paystack
     try:
@@ -48,15 +48,15 @@ def create_subscription(request):
 
     # Check if customer already exists
     customer_code = None
-    if hasattr(estate, 'subscription') and estate.subscription.paystack_customer_code:
-        customer_code = estate.subscription.paystack_customer_code
+    if hasattr(user, 'subscription') and user.subscription.paystack_customer_code:
+        customer_code = user.subscription.paystack_customer_code
     else:
         try:
             cust_resp = paystack.customer.create(
-                email=request.user.email,
-                first_name=getattr(request.user, 'first_name', '') or '',
-                last_name=getattr(request.user, 'last_name', '') or '',
-                phone=getattr(request.user, 'phone_number', '')
+                email=user.email,
+                first_name=getattr(user, 'first_name', '') or '',
+                last_name=getattr(user, 'last_name', '') or '',
+                phone=getattr(user, 'phone_number', '')
             )
         except Exception as e:
             return Response({'error': f'Paystack customer creation failed: {e}'}, status=status.HTTP_502_BAD_GATEWAY)
@@ -87,12 +87,12 @@ def create_subscription(request):
         tz=datetime.timezone.utc
     )
 
-    estate_sub, _ = EstateSubscription.objects.update_or_create(
-        estate=estate,
+    user_sub, _ = UserSubscription.objects.update_or_create(
+        user=user,
         defaults={
             'paystack_customer_code': customer_code,
             'paystack_subscription_code': subscription_data['subscription_code'],
-            'authorization_code': authorization,  # Store authorization code
+            'authorization_code': authorization,
             'plan': plan,
             'status': subscription_data.get('status', 'active'),
             'next_billing_date': next_date
@@ -101,8 +101,8 @@ def create_subscription(request):
 
     return Response({
         'subscription_code': subscription_data['subscription_code'],
-        'status': estate_sub.status,
-        'next_billing_date': estate_sub.next_billing_date,
+        'status': user_sub.status,
+        'next_billing_date': user_sub.next_billing_date,
         'plan': {
             'id': plan.id,
             'name': plan.name,
@@ -111,26 +111,24 @@ def create_subscription(request):
         }
     }, status=status.HTTP_201_CREATED)
 
+
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def cancel_subscription(request):
     """
     Cancel the user's active subscription
     """
-    if request.user.role != 'admin':
-        return Response({'error': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
-
-    estate = request.user.estate
+    user = request.user
     
-    # Check if estate has an active subscription
+    # Check if user has an active subscription
     try:
-        subscription = EstateSubscription.objects.get(
-            estate=estate,
+        subscription = UserSubscription.objects.get(
+            user=user,
             status='active'
         )
-    except EstateSubscription.DoesNotExist:
+    except UserSubscription.DoesNotExist:
         return Response({
-            'error': 'No active subscription found for this estate.'
+            'error': 'No active subscription found for your account.'
         }, status=status.HTTP_404_NOT_FOUND)
 
     # Handle subscriptions with missing Paystack codes
@@ -231,18 +229,12 @@ def cancel_subscription(request):
     }, status=status.HTTP_200_OK)
 
 
-
-# This code handles the creation of a subscription for an estate using the Paystack API.
-# It checks if the user is an admin, creates a Paystack customer, creates a subscription,
-# and saves the subscription details in the database. It returns the subscription code, status,
-# and next billing date in the response.
-
-
-
-
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def subscription_plans(request):
+    """
+    Get all available subscription plans
+    """
     plans = SubscriptionPlan.objects.all()
     serializer = SubscriptionPlanSerializer(plans, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -251,21 +243,83 @@ def subscription_plans(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def subscription_status(request):
+    """
+    Get the current user's subscription status
+    """
     user = request.user
-    estate = getattr(user, 'estate', None)
 
-    if not estate or not hasattr(estate, 'subscription'):
-        return Response({'status': 'inactive', 'message': 'No subscription found.'},
-                        status=status.HTTP_200_OK)
+    if not hasattr(user, 'subscription'):
+        return Response({
+            'status': 'inactive', 
+            'message': 'No subscription found.',
+            'has_subscription': False
+        }, status=status.HTTP_200_OK)
 
-    subscription = estate.subscription
+    subscription = user.subscription
     return Response({
         'status': subscription.status,
         'next_billing_date': subscription.next_billing_date,
-        'can_cancel': subscription.status == 'active',  # Add this to help frontend
+        'can_cancel': subscription.status == 'active',
+        'has_subscription': True,
+        'is_active': subscription.is_active(),
+        'is_expired': subscription.is_expired(),
+        'days_until_expiry': subscription.days_until_expiry(),
+        'grace_period_active': subscription.grace_period_active(),
         'plan': {
+            'id': subscription.plan.id,
             'name': subscription.plan.name,
             'amount': subscription.plan.amount,
             'interval': subscription.plan.interval
         }
     }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def reactivate_subscription(request):
+    """
+    Reactivate a cancelled or past_due subscription
+    """
+    user = request.user
+    
+    try:
+        subscription = UserSubscription.objects.get(
+            user=user,
+            status__in=['cancelled', 'past_due']
+        )
+    except UserSubscription.DoesNotExist:
+        return Response({
+            'error': 'No cancelled or past due subscription found for your account.'
+        }, status=status.HTTP_404_NOT_FOUND)
+
+    # If we have a Paystack subscription code, try to enable it
+    if subscription.paystack_subscription_code:
+        try:
+            enable_resp = paystack.subscription.enable(
+                code=subscription.paystack_subscription_code,
+                token=subscription.email_token
+            )
+            
+            if enable_resp.get('status'):
+                subscription.status = 'active'
+                subscription.save()
+                
+                return Response({
+                    'message': 'Subscription reactivated successfully.',
+                    'status': subscription.status,
+                    'plan_name': subscription.plan.name
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({
+                    'error': 'Failed to reactivate subscription with Paystack.',
+                    'details': enable_resp.get('message', 'Unknown error')
+                }, status=status.HTTP_400_BAD_REQUEST)
+                
+        except Exception as e:
+            return Response({
+                'error': f'Failed to reactivate subscription: {str(e)}'
+            }, status=status.HTTP_502_BAD_GATEWAY)
+    else:
+        return Response({
+            'error': 'Cannot reactivate subscription - missing Paystack subscription code. Please create a new subscription.'
+        }, status=status.HTTP_400_BAD_REQUEST)

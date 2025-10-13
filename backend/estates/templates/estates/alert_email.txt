@@ -1,0 +1,20 @@
+Hello,
+
+ALERT: {{ subject }}
+
+You have received a new alert from your estate community.
+
+ALERT DETAILS:
+==============
+From: {{ sender_name }} ({{ sender_role }})
+Estate: {{ estate_name }}
+Subject: {{ subject }}
+Message: {{ message }}
+
+Please stay alert and take necessary actions if required.
+
+You can also log into your portal to view all alerts.
+
+---
+This is an automated alert from the Estate Management System.
+Please do not reply to this email.

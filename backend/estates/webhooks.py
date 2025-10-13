@@ -4,10 +4,14 @@ import datetime
 from dateutil.relativedelta import relativedelta
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import permissions
-from .models import EstateSubscription, SubscriptionPlan, Estate
+from .models import UserSubscription, SubscriptionPlan
+from django.utils import timezone
+
+User = get_user_model()
 
 
 def calculate_next_billing_date(plan, current_date=None):
@@ -59,6 +63,37 @@ def paystack_webhook(request):
     data = request.data.get('data', {})
     print(f"Webhook received event: {event}")
 
+    # -------------------- HELPERS --------------------
+    def get_subscription(subscription_code=None, customer_code=None, email=None):
+        """Resolve subscription, preferring subscription_code > customer_code > email."""
+        if subscription_code:
+            sub = UserSubscription.objects.filter(paystack_subscription_code=subscription_code).first()
+            if sub:
+                return sub
+        if customer_code:
+            sub = UserSubscription.objects.filter(paystack_customer_code=customer_code).first()
+            if sub:
+                return sub
+        if email:
+            user = User.objects.filter(email=email).first()
+            if user:
+                return UserSubscription.objects.filter(user=user).order_by('-id').first()
+        return None
+
+    def set_user_active_state(user):
+        """Update user.subscription_active depending on subs + grace period."""
+        active_subs = UserSubscription.objects.filter(user=user, status="active")
+        if active_subs.exists():
+            user.subscription_active = True
+        else:
+            # If last cancelled sub still has time left, keep active
+            last_sub = UserSubscription.objects.filter(user=user).order_by('-next_billing_date').first()
+            if last_sub and last_sub.next_billing_date and last_sub.next_billing_date > timezone.now():
+                user.subscription_active = True
+            else:
+                user.subscription_active = False
+        user.save()
+
     # ---------- CHARGE SUCCESS (first payment) ----------
     if event == 'charge.success':
         plan_data = data.get('plan', {})
@@ -74,39 +109,32 @@ def paystack_webhook(request):
         customer_code = customer_data.get('customer_code')
         authorization_code = authorization_data.get('authorization_code')
 
-        estate = Estate.objects.filter(user__email=customer_email).first()
+        user = User.objects.filter(email=customer_email).first()
         plan = SubscriptionPlan.objects.filter(paystack_plan_code=plan_code).first()
-        if not estate or not plan:
+        if not user or not plan:
+            print(f"User or plan not found - Email: {customer_email}, Plan: {plan_code}")
             return Response({'status': 'ignored'}, status=200)
 
-        # Use the transaction date if available, otherwise use current time
+        # Payment date
         paid_at = data.get('paid_at') or data.get('created_at')
-        if paid_at:
-            payment_date = parse_paystack_date(paid_at)
-            if payment_date is None:
-                payment_date = datetime.datetime.now(datetime.timezone.utc)
-        else:
-            payment_date = datetime.datetime.now(datetime.timezone.utc)
-
+        payment_date = parse_paystack_date(paid_at) or datetime.datetime.now(datetime.timezone.utc)
         next_date = calculate_next_billing_date(plan, payment_date)
 
-        existing_sub = EstateSubscription.objects.filter(
-            estate=estate,
-            paystack_customer_code=customer_code
-        ).first()
+        # Lookup by subscription_code (strict!)
+        sub = get_subscription(subscription_code, customer_code, customer_email)
 
-        if existing_sub:
-            existing_sub.authorization_code = authorization_code or existing_sub.authorization_code
-            existing_sub.plan = plan
-            existing_sub.status = 'active'
-            existing_sub.next_billing_date = next_date
-            if subscription_code and not existing_sub.paystack_subscription_code:
-                existing_sub.paystack_subscription_code = subscription_code
-            existing_sub.save()
-            print(f"Updated subscription - Next billing: {next_date}")
+        if sub:
+            sub.authorization_code = authorization_code or sub.authorization_code
+            sub.plan = plan
+            sub.status = 'active'
+            sub.next_billing_date = next_date
+            if subscription_code:
+                sub.paystack_subscription_code = subscription_code
+            sub.save()
+            print(f"Updated subscription {sub.id} for {user.email}")
         else:
-            sub = EstateSubscription.objects.create(
-                estate=estate,
+            UserSubscription.objects.create(
+                user=user,
                 paystack_customer_code=customer_code,
                 paystack_subscription_code=subscription_code or '',
                 authorization_code=authorization_code or '',
@@ -114,7 +142,9 @@ def paystack_webhook(request):
                 status='active',
                 next_billing_date=next_date
             )
-            print(f"Created subscription - Next billing: {next_date}")
+            print(f"Created subscription for {user.email}")
+
+        set_user_active_state(user)
 
     # ---------- SUBSCRIPTION CREATE ----------
     elif event == 'subscription.create':
@@ -127,87 +157,110 @@ def paystack_webhook(request):
         customer_code = customer_data.get('customer_code')
         plan_code = plan_data.get('plan_code')
 
-        estate = Estate.objects.filter(user__email=customer_email).first()
+        user = User.objects.filter(email=customer_email).first()
         plan = SubscriptionPlan.objects.filter(paystack_plan_code=plan_code).first()
-        if not estate or not plan:
+        if not user or not plan:
+            print(f"User or plan not found - Email: {customer_email}, Plan: {plan_code}")
             return Response({'status': 'ignored'}, status=200)
 
-        # Prefer Paystack's next_payment_date, fallback to calculation
-        next_date = parse_paystack_date(next_payment_date)
-        if next_date is None:
-            next_date = calculate_next_billing_date(plan)
+        next_date = parse_paystack_date(next_payment_date) or calculate_next_billing_date(plan)
 
-        sub, created = EstateSubscription.objects.get_or_create(
-            estate=estate,
-            paystack_customer_code=customer_code,
-            defaults={
-                "paystack_subscription_code": subscription_code,
-                "plan": plan,
-                "status": "active",
-                "next_billing_date": next_date
-            }
-        )
-        if not created:
+        sub = get_subscription(subscription_code, customer_code, customer_email)
+
+        if sub:
             sub.paystack_subscription_code = subscription_code
-            sub.next_billing_date = next_date
+            sub.plan = plan
             sub.status = "active"
+            sub.next_billing_date = next_date
             sub.save()
-        
-        print(f"Subscription {'created' if created else 'updated'} - Next billing: {next_date}")
+            print(f"Updated subscription {sub.id} for {user.email}")
+        else:
+            UserSubscription.objects.create(
+                user=user,
+                paystack_customer_code=customer_code,
+                paystack_subscription_code=subscription_code,
+                plan=plan,
+                status="active",
+                next_billing_date=next_date
+            )
+            print(f"Created subscription for {user.email}")
+
+        set_user_active_state(user)
 
     # ---------- PAYMENT SUCCESSFUL ----------
     elif event == 'invoice.payment_successful':
-        subscription_data = data.get('subscription', {})
-        subscription_code = subscription_data.get('subscription_code')
+        subscription_code = data.get('subscription', {}).get('subscription_code')
         customer_code = data.get('customer', {}).get('customer_code')
+        customer_email = data.get('customer', {}).get('email')
 
-        sub = None
-        if subscription_code:
-            sub = EstateSubscription.objects.filter(paystack_subscription_code=subscription_code).first()
-        if not sub and customer_code:
-            sub = EstateSubscription.objects.filter(paystack_customer_code=customer_code).first()
+        sub = get_subscription(subscription_code, customer_code, customer_email)
 
         if sub:
-            # Prefer Paystack's next_payment_date, fallback to calculation
-            next_payment_date = subscription_data.get('next_payment_date')
+            next_payment_date = data.get('subscription', {}).get('next_payment_date')
             next_date = parse_paystack_date(next_payment_date)
-            
-            if next_date is None:
-                # Calculate based on payment date if available
+
+            if not next_date:
                 paid_at = data.get('paid_at') or data.get('created_at')
-                payment_date = parse_paystack_date(paid_at) if paid_at else datetime.datetime.now(datetime.timezone.utc)
+                payment_date = parse_paystack_date(paid_at) or datetime.datetime.now(datetime.timezone.utc)
                 next_date = calculate_next_billing_date(sub.plan, payment_date)
-            
+
             sub.next_billing_date = next_date
             sub.status = "active"
             sub.save()
-            print(f"Payment successful - Next billing: {next_date}")
+
+            set_user_active_state(sub.user)
+            print(f"Payment successful for {sub.user.email} - Next billing: {next_date}")
+        else:
+            print(f"No subscription found for payment successful - Email: {customer_email}")
 
     # ---------- PAYMENT FAILED ----------
     elif event == 'invoice.payment_failed':
         subscription_code = data.get('subscription', {}).get('subscription_code')
         customer_code = data.get('customer', {}).get('customer_code')
+        customer_email = data.get('customer', {}).get('email')
 
-        sub = None
-        if subscription_code:
-            sub = EstateSubscription.objects.filter(paystack_subscription_code=subscription_code).first()
-        if not sub and customer_code:
-            sub = EstateSubscription.objects.filter(paystack_customer_code=customer_code).first()
+        sub = get_subscription(subscription_code, customer_code, customer_email)
 
         if sub:
             sub.status = "past_due"
             sub.save()
-            print(f"Payment failed for subscription {sub.id}")
+            set_user_active_state(sub.user)
+            print(f"Payment failed for {sub.user.email}")
+        else:
+            print(f"No subscription found for payment failed - Email: {customer_email}")
 
     # ---------- SUBSCRIPTION DISABLE ----------
     elif event == 'subscription.disable':
         subscription_code = data.get('subscription_code')
-        if subscription_code:
-            sub = EstateSubscription.objects.filter(paystack_subscription_code=subscription_code).first()
-            if sub:
-                sub.status = "cancelled"
-                sub.save()
-                print(f"Subscription disabled: {sub.id}")
+        customer_email = data.get('customer', {}).get('email')
+
+        sub = get_subscription(subscription_code, None, customer_email)
+
+        if sub:
+            sub.status = "cancelled"
+            sub.save()
+            set_user_active_state(sub.user)
+            print(f"Subscription disabled for {sub.user.email}")
+        else:
+            print(f"No subscription found for disable - Code: {subscription_code}")
+
+    # ---------- SUBSCRIPTION ENABLE ----------
+    elif event == 'subscription.enable':
+        subscription_code = data.get('subscription_code')
+        customer_email = data.get('customer', {}).get('email')
+
+        sub = get_subscription(subscription_code, None, customer_email)
+
+        if sub:
+            sub.status = "active"
+            next_payment_date = data.get('next_payment_date')
+            if next_payment_date:
+                sub.next_billing_date = parse_paystack_date(next_payment_date) or calculate_next_billing_date(sub.plan)
+            sub.save()
+            set_user_active_state(sub.user)
+            print(f"Subscription enabled for {sub.user.email}")
+        else:
+            print(f"No subscription found for enable - Code: {subscription_code}")
 
     else:
         print(f"Unhandled event type: {event}")

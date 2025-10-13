@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { HomeIcon, UsersIcon, CreditCardIcon, FileTextIcon, BuildingIcon, LogOutIcon, BadgeDollarSign, MenuIcon, XIcon, Megaphone, BellIcon, SettingsIcon, UserIcon, Contact2Icon } from 'lucide-react';
+import { HomeIcon, UsersIcon, CreditCardIcon, FileTextIcon, BuildingIcon, LogOutIcon, BadgeDollarSign, MenuIcon, XIcon, Megaphone, BellIcon, SettingsIcon, UserIcon, Contact2Icon, AlertCircle } from 'lucide-react';
 import Logo from '../../assets/estatepadilogo.png';
 
 interface AdminLayoutProps {
@@ -63,6 +63,19 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
     color: 'text-orange-600',
     bgColor: 'bg-orange-50'
   }, {
+    name: 'Staff Management',
+    icon: <UsersIcon size={20} />,
+    path: '/admin/staff',
+    color: 'text-teal-600',
+    bgColor: 'bg-teal-50'
+  },{
+      name: 'Alert',
+      icon: <AlertCircle size={20} />,
+      path: '/admin/alerts',
+      color: 'text-red-600',
+      bgColor: 'bg-red-50'
+    },
+  {
     name: 'Estate Profile',
     icon: <BuildingIcon size={20} />,
     path: '/admin/estate-profile',
@@ -81,9 +94,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
     color: 'text-indigo-600',
     bgColor: 'bg-indigo-50'
   },{
-    name: 'Subscription',
+    name: 'My Subscription',
     icon: <BadgeDollarSign size={20} />,
-    path: '/admin/subscription',
+    path: '/user-subscription',
     color: 'text-amber-600',
     bgColor: 'bg-amber-50'
   },{

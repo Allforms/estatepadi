@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { HomeIcon, KeyIcon, CreditCardIcon, UserIcon, BuildingIcon, LogOutIcon, MenuIcon, XIcon, BellIcon, SettingsIcon, ShieldCheckIcon, Contact2Icon } from 'lucide-react';
+import { HomeIcon, KeyIcon, CreditCardIcon, UserIcon, BuildingIcon, LogOutIcon, MenuIcon, XIcon, BellIcon, SettingsIcon, ShieldCheckIcon, Contact2Icon, CreditCard, UsersIcon, AlertCircle } from 'lucide-react';
 import Logo from '../../assets/estatepadilogo.png';
 
 interface ResidentLayoutProps {
@@ -57,6 +57,19 @@ const ResidentLayout: React.FC<ResidentLayoutProps> = ({
     color: 'text-green-600',
     bgColor: 'bg-green-50'
   }, {
+    name: 'Artisans & Domestics',
+    icon: <UsersIcon size={20} />,
+    path: '/resident/artisans-domestics',
+    color: 'text-pink-600',
+    bgColor: 'bg-pink-50'
+  },{
+    name: 'Alert',
+    icon: <AlertCircle size={20} />,
+    path: '/resident/alerts',
+    color: 'text-red-600',
+    bgColor: 'bg-red-50'
+  },
+  {
     name: 'My Profile',
     icon: <UserIcon size={20} />,
     path: '/resident/profile',
@@ -72,6 +85,12 @@ const ResidentLayout: React.FC<ResidentLayoutProps> = ({
     name: 'Contact Support',
     icon: <Contact2Icon size={20} />,
     path: '/contact-support',
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-50'
+  }, {
+    name: 'My Subscription',
+    icon: <CreditCard size={20} />,
+    path: '/user-subscription',
     color: 'text-amber-600',
     bgColor: 'bg-amber-50'
   }];

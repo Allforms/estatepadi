@@ -26,20 +26,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
   }
 
   // Enforce subscription for all roles except security during login phase
-  if ((userRole === 'admin' || userRole === 'resident' || userRole === 'security') && user.subscription_active === false) {
-    
-    if (userRole === 'admin' && !currentPath.startsWith('/admin/subscription')) {
-      return <Navigate to="/admin/subscription" />;
-    }
-
-    if (userRole === 'resident' && !currentPath.startsWith('/subscription-required')) {
-      return <Navigate to="/subscription-required" />;
-    }
-
-    if (userRole === 'security' && !currentPath.startsWith('/subscription-required')) {
-      return <Navigate to="/subscription-required" />;
-    }
+  // Enforce subscription check for all roles
+  if (user.subscription_active === false && !currentPath.startsWith('/subscription-required')) {
+    return <Navigate to="/user-subscription" />;
   }
+
 
   // Role-based route restriction
   if (requiredRole) {

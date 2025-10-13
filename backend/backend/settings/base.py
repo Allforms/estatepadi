@@ -159,6 +159,11 @@ CELERY_TASK_SERIALIZER = 'json'
 PAYSTACK_SECRET_KEY = config('PAYSTACK_SECRET_KEY', default='')
 PAYSTACK_PUBLIC_KEY = config('PAYSTACK_PUBLIC_KEY', default='')
 
+# Twilio settings (for SMS)
+TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID', default='')
+TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN', default='')
+TWILIO_PHONE_NUMBER = config('TWILIO_PHONE_NUMBER', default='') 
+
 # Bunny storage settings - with defaults
 BUNNY_STORAGE_ZONE = config('BUNNY_STORAGE_ZONE', default='')
 BUNNY_STORAGE_PASSWORD = config('BUNNY_STORAGE_PASSWORD', default='')

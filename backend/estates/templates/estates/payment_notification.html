@@ -1,0 +1,50 @@
+<!-- templates/estates/payment_notification.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>New Payment Submission</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f9fafb; font-family: Arial, sans-serif; color: #111827;">
+  <div style="max-width: 600px; margin: 40px auto; background-color: white; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 32px;">
+    <div style="text-align: center;">
+      <div style="margin-bottom: 20px;">
+        <img src="https://estatepadi.com/assets/estatepadilogo-D-IiN9Nu.png" alt="EstatePadiIcon" width="100" />
+      </div>
+      <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 10px; color: #1f2937;">New Payment Submission</h2>
+      <p style="font-size: 14px; color: #6b7280;">Action required - Payment evidence submitted for review</p>
+    </div>
+
+    <div style="margin-top: 32px;">
+      <p style="font-size: 16px;">Hello <strong>{{ admin_name }}</strong>,</p>
+
+      <div style="background-color: #fef3c7; border: 1px solid #f59e0b; padding: 16px; border-radius: 8px; margin: 16px 0;">
+        <p style="font-size: 16px; margin: 0; color: #92400e;"><strong>⚠️ Action Required:</strong> A resident has submitted payment evidence that requires your review.</p>
+      </div>
+
+      <p style="font-size: 16px; margin-top: 16px;">A resident has submitted payment evidence for review. Here are the details:</p>
+
+      <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981;">
+        <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 16px 0; color: #1f2937;">Payment Details</h3>
+        <p style="font-size: 16px; margin: 8px 0;"><strong>Resident:</strong> {{ resident_name }}</p>
+        <p style="font-size: 16px; margin: 8px 0;"><strong>Email:</strong> {{ resident_email }}</p>
+        <p style="font-size: 16px; margin: 8px 0;"><strong>Due Item:</strong> {{ due_title }}</p>
+        <p style="font-size: 16px; margin: 8px 0;"><strong>Amount:</strong> ₦{{ amount }}</p>
+        <p style="font-size: 16px; margin: 8px 0;"><strong>Estate:</strong> {{ estate_name }}</p>
+      </div>
+
+      <p style="font-size: 16px; margin-top: 16px;">Please log into the admin panel to review and approve or reject this payment submission.</p>
+
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="https://estatepadi.com/login" style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Review Payment</a>
+      </div>
+
+      <p style="font-size: 16px; margin-top: 16px;">If you have any questions, please contact the system administrator.</p>
+    </div>
+
+    <div style="margin-top: 40px; text-align: center; font-size: 12px; color: #9ca3af;">
+      <p>&copy; {{ current_year }} EstatePadi. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>

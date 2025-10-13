@@ -90,6 +90,15 @@ urlpatterns = [
     path('payments/<int:payment_id>/receipt/info/', 
          views.payment_receipt_info, 
          name='receipt-info'),
+
+     # Artisan and Domestic Staff
+    path("artisans-domestics/", views.ArtisanOrDomesticStaffListCreateView.as_view(), name="artisan_domestic_list_create"),
+    path("artisans-domestics/<int:pk>/", views.ArtisanOrDomesticStaffDetailView.as_view(), name="artisan_domestic_detail"),
+    path("artisans-domestics/<int:pk>/disable/", views.DisableArtisanOrDomesticStaffView.as_view(), name="artisan_domestic_disable"),
+
+    # Alerts 
+    path("alert/", views.AlertListCreateView.as_view(), name="alerts")
+
     
     
 ]

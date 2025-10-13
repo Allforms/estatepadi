@@ -20,13 +20,14 @@ from io import BytesIO
 from .permissions import IsEstateAdmin
 from postmarker.core import PostmarkClient
 from django.conf import settings
-from .tasks import send_account_approved_email, send_payment_approved_email
+from .tasks import *
 from .decorators import subscription_required, admin_subscription_required
 from django.core.cache import cache
 from estates.tasks import sync_subscriptions_from_paystack
 import json, logging, uuid
 from django.shortcuts import get_object_or_404
 import mimetypes
+from rest_framework.views import APIView
 
 
 
@@ -272,7 +273,6 @@ class ResendVerificationView(generics.GenericAPIView):
                 'detail': 'Failed to send verification email. Please try again.'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
 class PasswordResetRequestView(generics.GenericAPIView):
     serializer_class = PasswordResetRequestSerializer
     permission_classes = [permissions.AllowAny]
@@ -345,7 +345,6 @@ class PasswordResetConfirmView(generics.GenericAPIView):
         return Response({"detail": "Password reset successful."}, status=status.HTTP_200_OK)
 @api_view(['GET', 'PATCH'])
 @permission_classes([permissions.IsAuthenticated])
-@subscription_required
 def resident_profile(request):
     user = request.user
 
@@ -386,7 +385,6 @@ class EstateDetailView(generics.RetrieveUpdateAPIView):
             return Response({'error': 'Admin access required.'}, status=403)
         return super().update(request, *args, **kwargs)
 
-
 class EstateLeadershipDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = EstateLeadershipSerializer
 
@@ -419,7 +417,6 @@ class EstateLeadershipListView(generics.ListCreateAPIView):
             return Response({'error': 'Admin access required'}, status=403)
         serializer.save(estate_id=estate_id)
 
-
 # Admin Views
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
@@ -448,7 +445,6 @@ def pending_residents_view(request):
     
     serializer = UserSerializer(pending_residents, many=True)
     return Response(serializer.data)
-
 
 @api_view(['POST'])
 @admin_subscription_required
@@ -592,9 +588,6 @@ class VisitorCodeListCreateView(generics.ListCreateAPIView):
             related_id=visitor_code.id
         )
 
-
-
-
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def verify_visitor_code(request):
@@ -681,6 +674,9 @@ class DuePaymentListCreateView(generics.ListCreateAPIView):
             description=f"Payment evidence submitted for due '{payment.due.title}'. Status: Pending.",
             related_id=payment.id
         )
+
+         # Trigger notification task asynchronously
+        send_due_payment_notification.delay(payment.id)
 
 @api_view(['GET'])
 def pending_payments_view(request):
@@ -1070,8 +1066,6 @@ def mark_notification_read(request, notification_id):
         return Response({'error': 'Notification not found'}, 
                        status=status.HTTP_404_NOT_FOUND)
  
-
-
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def payment_records_pdf_view(request):
@@ -1131,12 +1125,9 @@ def payment_records_pdf_view(request):
     response['Content-Disposition'] = 'attachment; filename="payment_records.pdf"'
     return response
 
-
 @ensure_csrf_cookie
 def get_csrf_token(request):
     return JsonResponse({"detail": "CSRF cookie set"})
-
-
 
 class ActivityLogListView(generics.ListAPIView):
     """
@@ -1162,7 +1153,6 @@ class ActivityLogListView(generics.ListAPIView):
         return ActivityLog.objects.filter(
             user=user
         ).order_by('-created_at')
-
 
 class AnnouncementListCreateView(generics.ListCreateAPIView):
     serializer_class = AnnouncementSerializer
@@ -1194,11 +1184,9 @@ class AnnouncementRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIVie
     def get_queryset(self):
         return Announcement.objects.filter(estate=self.request.user.estate)
 
-
 def sync_subscriptions_view(request):
     results = sync_subscriptions_from_paystack()  # run synchronously
     return JsonResponse({"results": results})
-
 
 class ContactSupportView(generics.CreateAPIView):
     serializer_class = ContactSupportSerializer
@@ -1240,7 +1228,6 @@ class ContactSupportView(generics.CreateAPIView):
             HtmlBody=render_to_string("estates/support-email-received.html", context),
             MessageStream="outbound",
         )
-
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
@@ -1350,3 +1337,126 @@ def payment_receipt_info(request, payment_id):
     except DuePayment.DoesNotExist:
         return Response({'error': 'Payment not found'}, 
                       status=status.HTTP_404_NOT_FOUND)
+    
+#Artisan and Domestic Staff Views
+class ArtisanOrDomesticStaffListCreateView(generics.ListCreateAPIView):
+    serializer_class = ArtisanOrDomesticStaffSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = ArtisanOrDomesticStaff.objects.all()
+
+        # Restrict data access
+        if user.role == "resident":
+            queryset = queryset.filter(resident=user)
+        elif user.role in ["admin", "security"]:
+            queryset = queryset.filter(estate=user.estate)
+        else:
+            return ArtisanOrDomesticStaff.objects.none()
+
+        # Filtering by status
+        status_param = self.request.query_params.get("status")
+        if status_param in ["active", "removed"]:
+            queryset = queryset.filter(status=status_param)
+
+        return queryset
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        estate = user.estate
+        staff = serializer.save(resident=user, estate=estate)
+
+        # Create activity log
+        ActivityLog.objects.create(
+            user=user,
+            estate=estate,
+            type=ActivityLog.ActivityType.NEWARTISAN_DOMESTICSTAFF,
+            description=f"New {staff.role} '{staff.name}' registered by {user.get_full_name() or user.email}.",
+            related_id=staff.id
+        )
+
+
+class ArtisanOrDomesticStaffDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = ArtisanOrDomesticStaffSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == "resident":
+            return ArtisanOrDomesticStaff.objects.filter(resident=user)
+        elif user.role in ["admin", "security"]:
+            return ArtisanOrDomesticStaff.objects.filter(estate=user.estate)
+        return ArtisanOrDomesticStaff.objects.none()
+
+
+class DisableArtisanOrDomesticStaffView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, pk):
+        try:
+            staff = ArtisanOrDomesticStaff.objects.get(pk=pk)
+        except ArtisanOrDomesticStaff.DoesNotExist:
+            return Response({"detail": "Staff not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        user = request.user
+        if user.role == "resident" and staff.resident != user:
+            return Response({"detail": "You do not have permission to disable this staff."}, status=status.HTTP_403_FORBIDDEN)
+
+        if user.role in ["admin", "security"] and staff.estate != user.estate:
+            return Response({"detail": "This staff does not belong to your estate."}, status=status.HTTP_403_FORBIDDEN)
+
+        reason = request.data.get("removal_reason", None)
+
+        staff.status = "removed"
+        if reason:
+            staff.removal_reason = reason
+        staff.save()
+
+        serializer = ArtisanOrDomesticStaffSerializer(staff)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class AlertListCreateView(generics.ListCreateAPIView):
+    serializer_class = AlertSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Only return alerts within the logged-in user's estate.
+        """
+        user = self.request.user
+        return Alert.objects.filter(estate=user.estate).order_by("-created_at")
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        estate = user.estate
+
+        # Save alert scoped to sender's estate
+        alert = serializer.save(sender=user, estate=estate)
+
+        # Create activity log
+        ActivityLog.objects.create(
+            user=user,
+            estate=estate,
+            type=ActivityLog.ActivityType.NEW_ALERT,
+            description=f"New alert {user.role} '{alert.alert_type}' created by {user.get_full_name() or user.email}.",
+            related_id=alert.id
+        )
+
+        # Define recipients based on sender role
+        if user.role == "resident":
+            recipients = User.objects.filter(estate=estate, role__in=["admin", "security"])
+        elif user.role == "admin":
+            recipients = User.objects.filter(estate=estate, role__in=["resident", "security"])
+        elif user.role == "security":
+            recipients = User.objects.filter(estate=estate, role__in=["resident", "admin"])
+        else:
+            recipients = User.objects.none()
+
+        # Send notifications via email + SMS
+        for recipient in recipients:
+            if recipient.email:
+                send_email_alert(recipient.email, alert.id)  # pass ID for Celery task
+            if recipient.phone_number:
+                send_sms_alert(recipient.phone_number, alert.id)  # pass ID for Celery task
+

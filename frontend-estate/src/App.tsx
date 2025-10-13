@@ -34,6 +34,12 @@ import PricingPage from './pages/PricingPage';
 import NotFoundPage from './pages/NotFoundPage';
 import AdminProfile from './pages/admin/AdminProfile';
 import ContactSupport from './pages/ContactSupport';
+import UserSubPage from './pages/UserSubPage';
+import ArtisanDomesticList from './pages/resident/ArtisanDomesticList';
+import ArtisanDomesticDetail from './pages/resident/ArtisanDomesticDetail';
+import AdminStaffManagement from './pages/admin/AdminStaffManagement';
+import ResidentAlerts from './pages/resident/ResidentAlerts';
+import AdminAlerts from './pages/admin/AdminAlerts';
 export function App() {
   useEffect(() => {
     api.get('/api/csrf-cookie/').catch(console.error);
@@ -57,6 +63,7 @@ export function App() {
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="*" element={<NotFoundPage />} />
             <Route path="/contact-support" element={<ContactSupport />} />
+            <Route path='/user-subscription' element={<UserSubPage />} />
 
             {/* policies route */}
             <Route path="/terms" element={<PoliciesLayout />}/>
@@ -92,6 +99,22 @@ export function App() {
               element={
                 <ProtectedRoute requiredRole="admin">
                   <DuesManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/staff"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminStaffManagement/>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/alerts"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminAlerts/>
                 </ProtectedRoute>
               }
             />
@@ -161,6 +184,30 @@ export function App() {
               element={
                 <ProtectedRoute requiredRole="resident">
                   <PayDues />
+                </ProtectedRoute>
+              }
+            />
+            <Route 
+              path='/resident/artisans-domestics'
+              element={
+                <ProtectedRoute requiredRole="resident">
+                  <ArtisanDomesticList/>
+                </ProtectedRoute>
+              }
+            />
+            <Route 
+              path='/resident/alerts'
+              element={
+                <ProtectedRoute requiredRole="resident">
+                  <ResidentAlerts/>
+                </ProtectedRoute>
+              }
+            />
+            <Route 
+              path='/resident/artisans-domestics/:id'
+              element={
+                <ProtectedRoute requiredRole="resident">
+                  <ArtisanDomesticDetail/>
                 </ProtectedRoute>
               }
             />
