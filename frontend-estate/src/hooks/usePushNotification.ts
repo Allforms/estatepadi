@@ -1,5 +1,5 @@
 // src/hooks/usePushNotifications.ts
-// Fixed version for Vite PWA
+// Fixed version for Vite PWA with WebView detection
 import { useState, useEffect, useCallback } from 'react';
 import api from '../api';
 
@@ -11,18 +11,64 @@ interface PushSubscription {
   };
 }
 
+/**
+ * Detects if the app is running in a WebView/mobile app environment
+ * WebViews typically don't support Web Push API
+ */
+const detectWebView = (): boolean => {
+  const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+
+  // Check for common WebView indicators
+  const isWebView =
+    // Android WebView
+    /wv|WebView/.test(userAgent) ||
+    // iOS WebView (Safari not in user agent)
+    /(iPhone|iPod|iPad)(?!.*Safari\/)/i.test(userAgent) ||
+    // Appilix or other converters
+    /Appilix|WebViewApp|ConverterApp/.test(userAgent) ||
+    // Facebook/Instagram in-app browser
+    /FBAN|FBAV|Instagram/.test(userAgent);
+
+  return isWebView;
+};
+
+/**
+ * Get detailed platform information for debugging
+ */
+const getPlatformInfo = (): string => {
+  const isWebView = detectWebView();
+  const hasServiceWorker = 'serviceWorker' in navigator;
+  const hasPushManager = 'PushManager' in window;
+  const hasNotification = 'Notification' in window;
+
+  return `WebView: ${isWebView}, ServiceWorker: ${hasServiceWorker}, PushManager: ${hasPushManager}, Notification: ${hasNotification}`;
+};
+
 export const usePushNotifications = () => {
   const [isSupported, setIsSupported] = useState(false);
   const [subscription, setSubscription] = useState<PushSubscription | null>(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isWebView, setIsWebView] = useState(false);
+  const [platformInfo, setPlatformInfo] = useState('');
 
   useEffect(() => {
+    const webViewDetected = detectWebView();
+    setIsWebView(webViewDetected);
+    setPlatformInfo(getPlatformInfo());
+
     // Check if push notifications are supported
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
+    // Web Push API is NOT supported in WebView environments
+    if ('serviceWorker' in navigator && 'PushManager' in window && !webViewDetected) {
       setIsSupported(true);
       checkSubscription();
+    } else {
+      if (webViewDetected) {
+        setError('Push notifications are not supported in mobile app containers. Please use the web version at estatepadi.com in your browser for push notification features.');
+      } else if (!('PushManager' in window)) {
+        setError('Push notifications are not supported in this browser.');
+      }
     }
   }, []);
 
@@ -145,6 +191,8 @@ export const usePushNotifications = () => {
     subscription,
     isLoading,
     error,
+    isWebView,
+    platformInfo,
     subscribeToPush,
     unsubscribeFromPush
   };

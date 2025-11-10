@@ -200,24 +200,14 @@ const PaymentRecords: React.FC = () => {
   const handleDownloadReceipt = async (paymentId: number) => {
     setReceiptLoading((prev) => ({ ...prev, [paymentId]: true }));
     try {
-      const response = await api.get(
+      const { downloadFile } = await import('../../utils/downloadHelpers');
+      await downloadFile(
         `/api/payments/${paymentId}/receipt/download/`,
-        {
-          responseType: "blob",
-        }
+        `receipt_payment_${paymentId}.pdf`
       );
-
-      // Create blob link to download
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `receipt_payment_${paymentId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error downloading receipt:", error);
+      alert('Failed to download receipt. Please try again.');
     } finally {
       setReceiptLoading((prev) => ({ ...prev, [paymentId]: false }));
     }

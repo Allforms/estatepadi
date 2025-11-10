@@ -1206,42 +1206,62 @@ class ContactSupportView(generics.CreateAPIView):
 def download_receipt_view(request, payment_id):
     """
     Download or view payment receipt PDF
+    Optimized for mobile apps and WebView environments
     """
     try:
         payment = get_object_or_404(
-            DuePayment, 
+            DuePayment,
             id=payment_id,
             due__estate=request.user.estate
         )
-        
+
         # Check if user has permission to view this receipt
         # Either the resident who made the payment or an admin
         if request.user.role != 'admin' and payment.resident != request.user:
-            return Response({'error': 'Permission denied'}, 
+            return Response({'error': 'Permission denied'},
                           status=status.HTTP_403_FORBIDDEN)
-        
+
         # Check if payment is approved and has a receipt
         if payment.status != 'approved' or not payment.receipt:
-            return Response({'error': 'Receipt not available'}, 
+            return Response({'error': 'Receipt not available'},
                           status=status.HTTP_404_NOT_FOUND)
-        
+
         # Get the file
         receipt_file = payment.receipt
-        
+
         # Determine content type
         content_type, _ = mimetypes.guess_type(receipt_file.name)
         if content_type is None:
             content_type = 'application/pdf'
-        
-        # Create response
-        response = HttpResponse(receipt_file.read(), content_type=content_type)
-        
+
+        # Seek to beginning to ensure proper reading
+        receipt_file.seek(0)
+
+        # Read file content
+        file_content = receipt_file.read()
+
+        # Create response with proper headers for mobile compatibility
+        response = HttpResponse(file_content, content_type=content_type)
+
         # Set filename for download
         filename = f"receipt_payment_{payment.id}.pdf"
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
-        
+
+        # Use RFC 6266 compliant Content-Disposition header
+        # This works better with mobile apps and WebViews
+        response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{filename}'
+
+        # Add additional headers for better mobile compatibility
+        response['Content-Length'] = len(file_content)
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+
+        # Add CORS headers for WebView access
+        response['Access-Control-Allow-Origin'] = '*'
+        response['Access-Control-Expose-Headers'] = 'Content-Disposition, Content-Length'
+
         return response
-        
+
     except DuePayment.DoesNotExist:
         raise Http404("Payment not found")
 
