@@ -47,7 +47,7 @@ const NotificationSettingsPage: React.FC = () => {
                   Push Notifications Not Supported
                 </h3>
                 <p className="text-yellow-800 text-sm">
-                  Your browser does not support push notifications. Please try using a modern browser like Chrome, Firefox, or Edge.
+                  Your app does not support push notifications. Please try using a modern browser like Chrome, Firefox, or Edge.
                 </p>
               </div>
             </div>

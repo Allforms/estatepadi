@@ -90,7 +90,12 @@ CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='')
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='')
 
 #admin Ips restriction
-ALLOWED_ADMIN_IPS = config("ALLOWED_ADMIN_IPS", default="", cast=lambda v: [ip.strip() for ip in v.split(",") if ip.strip()])
+ALLOWED_ADMIN_IPS = config(
+    "ALLOWED_ADMIN_IPS",
+    default="127.0.0.1",
+    cast=lambda v: [ip.strip() for ip in v.split(",") if ip.strip()]
+)
+
 
 
 
