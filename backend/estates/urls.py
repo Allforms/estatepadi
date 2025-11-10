@@ -1,8 +1,19 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
 from .subscriptions import *
 from .webhooks import paystack_webhook
-
+from .notification_views import (
+    NotificationViewSet,
+    get_vapid_public_key,
+    subscribe_push,
+    unsubscribe_push,
+    test_notification,
+    get_user_subscriptions,
+    delete_subscription
+)
+router = DefaultRouter()
+router.register(r'notifications', NotificationViewSet, basename='notification')
 urlpatterns = [
     # Authentication
     path('auth/login/', views.login_view, name='login'),
@@ -46,9 +57,6 @@ urlpatterns = [
     # Dashboard
     path('dashboard/', views.dashboard_view, name='dashboard'),
     
-    # Notifications
-    path('notifications/', views.NotificationListView.as_view(), name='notifications'),
-    path('notifications/<int:notification_id>/read/', views.mark_notification_read, name='mark-notification-read'),
 
     # paymnts report view
     path('payments/report/pdf/', views.payment_records_pdf_view, name='payment-report'),
@@ -97,7 +105,17 @@ urlpatterns = [
     path("artisans-domestics/<int:pk>/disable/", views.DisableArtisanOrDomesticStaffView.as_view(), name="artisan_domestic_disable"),
 
     # Alerts 
-    path("alert/", views.AlertListCreateView.as_view(), name="alerts")
+    path("alert/", views.AlertListCreateView.as_view(), name="alerts"),
+
+    # ==================== PUSH NOTIFICATION ENDPOINTS ====================
+    path('push/vapid-key/', get_vapid_public_key, name='vapid-key'),
+    path('push/subscribe/', subscribe_push, name='push-subscribe'),
+    path('push/unsubscribe/', unsubscribe_push, name='push-unsubscribe'),
+    path('push/test/', test_notification, name='test-notification'),
+    path('push/subscriptions/', get_user_subscriptions, name='user-subscriptions'),
+    path('push/subscriptions/<int:subscription_id>/', delete_subscription, name='delete-subscription'),
+
+    path('', include(router.urls)),
 
     
     

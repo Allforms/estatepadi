@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { HomeIcon, KeyIcon, CreditCardIcon, UserIcon, BuildingIcon, LogOutIcon, MenuIcon, XIcon, BellIcon, SettingsIcon, ShieldCheckIcon, Contact2Icon, CreditCard, UsersIcon, AlertCircle } from 'lucide-react';
+import { HomeIcon, KeyIcon, CreditCardIcon, UserIcon, BuildingIcon, LogOutIcon, MenuIcon, XIcon, SettingsIcon, ShieldCheckIcon, Contact2Icon, CreditCard, UsersIcon, AlertCircle, BellIcon } from 'lucide-react';
 import Logo from '../../assets/estatepadilogo.png';
+import NotificationBell from '../../components/notifications/NotificationBell';
 
 interface ResidentLayoutProps {
   children: React.ReactNode;
@@ -62,14 +63,19 @@ const ResidentLayout: React.FC<ResidentLayoutProps> = ({
     path: '/resident/artisans-domestics',
     color: 'text-pink-600',
     bgColor: 'bg-pink-50'
-  },{
+  }, {
     name: 'Alert',
     icon: <AlertCircle size={20} />,
     path: '/resident/alerts',
     color: 'text-red-600',
     bgColor: 'bg-red-50'
-  },
-  {
+  }, {
+    name: 'Notifications', // ✅ NEW
+    icon: <BellIcon size={20} />,
+    path: '/resident/notifications',
+    color: 'text-yellow-600',
+    bgColor: 'bg-yellow-50'
+  }, {
     name: 'My Profile',
     icon: <UserIcon size={20} />,
     path: '/resident/profile',
@@ -232,14 +238,15 @@ const ResidentLayout: React.FC<ResidentLayoutProps> = ({
                 <span>Resident Active</span>
               </div>
 
-              {/* Notifications */}
-              <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors relative">
-                <BellIcon size={20} />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"></div>
-              </button>
+              {/* ✅ NOTIFICATION BELL - REPLACED WITH FUNCTIONAL COMPONENT */}
+              <NotificationBell />
 
               {/* Settings */}
-              <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+              <button 
+                onClick={() => navigate('/resident/notification-settings')}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Notification Settings"
+              >
                 <SettingsIcon size={20} />
               </button>
 

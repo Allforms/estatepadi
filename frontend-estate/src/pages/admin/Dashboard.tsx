@@ -16,6 +16,7 @@ import api from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 import RecentActivities from '../../components/RecentActivities';
+import AdminBottomNav from '../../components/layouts/AdminBottomNav';
 
 interface DashboardStats {
   total_residents: number;
@@ -500,7 +501,10 @@ const AdminDashboard: React.FC = () => {
         </div>
 
       </div>
+      <br /><br />
+      <AdminBottomNav/>
     </AdminLayout>
+    
   );
 };
 

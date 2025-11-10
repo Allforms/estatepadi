@@ -1,10 +1,14 @@
+from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
-from django.conf import settings
-from django.conf.urls.static import static
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/', include('estates.urls')),
+    path("api/", include("estates.urls"))
 ]
 
+# Only include admin if in development
+if settings.DEBUG:
+    urlpatterns += [path("admin/", admin.site.urls)]
+else:
+    # In production, keep it at a non-obvious path (optional)
+    urlpatterns += [path("super-secret-admin-path-path-yaba-lagos/", admin.site.urls)]

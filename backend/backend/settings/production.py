@@ -89,33 +89,9 @@ CSRF_COOKIE_DOMAIN = '.estatepadi.com'
 CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='')
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='')
 
-# ===== ADMIN IP WHITELIST (PRODUCTION ONLY) =====
-# Get individual IPs from environment variables
-HOME_IP = config('HOME_IP', default='').strip()
-OFFICE_IP = config('OFFICE_IP', default='').strip()
+#admin Ips restriction
+ALLOWED_ADMIN_IPS = config("ALLOWED_ADMIN_IPS", default="", cast=lambda v: [ip.strip() for ip in v.split(",") if ip.strip()])
 
-# Get comma-separated list from environment variable
-ADMIN_IPS_STRING = config('ADMIN_ALLOWED_IPS', default='').strip()
-
-# Build the final list
-ADMIN_ALLOWED_IPS = []
-
-# Add individual IPs if they exist
-if HOME_IP:
-    ADMIN_ALLOWED_IPS.append(HOME_IP)
-if OFFICE_IP:
-    ADMIN_ALLOWED_IPS.append(OFFICE_IP)
-
-# Add comma-separated IPs if they exist
-if ADMIN_IPS_STRING:
-    additional_ips = [ip.strip() for ip in ADMIN_IPS_STRING.split(',') if ip.strip()]
-    ADMIN_ALLOWED_IPS.extend(additional_ips)
-
-# Remove duplicates
-ADMIN_ALLOWED_IPS = list(set(ADMIN_ALLOWED_IPS))
-
-# Debug: Print the IPs being used (remove this after confirming it works)
-print(f"DEBUG - ADMIN_ALLOWED_IPS: {ADMIN_ALLOWED_IPS}")
 
 
 # Logging for production
@@ -156,7 +132,6 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
-        # Add CSRF debugging
         'django.security.csrf': {
             'handlers': ['console'],
             'level': 'DEBUG',
@@ -173,9 +148,3 @@ LOGGING = {
 
 # Ensure logs directory exists
 os.makedirs(BASE_DIR / 'logs', exist_ok=True)
-
-# ===== DEBUGGING SETTINGS (Remove after fixing) =====
-print(f"CORS_ALLOWED_ORIGINS: {CORS_ALLOWED_ORIGINS}")
-print(f"CSRF_TRUSTED_ORIGINS: {CSRF_TRUSTED_ORIGINS}")
-print(f"CSRF_COOKIE_SAMESITE: {globals().get('CSRF_COOKIE_SAMESITE', 'Not Set')}")
-print(f"CSRF_COOKIE_HTTPONLY: {globals().get('CSRF_COOKIE_HTTPONLY', 'Not Set')}")

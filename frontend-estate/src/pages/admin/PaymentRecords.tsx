@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import AdminLayout from '../../components/layouts/AdminLayout';
+import React, { useEffect, useState, useMemo } from "react";
+import AdminLayout from "../../components/layouts/AdminLayout";
 import {
   SearchIcon,
   FileTextIcon,
@@ -9,9 +9,11 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   DownloadIcon,
-  EyeIcon
-} from 'lucide-react';
-import api from '../../api';
+  EyeIcon,
+} from "lucide-react";
+import api from "../../api";
+import { AxiosResponse } from "axios";
+
 
 interface Payment {
   id: number;
@@ -21,7 +23,7 @@ interface Payment {
   amount_paid: string;
   payment_evidence: string;
   payment_date: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
   admin_notes: string;
   approved_by_name: string | null;
   approved_at: string | null;
@@ -32,11 +34,15 @@ interface Payment {
 const PaymentRecords: React.FC = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all'|'approved'|'pending'|'rejected'>('all');
-  const [filterMonth, setFilterMonth] = useState<'all'|string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState<
+    "all" | "approved" | "pending" | "rejected"
+  >("all");
+  const [filterMonth, setFilterMonth] = useState<"all" | string>("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [receiptLoading, setReceiptLoading] = useState<Record<number, boolean>>({});
+  const [receiptLoading, setReceiptLoading] = useState<Record<number, boolean>>(
+    {}
+  );
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
@@ -44,70 +50,93 @@ const PaymentRecords: React.FC = () => {
   }, []);
 
   const loadPayments = async () => {
-    try {
-      const res = await api.get('/api/payments/');
-      // Handle paginated vs array response
-      const data = Array.isArray(res.data) ? res.data : res.data.results;
-      
-      // Check receipt availability for approved payments
-      const paymentsWithReceipts = await Promise.all(
-        data.map(async (payment: Payment) => {
-          if (payment.status === 'approved') {
-            try {
-              const receiptRes = await api.get(`/api/payments/${payment.id}/receipt/info/`);
-              return {
-                ...payment,
-                has_receipt: receiptRes.data.has_receipt,
-                receipt_url: receiptRes.data.receipt_url
-              };
-            } catch (err) {
-              return { ...payment, has_receipt: false };
-            }
-          }
-          return payment;
-        })
-      );
-      
-      setPayments(paymentsWithReceipts);
-    } catch (err) {
-      console.error('Failed to load payments:', err);
-    } finally {
-      setLoading(false);
+  try {
+    const allData: Payment[] = [];
+    let nextUrl: string | null = '/api/payments/';
+    
+    while (nextUrl) {
+      const res: AxiosResponse = await api.get(nextUrl);
+      const pageData = Array.isArray(res.data)
+        ? res.data
+        : res.data.results;
+
+      allData.push(...pageData);
+      nextUrl = Array.isArray(res.data) ? null : res.data.next;
     }
-  };
+
+    
+    const paymentsWithReceipts = await Promise.all(
+      allData.map(async (payment: Payment) => {
+        if (payment.status === 'approved') {
+          try {
+            const receiptRes = await api.get(`/api/payments/${payment.id}/receipt/info/`);
+            return {
+              ...payment,
+              has_receipt: receiptRes.data.has_receipt,
+              receipt_url: receiptRes.data.receipt_url
+            };
+          } catch (err) {
+            return { ...payment, has_receipt: false };
+          }
+        }
+        return payment;
+      })
+    );
+    
+    setPayments(paymentsWithReceipts);
+  } catch (err) {
+    console.error('Failed to load payments:', err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Generate available months dynamically from payment data
   const availableMonths = useMemo(() => {
     const months = new Set<string>();
-    payments.forEach(payment => {
+    payments.forEach((payment) => {
       const date = new Date(payment.payment_date);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthKey = `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}`;
       months.add(monthKey);
     });
-    
-    return Array.from(months).sort().reverse().map(monthKey => {
-      const [year, month] = monthKey.split('-');
-      const date = new Date(parseInt(year), parseInt(month) - 1);
-      return {
-        value: monthKey,
-        label: date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-      };
-    });
+
+    return Array.from(months)
+      .sort()
+      .reverse()
+      .map((monthKey) => {
+        const [year, month] = monthKey.split("-");
+        const date = new Date(parseInt(year), parseInt(month) - 1);
+        return {
+          value: monthKey,
+          label: date.toLocaleDateString("en-US", {
+            month: "long",
+            year: "numeric",
+          }),
+        };
+      });
   }, [payments]);
 
   // Filter payments
   const filteredPayments = useMemo(() => {
-    return payments.filter(p => {
-      const name = p.resident_name.toLowerCase();
-      const matchesSearch =
-        name.includes(searchTerm.toLowerCase()) ||
-        p.due_title.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus =
-        filterStatus === 'all' || p.status === filterStatus;
-      const matchesMonth =
-        filterMonth === 'all' || p.payment_date.startsWith(filterMonth);
-      return matchesSearch && matchesStatus && matchesMonth;
-    }).sort((a, b) => new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime());
+    return payments
+      .filter((p) => {
+        const name = p.resident_name.toLowerCase();
+        const matchesSearch =
+          name.includes(searchTerm.toLowerCase()) ||
+          p.due_title.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus =
+          filterStatus === "all" || p.status === filterStatus;
+        const matchesMonth =
+          filterMonth === "all" || p.payment_date.startsWith(filterMonth);
+        return matchesSearch && matchesStatus && matchesMonth;
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.payment_date).getTime() -
+          new Date(a.payment_date).getTime()
+      );
   }, [payments, searchTerm, filterStatus, filterMonth]);
 
   // Pagination calculations
@@ -122,77 +151,92 @@ const PaymentRecords: React.FC = () => {
   }, [searchTerm, filterStatus, filterMonth, itemsPerPage]);
 
   const handleVerify = async (id: number) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to approve this payment? This action will generate a receipt for the resident."
+      )
+    )
+      return;
     try {
       await api.post(`/api/admin/approve-payment/${id}/`);
       // Reload payments to get updated receipt info
       loadPayments();
     } catch (error) {
-      console.error('Error approving payment:', error);
+      console.error("Error approving payment:", error);
     }
   };
 
   const handleReject = (id: number) => {
-    if (!window.confirm('Are you sure you want to reject this payment?')) return;
-    api.post(`/api/admin/reject-payment/${id}/`)
+    if (
+      !window.confirm(
+        "Are you sure you want to reject this payment? The resident will be notified of the rejection."
+      )
+    )
+      return;
+    api
+      .post(`/api/admin/reject-payment/${id}/`)
       .then(() =>
-        setPayments(ps =>
-          ps.map(p => p.id === id ? { ...p, status: 'rejected' } : p)
+        setPayments((ps) =>
+          ps.map((p) => (p.id === id ? { ...p, status: "rejected" } : p))
         )
       )
       .catch(console.error);
   };
 
-  const handleViewEvidence = (url: string) => window.open(url, '_blank');
+  const handleViewEvidence = (url: string) => window.open(url, "_blank");
 
   const handleViewReceipt = async (paymentId: number) => {
-    setReceiptLoading(prev => ({ ...prev, [paymentId]: true }));
+    setReceiptLoading((prev) => ({ ...prev, [paymentId]: true }));
     try {
       const receiptUrl = `${api.defaults.baseURL}/api/payments/${paymentId}/receipt/view/`;
-      window.open(receiptUrl, '_blank');
+      window.open(receiptUrl, "_blank");
     } catch (error) {
-      console.error('Error viewing receipt:', error);
+      console.error("Error viewing receipt:", error);
     } finally {
-      setReceiptLoading(prev => ({ ...prev, [paymentId]: false }));
+      setReceiptLoading((prev) => ({ ...prev, [paymentId]: false }));
     }
   };
 
   const handleDownloadReceipt = async (paymentId: number) => {
-    setReceiptLoading(prev => ({ ...prev, [paymentId]: true }));
+    setReceiptLoading((prev) => ({ ...prev, [paymentId]: true }));
     try {
-      const response = await api.get(`/api/payments/${paymentId}/receipt/download/`, {
-        responseType: 'blob'
-      });
-      
+      const response = await api.get(
+        `/api/payments/${paymentId}/receipt/download/`,
+        {
+          responseType: "blob",
+        }
+      );
+
       // Create blob link to download
       const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.setAttribute('download', `receipt_payment_${paymentId}.pdf`);
+      link.setAttribute("download", `receipt_payment_${paymentId}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error downloading receipt:', error);
+      console.error("Error downloading receipt:", error);
     } finally {
-      setReceiptLoading(prev => ({ ...prev, [paymentId]: false }));
+      setReceiptLoading((prev) => ({ ...prev, [paymentId]: false }));
     }
   };
 
   const handleExport = () => {
-    window.open(`${api.defaults.baseURL}/api/payments/report/pdf/`, '_blank');
+    window.open(`${api.defaults.baseURL}/api/payments/report/pdf/`, "_blank");
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'approved':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'rejected':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case "approved":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "rejected":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
@@ -216,10 +260,15 @@ const PaymentRecords: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex flex-wrap justify-between items-center mb-4">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Payment Records</h2>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Payment Records
+              </h2>
               <p className="text-gray-600 mt-1">
-                Showing {Math.min(startIndex + 1, filteredPayments.length)} to {Math.min(endIndex, filteredPayments.length)} of {filteredPayments.length} payments
-                {filteredPayments.length !== payments.length && ` (filtered from ${payments.length} total)`}
+                Showing {Math.min(startIndex + 1, filteredPayments.length)} to{" "}
+                {Math.min(endIndex, filteredPayments.length)} of{" "}
+                {filteredPayments.length} payments
+                {filteredPayments.length !== payments.length &&
+                  ` (filtered from ${payments.length} total)`}
               </p>
             </div>
             <button
@@ -234,25 +283,29 @@ const PaymentRecords: React.FC = () => {
           {/* Summary Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <p className="text-sm text-blue-600 font-medium">Total Payments</p>
-              <p className="text-2xl font-bold text-blue-900">{payments.length}</p>
+              <p className="text-sm text-blue-600 font-medium">
+                Total Payments
+              </p>
+              <p className="text-2xl font-bold text-blue-900">
+                {payments.length}
+              </p>
             </div>
             <div className="bg-green-50 p-4 rounded-lg border border-green-200">
               <p className="text-sm text-green-600 font-medium">Approved</p>
               <p className="text-2xl font-bold text-green-900">
-                {payments.filter(p => p.status === 'approved').length}
+                {payments.filter((p) => p.status === "approved").length}
               </p>
             </div>
             <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
               <p className="text-sm text-yellow-600 font-medium">Pending</p>
               <p className="text-2xl font-bold text-yellow-900">
-                {payments.filter(p => p.status === 'pending').length}
+                {payments.filter((p) => p.status === "pending").length}
               </p>
             </div>
             <div className="bg-red-50 p-4 rounded-lg border border-red-200">
               <p className="text-sm text-red-600 font-medium">Rejected</p>
               <p className="text-2xl font-bold text-red-900">
-                {payments.filter(p => p.status === 'rejected').length}
+                {payments.filter((p) => p.status === "rejected").length}
               </p>
             </div>
           </div>
@@ -271,7 +324,7 @@ const PaymentRecords: React.FC = () => {
                 placeholder="Search by resident name or payment description..."
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
 
@@ -281,7 +334,7 @@ const PaymentRecords: React.FC = () => {
               <select
                 className="border border-gray-300 rounded-lg py-2 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={filterStatus}
-                onChange={e => setFilterStatus(e.target.value as any)}
+                onChange={(e) => setFilterStatus(e.target.value as any)}
               >
                 <option value="all">All Status</option>
                 <option value="approved">Approved</option>
@@ -292,14 +345,16 @@ const PaymentRecords: React.FC = () => {
 
             {/* Month Filter */}
             <div className="flex items-center space-x-2">
-              <span className="text-gray-500 text-sm whitespace-nowrap">Month:</span>
+              <span className="text-gray-500 text-sm whitespace-nowrap">
+                Month:
+              </span>
               <select
                 className="border border-gray-300 rounded-lg py-2 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={filterMonth}
-                onChange={e => setFilterMonth(e.target.value)}
+                onChange={(e) => setFilterMonth(e.target.value)}
               >
                 <option value="all">All Months</option>
-                {availableMonths.map(month => (
+                {availableMonths.map((month) => (
                   <option key={month.value} value={month.value}>
                     {month.label}
                   </option>
@@ -309,11 +364,13 @@ const PaymentRecords: React.FC = () => {
 
             {/* Items per page */}
             <div className="flex items-center space-x-2">
-              <span className="text-gray-500 text-sm whitespace-nowrap">Per page:</span>
+              <span className="text-gray-500 text-sm whitespace-nowrap">
+                Per page:
+              </span>
               <select
                 className="border border-gray-300 rounded-lg py-2 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={itemsPerPage}
-                onChange={e => setItemsPerPage(parseInt(e.target.value))}
+                onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -331,15 +388,15 @@ const PaymentRecords: React.FC = () => {
               <thead className="bg-gray-50">
                 <tr>
                   {[
-                    'Resident',
-                    'Description',
-                    'Amount',
-                    'Date',
-                    'Status',
-                    'Evidence',
-                    'Receipt',
-                    'Actions'
-                  ].map(h => (
+                    "Resident",
+                    "Description",
+                    "Amount",
+                    "Date",
+                    "Status",
+                    "Evidence",
+                    "Receipt",
+                    "Actions",
+                  ].map((h) => (
                     <th
                       key={h}
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -356,26 +413,32 @@ const PaymentRecords: React.FC = () => {
                       <div className="flex flex-col items-center space-y-3">
                         <FileTextIcon size={48} className="text-gray-300" />
                         <p className="text-gray-500 font-medium">
-                          {payments.length === 0 ? 'No payments found' : 'No payments match your current filters'}
+                          {payments.length === 0
+                            ? "No payments found"
+                            : "No payments match your current filters"}
                         </p>
-                        {payments.length > 0 && filteredPayments.length === 0 && (
-                          <button
-                            onClick={() => {
-                              setSearchTerm('');
-                              setFilterStatus('all');
-                              setFilterMonth('all');
-                            }}
-                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                          >
-                            Clear all filters
-                          </button>
-                        )}
+                        {payments.length > 0 &&
+                          filteredPayments.length === 0 && (
+                            <button
+                              onClick={() => {
+                                setSearchTerm("");
+                                setFilterStatus("all");
+                                setFilterMonth("all");
+                              }}
+                              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            >
+                              Clear all filters
+                            </button>
+                          )}
                       </div>
                     </td>
                   </tr>
                 ) : (
-                  paginatedPayments.map(p => (
-                    <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                  paginatedPayments.map((p) => (
+                    <tr
+                      key={p.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900">
                           {p.resident_name}
@@ -390,7 +453,9 @@ const PaymentRecords: React.FC = () => {
                         <div className="text-sm font-medium text-gray-900">
                           {(() => {
                             const amt = parseFloat(p.amount_paid);
-                            return isNaN(amt) ? '-' : `₦${amt.toLocaleString()}`;
+                            return isNaN(amt)
+                              ? "-"
+                              : `₦${amt.toLocaleString()}`;
                           })()}
                         </div>
                       </td>
@@ -404,7 +469,9 @@ const PaymentRecords: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`px-3 py-1 inline-flex text-xs font-medium rounded-full border ${getStatusColor(p.status)}`}
+                          className={`px-3 py-1 inline-flex text-xs font-medium rounded-full border ${getStatusColor(
+                            p.status
+                          )}`}
                         >
                           {p.status.charAt(0).toUpperCase() + p.status.slice(1)}
                         </span>
@@ -418,7 +485,7 @@ const PaymentRecords: React.FC = () => {
                         </button>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {p.status === 'approved' && p.has_receipt ? (
+                        {p.status === "approved" && p.has_receipt ? (
                           <div className="flex space-x-2">
                             <button
                               onClick={() => handleViewReceipt(p.id)}
@@ -443,30 +510,36 @@ const PaymentRecords: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
-                          {p.status === 'pending' && (
+                          {p.status === "pending" && (
                             <>
                               <button
                                 onClick={() => handleVerify(p.id)}
-                                className="text-green-600 hover:text-green-800 p-1 rounded hover:bg-green-50 transition-colors"
+                                className="flex items-center space-x-1 px-3 py-1.5 text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
                                 title="Approve payment"
                               >
-                                <CheckCircleIcon size={18} />
+                                <CheckCircleIcon size={16} />
+                                <span className="text-xs font-medium">
+                                  Approve
+                                </span>
                               </button>
                               <button
                                 onClick={() => handleReject(p.id)}
-                                className="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50 transition-colors"
+                                className="flex items-center space-x-1 px-3 py-1.5 text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
                                 title="Reject payment"
                               >
-                                <XCircleIcon size={18} />
+                                <XCircleIcon size={16} />
+                                <span className="text-xs font-medium">
+                                  Reject
+                                </span>
                               </button>
                             </>
                           )}
-                          {p.status === 'approved' && p.approved_by_name && (
+                          {p.status === "approved" && p.approved_by_name && (
                             <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
                               Approved by {p.approved_by_name}
                             </span>
                           )}
-                          {p.status === 'rejected' && (
+                          {p.status === "rejected" && (
                             <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
                               Rejected
                             </span>
@@ -486,9 +559,11 @@ const PaymentRecords: React.FC = () => {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-700">
-                Showing {startIndex + 1} to {Math.min(endIndex, filteredPayments.length)} of {filteredPayments.length} results
+                Showing {startIndex + 1} to{" "}
+                {Math.min(endIndex, filteredPayments.length)} of{" "}
+                {filteredPayments.length} results
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
@@ -497,38 +572,47 @@ const PaymentRecords: React.FC = () => {
                 >
                   <ChevronLeftIcon size={16} />
                 </button>
-                
+
                 <div className="flex items-center space-x-1">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
-                    const isCurrentPage = page === currentPage;
-                    const isNearCurrentPage = Math.abs(page - currentPage) <= 2;
-                    const isFirstOrLast = page === 1 || page === totalPages;
-                    
-                    if (!isNearCurrentPage && !isFirstOrLast) {
-                      if (page === 2 || page === totalPages - 1) {
-                        return <span key={page} className="text-gray-400 px-2">...</span>;
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => {
+                      const isCurrentPage = page === currentPage;
+                      const isNearCurrentPage =
+                        Math.abs(page - currentPage) <= 2;
+                      const isFirstOrLast = page === 1 || page === totalPages;
+
+                      if (!isNearCurrentPage && !isFirstOrLast) {
+                        if (page === 2 || page === totalPages - 1) {
+                          return (
+                            <span key={page} className="text-gray-400 px-2">
+                              ...
+                            </span>
+                          );
+                        }
+                        return null;
                       }
-                      return null;
+
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                            isCurrentPage
+                              ? "bg-blue-600 text-white"
+                              : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      );
                     }
-                    
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                          isCurrentPage
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-100'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    );
-                  })}
+                  )}
                 </div>
-                
+
                 <button
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  onClick={() =>
+                    setCurrentPage(Math.min(totalPages, currentPage + 1))
+                  }
                   disabled={currentPage === totalPages}
                   className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >

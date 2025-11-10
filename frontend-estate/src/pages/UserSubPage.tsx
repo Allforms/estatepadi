@@ -3,6 +3,17 @@ import api from "../api";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { 
+  Check, 
+  Crown, 
+  Zap, 
+  Shield, 
+  RefreshCw, 
+  Calendar,
+  AlertCircle,
+  Sparkles,
+  TrendingUp
+} from "lucide-react";
 
 const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY as string;
 
@@ -14,7 +25,6 @@ const UserSubscriptionPage: React.FC = () => {
   const [processingPayment, setProcessingPayment] = useState(false);
   const { user, refreshUser } = useAuth();
 
-  // Load subscription + plans
   useEffect(() => {
     loadSubscriptionData();
   }, []);
@@ -32,13 +42,12 @@ const UserSubscriptionPage: React.FC = () => {
 
       if (refreshUser) await refreshUser();
     } catch (err) {
-      console.error("Failed to load subscription data:", err);
+      //console.error("Failed to load subscription data:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Poll Paystack webhook
   const pollForUpdates = async (maxAttempts = 10, interval = 3000) => {
     let attempts = 0;
 
@@ -63,7 +72,7 @@ const UserSubscriptionPage: React.FC = () => {
           );
         }
       } catch (error) {
-        console.error("Error checking subscription status:", error);
+        //console.error("Error checking subscription status:", error);
         attempts++;
         if (attempts < maxAttempts) {
           setTimeout(checkStatus, interval);
@@ -128,297 +137,342 @@ const UserSubscriptionPage: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case "active":
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-green-100 text-green-800 border-green-300";
       case "cancelled":
-        return "bg-red-100 text-red-800 border-red-200";
+        return "bg-red-100 text-red-800 border-red-300";
       case "past_due":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+        return "bg-yellow-100 text-yellow-800 border-yellow-300";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "active":
-        return "✅";
-      case "cancelled":
-        return "❌";
-      case "past_due":
-        return "⚠️";
-      default:
-        return "❓";
+        return "bg-gray-100 text-gray-800 border-gray-300";
     }
   };
 
   const canCancelSubscription = () =>
     subStatus?.can_cancel === true || subStatus?.status === "active";
 
+  const getPlanIcon = (index: number) => {
+    switch (index) {
+      case 0:
+        return <Shield className="h-8 w-8" />;
+      case 1:
+        return <Crown className="h-8 w-8" />;
+      case 2:
+        return <Sparkles className="h-8 w-8" />;
+      default:
+        return <Zap className="h-8 w-8" />;
+    }
+  };
+
+  const getPlanGradient = (index: number) => {
+    switch (index) {
+      case 0:
+        return "from-green-500 to-emerald-600";
+      case 1:
+        return "from-blue-500 to-indigo-600";
+      case 2:
+        return "from-purple-500 to-pink-600";
+      default:
+        return "from-gray-500 to-gray-600";
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading subscription info...</p>
+      <>
+        <Navbar />
+        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+          <div className="text-center">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-20 w-20 border-b-4 border-blue-600 mx-auto"></div>
+              <Sparkles className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-8 w-8 text-blue-600 animate-pulse" />
+            </div>
+            <p className="mt-6 text-lg text-gray-700 font-medium animate-pulse">Loading your subscription...</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
     <>
       <Navbar />
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 my-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          
+          {/* Hero Section */}
+          <div className="text-center space-y-4 animate-fade-in">
+            <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium">
+              <Sparkles className="h-4 w-4" />
+              <span>Subscription Management</span>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
+              Choose Your Perfect Plan
+            </h1>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Unlock premium features and take your estate management to the next level
+            </p>
+          </div>
+
           {/* Processing Banner */}
           {processingPayment && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
-                <p className="text-blue-800 font-medium">
-                  Processing your subscription...
-                </p>
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl p-6 shadow-xl animate-slide-down">
+              <div className="flex items-center justify-center space-x-3">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                <p className="font-semibold text-lg">Processing your subscription...</p>
               </div>
               <button
                 onClick={loadSubscriptionData}
-                className="mt-2 text-sm text-blue-600 hover:text-blue-800 underline"
+                className="mt-4 w-full bg-white bg-opacity-20 hover:bg-opacity-30 text-white py-2 rounded-lg font-medium transition-all flex items-center justify-center space-x-2"
               >
-                Refresh if it takes too long
+                <RefreshCw className="h-4 w-4" />
+                <span>Refresh Status</span>
               </button>
             </div>
           )}
 
-          {/* Current Subscription */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 flex items-center">
-                <span className="mr-2">👤</span> My Subscription
-              </h2>
-              <button
-                onClick={loadSubscriptionData}
-                className="text-sm text-gray-600 hover:text-gray-800 flex items-center"
-              >
-                <span className="mr-1">🔄</span> Refresh
-              </button>
-            </div>
-
-            <div className="p-6">
-              {subStatus && subStatus.status !== "inactive" ? (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-6">
-                    {/* Status */}
-                    <div className="text-center">
-                      <div
-                        className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium border ${getStatusColor(
-                          subStatus.status
-                        )}`}
-                      >
-                        <span className="mr-2">
-                          {getStatusIcon(subStatus.status)}
-                        </span>
-                        {subStatus.status?.toUpperCase() || "Unknown"}
-                      </div>
-                      <p className="text-sm text-gray-500 mt-2">Status</p>
+          {/* Current Subscription Status */}
+          {subStatus && subStatus.status !== "inactive" && (
+            <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden animate-slide-up">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6 text-white">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-white bg-opacity-20 rounded-full p-3">
+                      <Crown className="h-6 w-6" />
                     </div>
-
-                    {/* Plan */}
-                    <div className="text-center">
-                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                        <p className="text-lg font-semibold text-blue-900">
-                          {subStatus.plan?.name || "N/A"}
-                        </p>
-                        <p className="text-sm text-blue-600 mt-1">
-                          ₦
-                          {subStatus.plan?.amount
-                            ? (subStatus.plan.amount / 100).toLocaleString()
-                            : "N/A"}{" "}
-                          / {subStatus.plan?.interval || "month"}
-                        </p>
-                      </div>
-                      <p className="text-sm text-gray-500 mt-2">Current Plan</p>
-                    </div>
-
-                    {/* Next Billing */}
-                    <div className="text-center">
-                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                        <p className="text-lg font-semibold text-gray-900">
-                          {subStatus.next_billing_date
-                            ? new Date(
-                                subStatus.next_billing_date
-                              ).toLocaleDateString()
-                            : "N/A"}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {subStatus.next_billing_date &&
-                            new Date(
-                              subStatus.next_billing_date
-                            ).toLocaleTimeString()}
-                        </p>
-                      </div>
-                      <p className="text-sm text-gray-500 mt-2">
-                        {subStatus.status === "cancelled"
-                          ? "Access Until"
-                          : "Next Billing"}
-                      </p>
+                    <div>
+                      <h2 className="text-2xl font-bold">Your Subscription</h2>
+                      <p className="text-blue-100">Active membership details</p>
                     </div>
                   </div>
-
-                  {/* Actions */}
-                  <div className="border-t border-gray-200 pt-6 flex flex-col sm:flex-row gap-4 justify-center">
-                    {canCancelSubscription() && (
-                      <button
-                        onClick={handleCancelSubscription}
-                        disabled={cancellingSubscription || processingPayment}
-                        className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:bg-red-400 disabled:cursor-not-allowed flex items-center justify-center"
-                      >
-                        {cancellingSubscription ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                            Cancelling...
-                          </>
-                        ) : (
-                          <>
-                            <span className="mr-2">🚫</span> Cancel Subscription
-                          </>
-                        )}
-                      </button>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">📋</span>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    No Active Subscription
-                  </h3>
-                  <p className="text-gray-600">
-                    Choose a plan below to start your subscription.
-                  </p>
+                  <button
+                    onClick={loadSubscriptionData}
+                    className="bg-white bg-opacity-20 hover:bg-opacity-30 p-3 rounded-xl transition-all"
+                  >
+                    <RefreshCw className="h-5 w-5" />
+                  </button>
                 </div>
-              )}
+              </div>
+
+              <div className="p-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  {/* Status Card */}
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border-2 border-green-200 transform hover:scale-105 transition-transform">
+                    <div className="flex items-center justify-between mb-4">
+                      <Check className="h-8 w-8 text-green-600" />
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 ${getStatusColor(subStatus.status)}`}>
+                        {subStatus.status?.toUpperCase()}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 font-medium">Subscription Status</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">
+                      {subStatus.status === "active" ? "Active" : subStatus.status}
+                    </p>
+                  </div>
+
+                  {/* Plan Card */}
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border-2 border-blue-200 transform hover:scale-105 transition-transform">
+                    <div className="flex items-center justify-between mb-4">
+                      <Crown className="h-8 w-8 text-blue-600" />
+                    </div>
+                    <p className="text-sm text-gray-600 font-medium">Current Plan</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">
+                      {subStatus.plan?.name || "N/A"}
+                    </p>
+                    <p className="text-sm text-blue-600 font-semibold mt-2">
+                      ₦{subStatus.plan?.amount ? (subStatus.plan.amount / 100).toLocaleString() : "0"} / {subStatus.plan?.interval}
+                    </p>
+                  </div>
+
+                  {/* Next Billing Card */}
+                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-200 transform hover:scale-105 transition-transform">
+                    <div className="flex items-center justify-between mb-4">
+                      <Calendar className="h-8 w-8 text-purple-600" />
+                    </div>
+                    <p className="text-sm text-gray-600 font-medium">
+                      {subStatus.status === "cancelled" ? "Access Until" : "Next Billing"}
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">
+                      {subStatus.next_billing_date
+                        ? new Date(subStatus.next_billing_date).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric', 
+                            year: 'numeric' 
+                          })
+                        : "N/A"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Cancel Button */}
+                {canCancelSubscription() && (
+                  <div className="border-t border-gray-200 pt-6 flex justify-center">
+                    <button
+                      onClick={handleCancelSubscription}
+                      disabled={cancellingSubscription || processingPayment}
+                      className="px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold hover:from-red-600 hover:to-red-700 transition-all disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center space-x-2"
+                    >
+                      {cancellingSubscription ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                          <span>Cancelling...</span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="h-5 w-5" />
+                          <span>Cancel Subscription</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* No Active Subscription Banner */}
+          {(!subStatus || subStatus.status === "inactive") && (
+            <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-3xl p-8 shadow-2xl animate-slide-up">
+              <div className="flex items-center space-x-4">
+                <div className="bg-white bg-opacity-20 rounded-full p-4">
+                  <AlertCircle className="h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold">No Active Subscription</h3>
+                  <p className="text-orange-100 mt-1">Subscribe to unlock all premium features</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Available Plans */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 flex items-center">
-                <span className="mr-2">💳</span> Available Plans
-              </h2>
-              <p className="text-gray-600 mt-1">Pick the best plan for you</p>
+          <div className="space-y-8">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-gray-900 mb-3">Available Plans</h2>
+              <p className="text-gray-600">Select the plan that works best for you</p>
             </div>
 
-            <div className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {plans.map((plan, index) => (
-                  <div
-                    key={plan.id}
-                    className={`relative rounded-xl border-2 transition-all duration-300 hover:shadow-lg hover:scale-105 ${
-                      index === 1
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 bg-white hover:border-blue-300"
-                    }`}
-                  >
-                    {index === 1 && (
-                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                        <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
-                          ⭐ Popular
-                        </span>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {plans.map((plan, index) => (
+                <div
+                  key={plan.id}
+                  className={`relative rounded-3xl border-2 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 ${
+                    index === 1
+                      ? "border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 scale-105"
+                      : "border-gray-200 bg-white hover:border-blue-300"
+                  }`}
+                >
+                  {index === 1 && (
+                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg flex items-center space-x-2">
+                        <Crown className="h-4 w-4" />
+                        <span>Most Popular</span>
                       </div>
-                    )}
-
-                    <div className="p-6 text-center">
-                      <div
-                        className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                          index === 0
-                            ? "bg-green-100"
-                            : index === 1
-                            ? "bg-blue-100"
-                            : "bg-purple-100"
-                        }`}
-                      >
-                        <span className="text-2xl">
-                          {index === 0 ? "🏠" : index === 1 ? "🏢" : "🏰"}
-                        </span>
-                      </div>
-
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">
-                        {plan.name}
-                      </h3>
-
-                      <p className="text-3xl font-bold text-gray-900">
-                        ₦{(plan.amount / 100).toLocaleString()}
-                        <span className="text-base text-gray-600 ml-1">
-                          / {plan.interval}
-                        </span>
-                      </p>
-
-                      <p className="mt-4 text-gray-600">{plan.description}</p>
-
-                      <button
-                        onClick={() => handleSubscribe(plan)}
-                        disabled={
-                          (subStatus?.plan?.id === plan.id &&
-                            subStatus?.status === "active") ||
-                          processingPayment
-                        }
-                        className={`mt-6 w-full py-3 px-4 rounded-lg font-medium transition ${
-                          (subStatus?.plan?.id === plan.id &&
-                            subStatus?.status === "active") ||
-                          processingPayment
-                            ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                            : index === 1
-                            ? "bg-blue-600 text-white hover:bg-blue-700"
-                            : "bg-gray-900 text-white hover:bg-gray-800"
-                        }`}
-                      >
-                        {subStatus?.plan?.id === plan.id &&
-                        subStatus?.status === "active"
-                          ? "✅ Current Plan"
-                          : processingPayment
-                          ? "⏳ Processing..."
-                          : "🚀 Subscribe"}
-                      </button>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  )}
 
-              {plans.length === 0 && (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">📦</span>
+                  <div className="p-8">
+                    {/* Plan Icon */}
+                    <div className={`w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br ${getPlanGradient(index)} flex items-center justify-center text-white shadow-lg`}>
+                      {getPlanIcon(index)}
+                    </div>
+
+                    {/* Plan Name */}
+                    <h3 className="text-2xl font-bold text-gray-900 text-center mb-2">
+                      {plan.name}
+                    </h3>
+
+                    {/* Price */}
+                    <div className="text-center mb-6">
+                      <div className="flex items-baseline justify-center">
+                        <span className="text-4xl font-bold text-gray-900">
+                          ₦{(plan.amount / 100).toLocaleString()}
+                        </span>
+                        <span className="text-gray-600 ml-2">/ {plan.interval}</span>
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-gray-600 text-center mb-8 min-h-12">
+                      {plan.description}
+                    </p>
+
+                    {/* Subscribe Button */}
+                    <button
+                      onClick={() => handleSubscribe(plan)}
+                      disabled={
+                        (subStatus?.plan?.id === plan.id && subStatus?.status === "active") ||
+                        processingPayment
+                      }
+                      className={`w-full py-4 px-6 rounded-xl font-bold transition-all transform hover:-translate-y-1 hover:shadow-xl flex items-center justify-center space-x-2 ${
+                        (subStatus?.plan?.id === plan.id && subStatus?.status === "active")
+                          ? "bg-gray-200 text-gray-600 cursor-not-allowed"
+                          : processingPayment
+                          ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                          : index === 1
+                          ? "bg-gradient-to-r from-blue-600 to-indigo-700 text-white hover:from-blue-700 hover:to-indigo-800 shadow-lg"
+                          : "bg-gray-900 text-white hover:bg-gray-800"
+                      }`}
+                    >
+                      {subStatus?.plan?.id === plan.id && subStatus?.status === "active" ? (
+                        <>
+                          <Check className="h-5 w-5" />
+                          <span>Current Plan</span>
+                        </>
+                      ) : processingPayment ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                          <span>Processing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="h-5 w-5" />
+                          <span>Subscribe Now</span>
+                        </>
+                      )}
+                    </button>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    No Plans Available
-                  </h3>
-                  <p className="text-gray-600">
-                    Please check back later for subscription plans.
-                  </p>
                 </div>
-              )}
+              ))}
             </div>
+
+            {plans.length === 0 && (
+              <div className="text-center py-16 bg-white rounded-3xl shadow-lg">
+                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <AlertCircle className="h-10 w-10 text-gray-400" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  No Plans Available
+                </h3>
+                <p className="text-gray-600">
+                  Please check back later for subscription plans.
+                </p>
+              </div>
+            )}
           </div>
 
-          {/* Why Subscribe */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
-            <h3 className="text-xl font-bold text-center text-gray-900 mb-6">
-              Why Subscribe?
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-center">
-              <div className="flex items-center justify-center">
-                🔒 <span className="ml-2">Secure Payments</span>
+          {/* Features Grid */}
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-8 md:p-12 shadow-2xl text-white">
+            <h3 className="text-3xl font-bold text-center mb-8">Why Subscribe?</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 hover:bg-opacity-20 transition-all transform hover:scale-105">
+                <Shield className="h-10 w-10 mb-4" />
+                <h4 className="font-bold text-lg mb-2">Secure Payments</h4>
+                <p className="text-blue-100 text-sm">Bank-level encryption for all transactions</p>
               </div>
-              <div className="flex items-center justify-center">
-                📱 <span className="ml-2">24/7 Support</span>
+              <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 hover:bg-opacity-20 transition-all transform hover:scale-105">
+                <Zap className="h-10 w-10 mb-4" />
+                <h4 className="font-bold text-lg mb-2">Instant Activation</h4>
+                <p className="text-blue-100 text-sm">Access premium features immediately</p>
               </div>
-              <div className="flex items-center justify-center">
-                ⚡ <span className="ml-2">Instant Activation</span>
+              <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 hover:bg-opacity-20 transition-all transform hover:scale-105">
+                <TrendingUp className="h-10 w-10 mb-4" />
+                <h4 className="font-bold text-lg mb-2">24/7 Support</h4>
+                <p className="text-blue-100 text-sm">Get help whenever you need it</p>
               </div>
-              <div className="flex items-center justify-center">
-                🚫 <span className="ml-2">Cancel Anytime</span>
+              <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 hover:bg-opacity-20 transition-all transform hover:scale-105">
+                <RefreshCw className="h-10 w-10 mb-4" />
+                <h4 className="font-bold text-lg mb-2">Cancel Anytime</h4>
+                <p className="text-blue-100 text-sm">No long-term commitments required</p>
               </div>
             </div>
           </div>
@@ -426,6 +480,53 @@ const UserSubscriptionPage: React.FC = () => {
       </main>
 
       <Footer />
+
+      <style>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes slide-up {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes slide-down {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-fade-in {
+          animation: fade-in 0.6s ease-out;
+        }
+
+        .animate-slide-up {
+          animation: slide-up 0.6s ease-out;
+        }
+
+        .animate-slide-down {
+          animation: slide-down 0.6s ease-out;
+        }
+      `}</style>
     </>
   );
 };

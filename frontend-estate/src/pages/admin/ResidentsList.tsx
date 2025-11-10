@@ -9,7 +9,8 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   UsersIcon,
-  XIcon
+  XIcon,
+  AlertCircleIcon
 } from 'lucide-react';
 import api from '../../api';
 
@@ -35,6 +36,8 @@ const ResidentsList: React.FC = () => {
   const [filterResidentType, setFilterResidentType] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
+  const [showApproveConfirm, setShowApproveConfirm] = useState<number | null>(null);
   const itemsPerPage = 10;
 
   // Fetch all residents on mount
@@ -92,21 +95,24 @@ const ResidentsList: React.FC = () => {
     return { total, approved, pending };
   }, [filteredResidents]);
 
-  const handleApprove = (id: number) => {
-    api.post(`/api/admin/approve-resident/${id}/`)
+  const handleApprove = () => {
+    if (showApproveConfirm === null) return;
+    api.post(`/api/admin/approve-resident/${showApproveConfirm}/`)
       .then(() => {
         setResidents(rs =>
-          rs.map(r => r.id === id ? { ...r, is_approved: true } : r)
+          rs.map(r => r.id === showApproveConfirm ? { ...r, is_approved: true } : r)
         );
+        setShowApproveConfirm(null);
       })
       .catch(console.error);
   };
 
-  const handleDelete = (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this resident?')) return;
-    api.delete(`/api/admin/delete-resident/${id}/`)
+  const handleDelete = () => {
+    if (showDeleteConfirm === null) return;
+    api.delete(`/api/admin/delete-resident/${showDeleteConfirm}/`)
       .then(() => {
-        setResidents(rs => rs.filter(r => r.id !== id));
+        setResidents(rs => rs.filter(r => r.id !== showDeleteConfirm));
+        setShowDeleteConfirm(null);
       })
       .catch(console.error);
   };
@@ -400,19 +406,21 @@ const ResidentsList: React.FC = () => {
                         <div className="flex space-x-2">
                           {!resident.is_approved && (
                             <button
-                              onClick={() => handleApprove(resident.id)}
-                              className="text-green-600 hover:text-green-900 transition-colors"
+                              onClick={() => setShowApproveConfirm(resident.id)}
+                              className="flex items-center space-x-1 px-3 py-1.5 text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
                               title="Approve resident"
                             >
-                              <CheckCircleIcon size={18} />
+                              <CheckCircleIcon size={16} />
+                              <span className="text-xs font-medium">Approve</span>
                             </button>
                           )}
                           <button
-                            onClick={() => handleDelete(resident.id)}
-                            className="text-red-600 hover:text-red-900 transition-colors"
+                            onClick={() => setShowDeleteConfirm(resident.id)}
+                            className="flex items-center space-x-1 px-3 py-1.5 text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
                             title="Delete resident"
                           >
-                            <XCircleIcon size={18} />
+                            <XCircleIcon size={16} />
+                            <span className="text-xs font-medium">Delete</span>
                           </button>
                         </div>
                       </td>
@@ -482,6 +490,68 @@ const ResidentsList: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <AlertCircleIcon className="h-6 w-6 text-red-600 mr-3" />
+                <h3 className="text-lg font-semibold text-gray-800">Confirm Deletion</h3>
+              </div>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete this resident? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(null)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Approve Confirmation Modal */}
+      {showApproveConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <CheckCircleIcon className="h-6 w-6 text-green-600 mr-3" />
+                <h3 className="text-lg font-semibold text-gray-800">Confirm Approval</h3>
+              </div>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to approve this resident? They will gain access to the system.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowApproveConfirm(null)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleApprove}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                >
+                  Approve
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 };

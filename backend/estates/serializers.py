@@ -273,11 +273,52 @@ class DuePaymentSerializer(serializers.ModelSerializer):
                  'approved_by_name', 'approved_at']
         read_only_fields = ['status', 'approved_by', 'approved_at']
 
+
+
+class PushSubscriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PushSubscription
+        fields = ['id', 'device_type', 'is_active', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
 class NotificationSerializer(serializers.ModelSerializer):
+    notification_type_display = serializers.CharField(
+        source='get_notification_type_display', 
+        read_only=True
+    )
+    time_ago = serializers.SerializerMethodField()
+    
     class Meta:
         model = Notification
-        fields = '__all__'
-        read_only_fields = ['created_at']
+        fields = [
+            'id', 'title', 'message', 'notification_type', 
+            'notification_type_display', 'is_push_sent', 'push_sent_at',
+            'action_url', 'related_object_id', 'related_model',
+            'is_read', 'created_at', 'time_ago'
+        ]
+        read_only_fields = ['id', 'is_push_sent', 'push_sent_at', 'created_at']
+    
+    def get_time_ago(self, obj):
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        now = timezone.now()
+        diff = now - obj.created_at
+        
+        if diff < timedelta(minutes=1):
+            return 'Just now'
+        elif diff < timedelta(hours=1):
+            minutes = int(diff.total_seconds() / 60)
+            return f'{minutes} minute{"s" if minutes > 1 else ""} ago'
+        elif diff < timedelta(days=1):
+            hours = int(diff.total_seconds() / 3600)
+            return f'{hours} hour{"s" if hours > 1 else ""} ago'
+        elif diff < timedelta(days=7):
+            days = diff.days
+            return f'{days} day{"s" if days > 1 else ""} ago'
+        else:
+            return obj.created_at.strftime('%b %d, %Y')
 
 
 

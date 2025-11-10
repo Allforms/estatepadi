@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# Block unnecessary build or config files
+Disallow: /vite.svg
+Disallow: /src/
+Disallow: /node_modules/
+Disallow: /manifest.webmanifest
+
+# Sitemap for Google & Bing
+Sitemap: https://estatepadi.com/sitemap.xml
+
+# Hints for search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /

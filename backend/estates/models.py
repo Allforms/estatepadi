@@ -200,10 +200,62 @@ class DuePayment(models.Model):
     def __str__(self):
         return f"Payment for {self.due.title} by {self.resident.email} - {self.status}"
     
+# Add these models to your existing models.py
+
+class PushSubscription(models.Model):
+    """Store user's push notification subscription details"""
+    DEVICE_CHOICES = [
+        ('web', 'Web Browser'),
+        ('android', 'Android'),
+        ('ios', 'iOS'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='push_subscriptions')
+    endpoint = models.TextField()
+    auth = models.CharField(max_length=255)
+    p256dh = models.CharField(max_length=255)
+    device_type = models.CharField(max_length=10, choices=DEVICE_CHOICES, default='web')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ('user', 'endpoint')
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.device_type}"
+
+
+# Update your existing Notification model to include push-related fields
 class Notification(models.Model):
+    NOTIFICATION_TYPES = [
+        ('alert', 'Emergency Alert'),
+        ('payment', 'Payment'),
+        ('due', 'Estate Due'),
+        ('resident', 'New Resident'),
+        ('artisan', 'Artisan/Staff'),
+        ('announcement', 'Announcement'),
+        ('approval', 'Approval Request'),
+        ('general', 'General'),
+    ]
+    
     recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     title = models.CharField(max_length=255)
     message = models.TextField()
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES, default='general')
+    
+    # Push notification fields
+    is_push_sent = models.BooleanField(default=False)
+    push_sent_at = models.DateTimeField(blank=True, null=True)
+    
+    # URL to redirect when notification is clicked
+    action_url = models.CharField(max_length=500, blank=True, null=True)
+    
+    # Additional data for the notification
+    related_object_id = models.PositiveIntegerField(blank=True, null=True)
+    related_model = models.CharField(max_length=50, blank=True, null=True)
+    
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

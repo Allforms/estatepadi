@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import ResidentLayout from '../../components/layouts/ResidentLayout';
 import { KeyIcon, CreditCardIcon, CheckCircleIcon, UserIcon, AlertTriangle } from 'lucide-react';
 import api from '../../api';
+import ResidentBottomNav from '../../components/layouts/ResidentBottomNav';
 
 const ResidentDashboard: React.FC = () => {
   const [upcomingDues, setUpcomingDues] = useState<any[]>([]);
@@ -392,6 +393,8 @@ const ResidentDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+      <br /><br /> <br />
+      <ResidentBottomNav />
     </ResidentLayout>
   );
 };

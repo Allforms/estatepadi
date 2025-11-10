@@ -28,6 +28,8 @@ import json, logging, uuid
 from django.shortcuts import get_object_or_404
 import mimetypes
 from rest_framework.views import APIView
+from rest_framework.exceptions import PermissionDenied
+
 
 
 
@@ -457,13 +459,7 @@ def approve_resident_view(request, user_id):
         resident = User.objects.get(id=user_id, estate=request.user.estate)
         resident.is_approved = True
         resident.save()
-        
-        # Create notification
-        Notification.objects.create(
-            recipient=resident,
-            title='Account Approved',
-            message='Your resident account has been approved by the estate admin.'
-        )
+     
 
         # Send approval email asynchronously
         send_account_approved_email.delay(resident.email, resident.first_name)
@@ -624,9 +620,9 @@ class DueListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         if self.request.user.role == 'admin':
             return Due.objects.filter(estate=self.request.user.estate)
+            
         else:
             return Due.objects.filter(estate=self.request.user.estate)
-    
     def perform_create(self, serializer):
         if self.request.user.role != 'admin':
             return Response({'error': 'Admin access required'}, 
@@ -656,6 +652,7 @@ class DueRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         instance.delete()
 class DuePaymentListCreateView(generics.ListCreateAPIView):
     serializer_class = DuePaymentSerializer
+    permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
         if self.request.user.role == 'admin':
@@ -664,6 +661,11 @@ class DuePaymentListCreateView(generics.ListCreateAPIView):
             return DuePayment.objects.filter(resident=self.request.user)
     
     def perform_create(self, serializer):
+        # ensure due belongs to the user's estate
+        due = serializer.validated_data.get('due')
+
+        if due.estate != self.request.user.estate:
+            raise PermissionDenied("you cannot submit payment to another estate ")
         payment = serializer.save(resident=self.request.user)
 
         # Log pending payment activity
@@ -904,12 +906,7 @@ def approve_payment_view(request, payment_id):
             related_id=payment.id
         )
                          
-        # Create notification
-        Notification.objects.create(
-            recipient=payment.resident,
-            title='Payment Approved',
-            message=f'Your payment for {payment.due.title} has been approved. Receipt is now available for download.'
-        )
+       
 
         # Send approval email asynchronously
         send_payment_approved_email.delay(
@@ -960,13 +957,7 @@ def reject_payment_view(request, payment_id):
         related_id=payment.id
     )
 
-    # Notify the resident
-    Notification.objects.create(
-        recipient=payment.resident,   # or whatever your FK is named
-        title='Payment Rejected',
-        message=f'Your payment for {payment.due.title} has been rejected.'
-    )
-
+   
     return Response({'message': 'Payment rejected successfully'})
 
 # Dashboard Views
@@ -1045,26 +1036,7 @@ def dashboard_view(request):
             'announcements': announcements
         })
 
-# Notification Views
-class NotificationListView(generics.ListAPIView):
-    serializer_class = NotificationSerializer
-    
-    def get_queryset(self):
-        return Notification.objects.filter(user=self.request.user)
 
-@api_view(['POST'])
-def mark_notification_read(request, notification_id):
-    try:
-        notification = Notification.objects.get(
-            id=notification_id, 
-            user=request.user
-        )
-        notification.is_read = True
-        notification.save()
-        return Response({'message': 'Notification marked as read'})
-    except Notification.DoesNotExist:
-        return Response({'error': 'Notification not found'}, 
-                       status=status.HTTP_404_NOT_FOUND)
  
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
@@ -1431,32 +1403,42 @@ class AlertListCreateView(generics.ListCreateAPIView):
         user = self.request.user
         estate = user.estate
 
-        # Save alert scoped to sender's estate
-        alert = serializer.save(sender=user, estate=estate)
+        try:
+            alert = serializer.save(sender=user, estate=estate)
+            
+            ActivityLog.objects.create(
+                user=user,
+                estate=estate,
+                type=ActivityLog.ActivityType.NEW_ALERT,
+                description=f"New alert '{alert.alert_type}' created by {user.get_full_name() or user.email}.",
+                related_id=alert.id
+            )
 
-        # Create activity log
-        ActivityLog.objects.create(
-            user=user,
-            estate=estate,
-            type=ActivityLog.ActivityType.NEW_ALERT,
-            description=f"New alert {user.role} '{alert.alert_type}' created by {user.get_full_name() or user.email}.",
-            related_id=alert.id
-        )
+            # Recipients logic
+            if user.role == "resident":
+                recipients = User.objects.filter(estate=estate, role__in=["admin", "security"])
+            elif user.role == "admin":
+                recipients = User.objects.filter(estate=estate, role__in=["resident", "security"])
+            elif user.role == "security":
+                recipients = User.objects.filter(estate=estate, role__in=["resident", "admin"])
+            else:
+                recipients = User.objects.none()
 
-        # Define recipients based on sender role
-        if user.role == "resident":
-            recipients = User.objects.filter(estate=estate, role__in=["admin", "security"])
-        elif user.role == "admin":
-            recipients = User.objects.filter(estate=estate, role__in=["resident", "security"])
-        elif user.role == "security":
-            recipients = User.objects.filter(estate=estate, role__in=["resident", "admin"])
-        else:
-            recipients = User.objects.none()
-
-        # Send notifications via email + SMS
-        for recipient in recipients:
-            if recipient.email:
-                send_email_alert(recipient.email, alert.id)  # pass ID for Celery task
-            if recipient.phone_number:
-                send_sms_alert(recipient.phone_number, alert.id)  # pass ID for Celery task
+            # Send notifications (with error handling)
+            for recipient in recipients:
+                try:
+                    if recipient.email:
+                        send_email_alert.delay(recipient.email, alert.id)
+                    if recipient.phone_number:
+                        send_sms_alert.delay(recipient.phone_number, alert.id)
+                except Exception as e:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.error(f"Notification failed for user {recipient.id}: {str(e)}")
+                    
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.exception(f"Alert creation failed: {str(e)}")
+            raise
 

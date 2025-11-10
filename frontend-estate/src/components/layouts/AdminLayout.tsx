@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { HomeIcon, UsersIcon, CreditCardIcon, FileTextIcon, BuildingIcon, LogOutIcon, BadgeDollarSign, MenuIcon, XIcon, Megaphone, BellIcon, SettingsIcon, UserIcon, Contact2Icon, AlertCircle } from 'lucide-react';
 import Logo from '../../assets/estatepadilogo.png';
+import NotificationBell from '../../components/notifications/NotificationBell';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -68,14 +69,19 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
     path: '/admin/staff',
     color: 'text-teal-600',
     bgColor: 'bg-teal-50'
-  },{
-      name: 'Alert',
-      icon: <AlertCircle size={20} />,
-      path: '/admin/alerts',
-      color: 'text-red-600',
-      bgColor: 'bg-red-50'
-    },
-  {
+  }, {
+    name: 'Alert',
+    icon: <AlertCircle size={20} />,
+    path: '/admin/alerts',
+    color: 'text-red-600',
+    bgColor: 'bg-red-50'
+  }, {
+    name: 'Notifications', // ✅ NEW
+    icon: <BellIcon size={20} />,
+    path: '/admin/notifications',
+    color: 'text-yellow-600',
+    bgColor: 'bg-yellow-50'
+  }, {
     name: 'Estate Profile',
     icon: <BuildingIcon size={20} />,
     path: '/admin/estate-profile',
@@ -87,19 +93,19 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
     path: '/admin/announcements',
     color: 'text-purple-600',
     bgColor: 'bg-purple-50'
-  },{
+  }, {
     name: 'My Profile',
     icon: <UserIcon size={20} />,
     path: '/admin/profile',
     color: 'text-indigo-600',
     bgColor: 'bg-indigo-50'
-  },{
+  }, {
     name: 'My Subscription',
     icon: <BadgeDollarSign size={20} />,
     path: '/user-subscription',
     color: 'text-amber-600',
     bgColor: 'bg-amber-50'
-  },{
+  }, {
     name: 'Contact Support',
     icon: <Contact2Icon size={20} />,
     path: '/contact-support',
@@ -249,14 +255,15 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
                 </div>
               )}
 
-              {/* Notifications */}
-              <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors relative">
-                <BellIcon size={20} />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
-              </button>
+              {/* ✅ NOTIFICATION BELL - REPLACED WITH FUNCTIONAL COMPONENT */}
+              <NotificationBell />
 
               {/* Settings */}
-              <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+              <button 
+                onClick={() => navigate('/admin/notification-settings')}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Notification Settings"
+              >
                 <SettingsIcon size={20} />
               </button>
 
