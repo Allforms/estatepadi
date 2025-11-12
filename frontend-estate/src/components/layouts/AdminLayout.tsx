@@ -125,11 +125,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
 
       {/* Sidebar */}
       <div className={`
-        fixed lg:static inset-y-0 left-0 z-30 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out border-r border-gray-200
+        fixed lg:static inset-y-0 left-0 z-30 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out border-r border-gray-200 flex flex-col
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         {/* Sidebar Header */}
-        <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700">
+        <div className="flex-shrink-0 p-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700">
           <div className="flex justify-between items-center">
             <div>
               <img src={Logo} alt="EstatePadi Logo" className="h-8 w-auto mb-2 brightness-0 invert" />
@@ -149,7 +149,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
         </div>
 
         {/* User Info */}
-        <div className="p-4 border-b border-gray-100 bg-gray-50">
+        <div className="flex-shrink-0 p-4 border-b border-gray-100 bg-gray-50">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
               {user?.name?.charAt(0) || 'A'}
@@ -170,8 +170,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
           </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="mt-2 px-3 pb-4 flex-1 overflow-y-auto">
+        {/* Navigation - Scrollable */}
+        <nav className="flex-1 mt-2 px-3 pb-4 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
           <ul className="space-y-1">
             {navItems.map((item, index) => {
               const isActive = isActivePath(item.path);
