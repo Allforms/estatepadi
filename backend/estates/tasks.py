@@ -108,13 +108,17 @@ def sync_subscriptions_from_paystack():
     for transaction in successful_transactions:
         plan_data = transaction.get("plan")
         if not plan_data:
+            print(f"[SYNC] Transaction {transaction.get('reference')} has no plan data - skipping")
             continue  # Skip non-subscription transactions
 
         customer_data = transaction.get("customer", {})
         customer_email = customer_data.get("email")
         plan_code = plan_data.get("plan_code")
 
+        print(f"[SYNC] Processing transaction {transaction.get('reference')} - email: {customer_email}, plan_code: {plan_code}")
+
         if not customer_email or not plan_code:
+            print(f"[SYNC] Missing email or plan_code - skipping")
             continue
 
         try:
