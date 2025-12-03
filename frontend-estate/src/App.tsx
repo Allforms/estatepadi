@@ -34,7 +34,6 @@ import PaymentRecords from './pages/admin/PaymentRecords';
 import DuesManagement from './pages/admin/DuesManagement';
 import EstateProfile from './pages/admin/EstateProfile';
 import EstateLeadership from './pages/EstateLeadership';
-import AdminSubscriptionPage from './pages/admin/AdminSubscriptionPage';
 import AnnouncementManagement from './pages/admin/AnnouncementManagement';
 import AdminProfile from './pages/admin/AdminProfile';
 import AdminStaffManagement from './pages/admin/AdminStaffManagement';
@@ -99,7 +98,6 @@ export function App() {
                     <Route path="/admin/alerts" element={<ProtectedRoute requiredRole="admin"><AdminAlerts /></ProtectedRoute>} />
                     <Route path="/admin/estate-profile" element={<ProtectedRoute requiredRole="admin"><EstateProfile /></ProtectedRoute>} />
                     <Route path="/admin/estates/:estateId/leadership" element={<ProtectedRoute requiredRole="admin"><EstateLeadership /></ProtectedRoute>} />
-                    <Route path="/admin/subscription" element={<ProtectedRoute requiredRole="admin"><AdminSubscriptionPage /></ProtectedRoute>} />
                     <Route path="/admin/profile" element={<ProtectedRoute requiredRole="admin"><AdminProfile /></ProtectedRoute>} />
                     <Route path="/admin/announcements" element={<ProtectedRoute requiredRole="admin"><AnnouncementManagement /></ProtectedRoute>} />
                     <Route path="/admin/notifications" element={<ProtectedRoute requiredRole="admin"><AdminNotificationsPage/></ProtectedRoute>} />

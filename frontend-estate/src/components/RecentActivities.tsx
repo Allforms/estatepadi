@@ -383,6 +383,7 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
           </div>
         </div>
       )}
+      <br /><br /><br /><br /><br />
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ResidentLayout from '../../components/layouts/ResidentLayout';
+import ResidentBottomNav from '../../components/layouts/ResidentBottomNav';
 import { BuildingIcon, MapPinIcon, PhoneIcon, MailIcon, BanknoteIcon, CreditCardIcon } from 'lucide-react';
 import api from '../../api';
 
@@ -223,6 +224,8 @@ const EstateView: React.FC = () => {
           </div>
         </div>
       </div>
+      <br /><br /><br />
+      <ResidentBottomNav/>
     </ResidentLayout>
   );
 };

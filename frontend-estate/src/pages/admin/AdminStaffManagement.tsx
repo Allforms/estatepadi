@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import AdminLayout from '../../components/layouts/AdminLayout';
+import AdminBottomNav from '../../components/layouts/AdminBottomNav';
 import {
   Users,
   Search,
@@ -173,7 +174,8 @@ const AdminStaffManagement: React.FC = () => {
 
   return (
     <AdminLayout title="Staff Management">
-      <div className="space-y-6">
+      
+      <div className="space-y-6 sm:space-x-6">
         {/* Header */}
         <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl p-6 shadow-lg">
           <h2 className="text-2xl font-bold mb-2">Artisans & Domestic Staff Management</h2>
@@ -181,7 +183,7 @@ const AdminStaffManagement: React.FC = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-3">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -470,6 +472,8 @@ const AdminStaffManagement: React.FC = () => {
           </div>
         </div>
       )}
+      <br /><br /><br />
+      <AdminBottomNav/>
     </AdminLayout>
   );
 };

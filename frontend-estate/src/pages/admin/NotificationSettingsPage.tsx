@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import AdminLayout from '../../components/layouts/AdminLayout';
 import { BellIcon, BellOffIcon, CheckCircleIcon, AlertCircleIcon } from 'lucide-react';
 import { usePushNotifications } from '../../hooks/usePushNotification';
-
+import AdminBottomNav from '../../components/layouts/AdminBottomNav';
 const AdminNotificationSettingsPage: React.FC = () => {
   const {
     isSupported,
@@ -200,6 +200,7 @@ const AdminNotificationSettingsPage: React.FC = () => {
           </p>
         </div>
       </div>
+       <AdminBottomNav/>
     </AdminLayout>
   );
 };

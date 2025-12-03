@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ResidentLayout from '../../components/layouts/ResidentLayout';
+import ResidentBottomNav from '../../components/layouts/ResidentBottomNav';
 import { EditIcon, SaveIcon, TrashIcon, AlertCircleIcon, UserCircle } from 'lucide-react';
 import api from '../../api';
 
@@ -228,6 +229,8 @@ const ResidentProfile: React.FC = () => {
           </div>
         )}
       </div>
+      <br /><br /><br />
+      <ResidentBottomNav/>
     </ResidentLayout>
   );
 };

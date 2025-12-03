@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ResidentLayout from '../../components/layouts/ResidentLayout';
+import ResidentBottomNav from '../../components/layouts/ResidentBottomNav';
 import { UserIcon, PlusIcon, FilterIcon, SearchIcon } from 'lucide-react';
 import api from '../../api';
 
@@ -331,6 +332,8 @@ const ArtisanDomesticList: React.FC = () => {
           </div>
         </div>
       )}
+      <br /><br /><br />
+      <ResidentBottomNav/>
     </ResidentLayout>
   );
 };

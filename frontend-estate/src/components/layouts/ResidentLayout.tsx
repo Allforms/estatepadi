@@ -155,7 +155,7 @@ const ResidentLayout: React.FC<ResidentLayoutProps> = ({
         </div>
 
         {/* Navigation - Scrollable */}
-        <nav className="flex-1 mt-2 px-3 pb-4 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <nav className="flex-1 mt-2 px-3 pb-24 lg:pb-4 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
           <ul className="space-y-1">
             {navItems.map((item, index) => {
               const isActive = isActivePath(item.path);

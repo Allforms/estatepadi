@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ResidentLayout from '../../components/layouts/ResidentLayout';
+import ResidentBottomNav from '../../components/layouts/ResidentBottomNav';
 import {
   KeyIcon,
   ClockIcon,
@@ -501,6 +502,8 @@ Powered by EstatePadi 🚀`;
           )}
         </div>
       </div>
+      <br /><br /><br />
+      <ResidentBottomNav/>
     </ResidentLayout>
   );
 };

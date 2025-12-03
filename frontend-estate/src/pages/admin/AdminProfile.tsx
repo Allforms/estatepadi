@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import AdminLayout from '../../components/layouts/AdminLayout';
 import { EditIcon, SaveIcon, TrashIcon, AlertCircleIcon, UserCircle } from 'lucide-react';
 import api from '../../api';
+import AdminBottomNav from '../../components/layouts/AdminBottomNav';
 
 const AdminProfile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -228,6 +229,8 @@ const AdminProfile: React.FC = () => {
           </div>
         )}
       </div>
+      <br /><br /><br />
+      <AdminBottomNav/>
     </AdminLayout>
   );
 };

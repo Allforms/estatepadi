@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import AdminLayout from '../../components/layouts/AdminLayout';
 import { PlusIcon, EditIcon, TrashIcon, XIcon, Calendar, User, MessageSquare, Search } from 'lucide-react';
 import api from '../../api';
+import AdminBottomNav from '../../components/layouts/AdminBottomNav';
 
 interface Announcement {
   id: number;
@@ -340,6 +341,8 @@ const AnnouncementManagement: React.FC = () => {
           </div>
         )}
       </div>
+      <br /><br /><br />
+      <AdminBottomNav/>
     </AdminLayout>
   );
 };

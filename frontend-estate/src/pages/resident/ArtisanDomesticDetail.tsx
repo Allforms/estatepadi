@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ResidentLayout from '../../components/layouts/ResidentLayout';
+import ResidentBottomNav from '../../components/layouts/ResidentBottomNav';
 import { UserIcon, PhoneIcon, CalendarIcon, ShieldIcon, AlertTriangleIcon, ArrowLeftIcon, EditIcon, TrashIcon } from 'lucide-react';
 import api from '../../api';
 
@@ -394,6 +395,8 @@ const ArtisanDomesticDetail: React.FC = () => {
           </div>
         </div>
       )}
+      <br /><br /><br />
+      <ResidentBottomNav/>
     </ResidentLayout>
   );
 };

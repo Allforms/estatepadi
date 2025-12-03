@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { BellIcon, CheckCheckIcon } from 'lucide-react';
 import AdminLayout from '../../components/layouts/AdminLayout';
+import AdminBottomNav from '../../components/layouts/AdminBottomNav';
 import api from '../../api';
 
 interface Notification {
@@ -230,6 +231,8 @@ const NotificationsPage: React.FC = () => {
           </div>
         )}
       </div>
+      <br /><br /><br />
+      <AdminBottomNav/>
     </AdminLayout>
   );
 };

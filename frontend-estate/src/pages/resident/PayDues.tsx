@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import ResidentLayout from '../../components/layouts/ResidentLayout';
+import ResidentBottomNav from '../../components/layouts/ResidentBottomNav';
 import { 
   CreditCardIcon, 
   UploadIcon, 
@@ -511,6 +512,8 @@ const PayDues: React.FC = () => {
           )}
         </div>
       </div>
+      <br /><br /><br />
+      <ResidentBottomNav/>
     </ResidentLayout>
   );
 };

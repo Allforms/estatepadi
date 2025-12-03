@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { BellIcon, CheckCheckIcon} from 'lucide-react';
 import ResidentLayout from '../../components/layouts/ResidentLayout';
+import ResidentBottomNav from '../../components/layouts/ResidentBottomNav';
 import api from '../../api';
 interface Notification {
   id: number;
@@ -229,6 +230,8 @@ const NotificationsPage: React.FC = () => {
           </div>
         )}
       </div>
+      <br /><br /><br />
+      <ResidentBottomNav/>
     </ResidentLayout>
   );
 };

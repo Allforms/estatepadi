@@ -72,6 +72,7 @@ urlpatterns = [
     path('subscription/create/', create_subscription, name='create-subscription'),
     path('subscription/plans/', subscription_plans, name='subscription-plans'),
     path('subscription/status/', subscription_status, name='subscription-status'),
+    path('subscription/renew/', renew_subscription, name='renew-subscription'),
 
     # Paystack Webhooks
     path('paystack/webhook/', paystack_webhook, name='paystack-webhook'),

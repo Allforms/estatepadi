@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import ResidentLayout from '../../components/layouts/ResidentLayout';
 import { BellIcon, BellOffIcon, CheckCircleIcon, AlertCircleIcon } from 'lucide-react';
 import { usePushNotifications } from '../../hooks/usePushNotification';
+import ResidentBottomNav from '../../components/layouts/ResidentBottomNav';
 
 const NotificationSettingsPage: React.FC = () => {
   const {
@@ -200,6 +201,8 @@ const NotificationSettingsPage: React.FC = () => {
           </p>
         </div>
       </div>
+      <br /><br /><br />
+      <ResidentBottomNav/>
     </ResidentLayout>
   );
 };

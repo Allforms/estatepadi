@@ -107,24 +107,24 @@ const ResidentDashboard: React.FC = () => {
 
   return (
     <ResidentLayout title="Dashboard">
-      <div className="space-y-6">
+      <div className="space-y-6 pb-24 sm:pb-6">
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6 lg:grid-cols-4">
           {/* Generate Visitor Code */}
           <div className="bg-blue-50 overflow-hidden shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <div className="flex items-center">
-                <div className="bg-blue-100 rounded-md p-3">
-                  <KeyIcon size={24} className="text-blue-600" />
+            <div className="p-3 sm:p-4 lg:p-6">
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center space-x-2">
+                  <div className="bg-blue-100 rounded-md p-2">
+                    <KeyIcon size={18} className="sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-blue-600" />
+                  </div>
+                  <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">Visitor Code</p>
                 </div>
-                <div className="ml-5 flex-1">
-                  <p className="text-sm font-medium text-gray-500 truncate">Generate Visitor Code</p>
-                  <p className="text-lg font-medium text-gray-900">Quick access for visitors</p>
-                </div>
+                <p className="text-sm sm:text-base lg:text-lg font-medium text-gray-900 line-clamp-2">Quick access</p>
               </div>
-              <div className="mt-5">
-                <a href="/resident/visitor-codes" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                  Generate Code
+              <div className="mt-3 sm:mt-4">
+                <a href="/resident/visitor-codes" className="inline-flex items-center justify-center w-full px-3 py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all">
+                  Generate
                 </a>
               </div>
             </div>
@@ -132,18 +132,18 @@ const ResidentDashboard: React.FC = () => {
 
           {/* Pay Dues */}
           <div className="bg-green-50 overflow-hidden shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <div className="flex items-center">
-                <div className="bg-green-100 rounded-md p-3">
-                  <CreditCardIcon size={24} className="text-green-600" />
+            <div className="p-3 sm:p-4 lg:p-6">
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center space-x-2">
+                  <div className="bg-green-100 rounded-md p-2">
+                    <CreditCardIcon size={18} className="sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-green-600" />
+                  </div>
+                  <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">Pay Dues</p>
                 </div>
-                <div className="ml-5 flex-1">
-                  <p className="text-sm font-medium text-gray-500 truncate">Pay Dues</p>
-                  <p className="text-lg font-medium text-gray-900">Manage your payments</p>
-                </div>
+                <p className="text-sm sm:text-base lg:text-lg font-medium text-gray-900 line-clamp-2">Manage payments</p>
               </div>
-              <div className="mt-5">
-                <a href="/resident/pay-dues" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+              <div className="mt-3 sm:mt-4">
+                <a href="/resident/pay-dues" className="inline-flex items-center justify-center w-full px-3 py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 active:scale-95 transition-all">
                   View & Pay
                 </a>
               </div>
@@ -152,42 +152,42 @@ const ResidentDashboard: React.FC = () => {
 
           {/* Artisan & Domestic Staff */}
           <div className="bg-orange-50 overflow-hidden shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <div className="flex items-center">
-                <div className="bg-orange-100 rounded-md p-3">
-                  <UserIcon size={24} className="text-orange-600" />
+            <div className="p-3 sm:p-4 lg:p-6">
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center space-x-2">
+                  <div className="bg-orange-100 rounded-md p-2">
+                    <UserIcon size={18} className="sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-orange-600" />
+                  </div>
+                  <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">Staff</p>
                 </div>
-                <div className="ml-5 flex-1">
-                  <p className="text-sm font-medium text-gray-500 truncate">Staff Management</p>
-                  <p className="text-lg font-medium text-gray-900">
-                    {loading.staff ? '...' : `${staffCount.active} active staff`}
-                  </p>
-                </div>
+                <p className="text-sm sm:text-base lg:text-lg font-medium text-gray-900 line-clamp-2">
+                  {loading.staff ? '...' : `${staffCount.active} active`}
+                </p>
               </div>
-              <div className="mt-5">
-                <a href="/resident/artisans-domestics" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
-                  Manage Staff
+              <div className="mt-3 sm:mt-4">
+                <a href="/resident/artisans-domestics" className="inline-flex items-center justify-center w-full px-3 py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 active:scale-95 transition-all">
+                  Manage
                 </a>
               </div>
             </div>
           </div>
 
-          {/* Emergency Alerts - NEW */}
+          {/* Emergency Alerts */}
           <div className="bg-red-50 overflow-hidden shadow rounded-lg border-2 border-red-200">
-            <div className="px-4 py-5 sm:p-6">
-              <div className="flex items-center">
-                <div className="bg-red-100 rounded-md p-3">
-                  <AlertTriangle size={24} className="text-red-600" />
+            <div className="p-3 sm:p-4 lg:p-6">
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center space-x-2">
+                  <div className="bg-red-100 rounded-md p-2">
+                    <AlertTriangle size={18} className="sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-red-600" />
+                  </div>
+                  <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">Alerts</p>
                 </div>
-                <div className="ml-5 flex-1">
-                  <p className="text-sm font-medium text-gray-500 truncate">Emergency Alerts</p>
-                  <p className="text-lg font-medium text-gray-900">
-                    {loading.alerts ? '...' : `${alertCount} sent`}
-                  </p>
-                </div>
+                <p className="text-sm sm:text-base lg:text-lg font-medium text-gray-900 line-clamp-2">
+                  {loading.alerts ? '...' : `${alertCount} sent`}
+                </p>
               </div>
-              <div className="mt-5">
-                <a href="/resident/alerts" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+              <div className="mt-3 sm:mt-4">
+                <a href="/resident/alerts" className="inline-flex items-center justify-center w-full px-3 py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 active:scale-95 transition-all">
                   Send Alert
                 </a>
               </div>
@@ -393,7 +393,6 @@ const ResidentDashboard: React.FC = () => {
           </div>
         </div>
       </div>
-      <br /><br /> <br />
       <ResidentBottomNav />
     </ResidentLayout>
   );

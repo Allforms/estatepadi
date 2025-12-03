@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import api from "../../api";
 import { AxiosResponse } from "axios";
-
+import AdminBottomNav from "../../components/layouts/AdminBottomNav";
 
 interface Payment {
   id: number;
@@ -233,10 +233,10 @@ const PaymentRecords: React.FC = () => {
   if (loading) {
     return (
       <AdminLayout title="Payment Records">
-        <div className="p-6 text-center">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p className="text-lg text-gray-600">Loading payments...</p>
+        <div className="p-4 sm:p-6 text-center">
+          <div className="flex flex-col items-center space-y-3 sm:space-y-4">
+            <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600"></div>
+            <p className="text-base sm:text-lg text-gray-600">Loading payments...</p>
           </div>
         </div>
       </AdminLayout>
@@ -247,13 +247,13 @@ const PaymentRecords: React.FC = () => {
     <AdminLayout title="Payment Records">
       <div className="space-y-6">
         {/* Header with Export and Stats */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex flex-wrap justify-between items-center mb-4">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-between sm:items-center mb-4 space-y-3 sm:space-y-0">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                 Payment Records
               </h2>
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-600 mt-1 text-xs sm:text-sm">
                 Showing {Math.min(startIndex + 1, filteredPayments.length)} to{" "}
                 {Math.min(endIndex, filteredPayments.length)} of{" "}
                 {filteredPayments.length} payments
@@ -263,38 +263,38 @@ const PaymentRecords: React.FC = () => {
             </div>
             <button
               onClick={handleExport}
-              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg shadow-sm text-sm font-medium hover:bg-green-700 transition-colors"
+              className="flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-lg shadow-sm text-xs sm:text-sm font-medium hover:bg-green-700 active:scale-95 transition-all"
             >
-              <FileTextIcon size={18} className="mr-2" />
+              <FileTextIcon size={16} className="sm:w-[18px] sm:h-[18px] mr-2" />
               Generate Report
             </button>
           </div>
 
           {/* Summary Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <p className="text-sm text-blue-600 font-medium">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-200">
+              <p className="text-xs sm:text-sm text-blue-600 font-medium truncate">
                 Total Payments
               </p>
-              <p className="text-2xl font-bold text-blue-900">
+              <p className="text-xl sm:text-2xl font-bold text-blue-900">
                 {payments.length}
               </p>
             </div>
-            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-              <p className="text-sm text-green-600 font-medium">Approved</p>
-              <p className="text-2xl font-bold text-green-900">
+            <div className="bg-green-50 p-3 sm:p-4 rounded-lg border border-green-200">
+              <p className="text-xs sm:text-sm text-green-600 font-medium truncate">Approved</p>
+              <p className="text-xl sm:text-2xl font-bold text-green-900">
                 {payments.filter((p) => p.status === "approved").length}
               </p>
             </div>
-            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-              <p className="text-sm text-yellow-600 font-medium">Pending</p>
-              <p className="text-2xl font-bold text-yellow-900">
+            <div className="bg-yellow-50 p-3 sm:p-4 rounded-lg border border-yellow-200">
+              <p className="text-xs sm:text-sm text-yellow-600 font-medium truncate">Pending</p>
+              <p className="text-xl sm:text-2xl font-bold text-yellow-900">
                 {payments.filter((p) => p.status === "pending").length}
               </p>
             </div>
-            <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-              <p className="text-sm text-red-600 font-medium">Rejected</p>
-              <p className="text-2xl font-bold text-red-900">
+            <div className="bg-red-50 p-3 sm:p-4 rounded-lg border border-red-200">
+              <p className="text-xs sm:text-sm text-red-600 font-medium truncate">Rejected</p>
+              <p className="text-xl sm:text-2xl font-bold text-red-900">
                 {payments.filter((p) => p.status === "rejected").length}
               </p>
             </div>
@@ -302,17 +302,17 @@ const PaymentRecords: React.FC = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex flex-wrap items-center gap-4">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-4">
             {/* Search */}
-            <div className="relative flex-1 min-w-64">
+            <div className="relative flex-1 min-w-full sm:min-w-64">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <SearchIcon size={18} className="text-gray-400" />
+                <SearchIcon size={16} className="sm:w-[18px] sm:h-[18px] text-gray-400" />
               </div>
               <input
                 type="text"
-                placeholder="Search by resident name or payment description..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Search by resident or payment..."
+                className="w-full pl-9 sm:pl-10 pr-4 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -320,9 +320,9 @@ const PaymentRecords: React.FC = () => {
 
             {/* Status Filter */}
             <div className="flex items-center space-x-2">
-              <FilterIcon size={18} className="text-gray-500" />
+              <FilterIcon size={16} className="sm:w-[18px] sm:h-[18px] text-gray-500" />
               <select
-                className="border border-gray-300 rounded-lg py-2 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="border border-gray-300 rounded-lg py-2 pl-3 pr-8 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value as any)}
               >
@@ -335,11 +335,11 @@ const PaymentRecords: React.FC = () => {
 
             {/* Month Filter */}
             <div className="flex items-center space-x-2">
-              <span className="text-gray-500 text-sm whitespace-nowrap">
+              <span className="text-gray-500 text-xs sm:text-sm whitespace-nowrap">
                 Month:
               </span>
               <select
-                className="border border-gray-300 rounded-lg py-2 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="border border-gray-300 rounded-lg py-2 pl-3 pr-8 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={filterMonth}
                 onChange={(e) => setFilterMonth(e.target.value)}
               >
@@ -354,11 +354,11 @@ const PaymentRecords: React.FC = () => {
 
             {/* Items per page */}
             <div className="flex items-center space-x-2">
-              <span className="text-gray-500 text-sm whitespace-nowrap">
+              <span className="text-gray-500 text-xs sm:text-sm whitespace-nowrap">
                 Per page:
               </span>
               <select
-                className="border border-gray-300 rounded-lg py-2 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="border border-gray-300 rounded-lg py-2 pl-3 pr-8 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={itemsPerPage}
                 onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
               >
@@ -504,20 +504,20 @@ const PaymentRecords: React.FC = () => {
                             <>
                               <button
                                 onClick={() => handleVerify(p.id)}
-                                className="flex items-center space-x-1 px-3 py-1.5 text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                                className="flex items-center space-x-1 px-2 sm:px-3 py-1.5 text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 rounded-lg transition-colors active:scale-95"
                                 title="Approve payment"
                               >
-                                <CheckCircleIcon size={16} />
+                                <CheckCircleIcon size={14} className="sm:w-4 sm:h-4" />
                                 <span className="text-xs font-medium">
                                   Approve
                                 </span>
                               </button>
                               <button
                                 onClick={() => handleReject(p.id)}
-                                className="flex items-center space-x-1 px-3 py-1.5 text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                                className="flex items-center space-x-1 px-2 sm:px-3 py-1.5 text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 rounded-lg transition-colors active:scale-95"
                                 title="Reject payment"
                               >
-                                <XCircleIcon size={16} />
+                                <XCircleIcon size={14} className="sm:w-4 sm:h-4" />
                                 <span className="text-xs font-medium">
                                   Reject
                                 </span>
@@ -525,7 +525,7 @@ const PaymentRecords: React.FC = () => {
                             </>
                           )}
                           {p.status === "approved" && p.approved_by_name && (
-                            <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+                            <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded truncate max-w-[150px]">
                               Approved by {p.approved_by_name}
                             </span>
                           )}
@@ -546,9 +546,9 @@ const PaymentRecords: React.FC = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-700">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
+              <div className="text-xs sm:text-sm text-gray-700">
                 Showing {startIndex + 1} to{" "}
                 {Math.min(endIndex, filteredPayments.length)} of{" "}
                 {filteredPayments.length} results
@@ -558,9 +558,9 @@ const PaymentRecords: React.FC = () => {
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-1.5 sm:p-2 rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors active:scale-95"
                 >
-                  <ChevronLeftIcon size={16} />
+                  <ChevronLeftIcon size={14} className="sm:w-4 sm:h-4" />
                 </button>
 
                 <div className="flex items-center space-x-1">
@@ -574,7 +574,7 @@ const PaymentRecords: React.FC = () => {
                       if (!isNearCurrentPage && !isFirstOrLast) {
                         if (page === 2 || page === totalPages - 1) {
                           return (
-                            <span key={page} className="text-gray-400 px-2">
+                            <span key={page} className="text-gray-400 px-1 sm:px-2 text-xs sm:text-sm">
                               ...
                             </span>
                           );
@@ -586,7 +586,7 @@ const PaymentRecords: React.FC = () => {
                         <button
                           key={page}
                           onClick={() => setCurrentPage(page)}
-                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                          className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-medium transition-all active:scale-95 ${
                             isCurrentPage
                               ? "bg-blue-600 text-white"
                               : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-100"
@@ -604,15 +604,17 @@ const PaymentRecords: React.FC = () => {
                     setCurrentPage(Math.min(totalPages, currentPage + 1))
                   }
                   disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-1.5 sm:p-2 rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors active:scale-95"
                 >
-                  <ChevronRightIcon size={16} />
+                  <ChevronRightIcon size={14} className="sm:w-4 sm:h-4" />
                 </button>
               </div>
             </div>
           </div>
         )}
       </div>
+      <br /><br /><br />
+       <AdminBottomNav/>
     </AdminLayout>
   );
 };

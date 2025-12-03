@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import AdminLayout from '../../components/layouts/AdminLayout';
 import { PlusIcon, EditIcon, TrashIcon, BellIcon, XIcon, CalendarIcon, DollarSignIcon, SearchIcon, FilterIcon, CheckCircleIcon,AlertCircleIcon, ClockIcon } from 'lucide-react';
 import api from '../../api';
+import AdminBottomNav from '../../components/layouts/AdminBottomNav';
 
 interface Due {
   id: number;
@@ -229,7 +230,6 @@ const DuesManagement: React.FC = () => {
   return (
     <AdminLayout title="Dues Management">
       <div className="space-y-4 sm:space-y-6">
-        
         {/* Notification */}
         {notification && (
           <div className={`rounded-md p-4 ${
@@ -300,58 +300,58 @@ const DuesManagement: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg p-4 shadow">
+        {/* Stats Cards - Updated for mobile 2x2 layout */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="bg-white rounded-lg p-3 sm:p-4 shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Dues</p>
-                <p className="text-2xl font-bold text-gray-800">{dues.length}</p>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">Total Dues</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-800">{dues.length}</p>
               </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <DollarSignIcon className="h-6 w-6 text-blue-600" />
+              <div className="p-2 sm:p-3 bg-blue-100 rounded-full flex-shrink-0">
+                <DollarSignIcon className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-lg p-4 shadow">
+          <div className="bg-white rounded-lg p-3 sm:p-4 shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Overdue</p>
-                <p className="text-2xl font-bold text-red-600">
+                <p className="text-xs sm:text-sm text-gray-600 truncate">Overdue</p>
+                <p className="text-xl sm:text-2xl font-bold text-red-600">
                   {dues.filter(due => isOverdue(due.due_date)).length}
                 </p>
               </div>
-              <div className="p-3 bg-red-100 rounded-full">
-                <AlertCircleIcon className="h-6 w-6 text-red-600" />
+              <div className="p-2 sm:p-3 bg-red-100 rounded-full flex-shrink-0">
+                <AlertCircleIcon className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-lg p-4 shadow">
+          <div className="bg-white rounded-lg p-3 sm:p-4 shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Amount</p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-xs sm:text-sm text-gray-600 truncate">Total Amount</p>
+                <p className="text-lg sm:text-2xl font-bold text-green-600 truncate">
                   {formatCurrency(totalAmount)}
                 </p>
               </div>
-              <div className="p-3 bg-green-100 rounded-full">
-                <DollarSignIcon className="h-6 w-6 text-green-600" />
+              <div className="p-2 sm:p-3 bg-green-100 rounded-full flex-shrink-0">
+                <DollarSignIcon className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-lg p-4 shadow">
+          <div className="bg-white rounded-lg p-3 sm:p-4 shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Due Soon</p>
-                <p className="text-2xl font-bold text-yellow-600">
+                <p className="text-xs sm:text-sm text-gray-600 truncate">Due Soon</p>
+                <p className="text-xl sm:text-2xl font-bold text-yellow-600">
                   {dues.filter(due => isUpcoming(due.due_date)).length}
                 </p>
               </div>
-              <div className="p-3 bg-yellow-100 rounded-full">
-                <ClockIcon className="h-6 w-6 text-yellow-600" />
+              <div className="p-2 sm:p-3 bg-yellow-100 rounded-full flex-shrink-0">
+                <ClockIcon className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
               </div>
             </div>
           </div>
@@ -630,6 +630,8 @@ const DuesManagement: React.FC = () => {
         )}
 
       </div>
+      <br /><br /><br />
+      <AdminBottomNav/>
     </AdminLayout>
   );
 };
