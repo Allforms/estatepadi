@@ -83,13 +83,24 @@ def sync_subscriptions_from_paystack():
     headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
     results = []
 
+    print(f"[SYNC] Starting sync - Using secret key: {PAYSTACK_SECRET_KEY[:10]}...")
+
     url = f"{PAYSTACK_BASE_URL}/subscription"
+    print(f"[SYNC] Fetching from URL: {url}")
+
     resp = requests.get(url, headers=headers)
+    print(f"[SYNC] Response status: {resp.status_code}")
 
     if resp.status_code != 200:
+        print(f"[SYNC ERROR] Failed to fetch subscriptions: {resp.text}")
         return {"error": "Failed to fetch subscriptions from Paystack", "response": resp.text}
 
     subscriptions = resp.json().get("data", [])
+    print(f"[SYNC] Found {len(subscriptions)} subscriptions from Paystack")
+
+    # Log first subscription structure for debugging
+    if subscriptions:
+        print(f"[SYNC] Sample subscription data: {subscriptions[0]}")
 
     # Group subs by email
     user_subs = defaultdict(list)
@@ -97,6 +108,10 @@ def sync_subscriptions_from_paystack():
         email = sub.get("customer", {}).get("email")
         if email:
             user_subs[email].append(sub)
+        else:
+            print(f"[SYNC] Subscription {sub.get('subscription_code')} has no customer email - skipping")
+
+    print(f"[SYNC] Grouped subscriptions for {len(user_subs)} unique emails")
 
     for email, subs in user_subs.items():
         try:

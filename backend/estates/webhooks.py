@@ -94,21 +94,17 @@ def paystack_webhook(request):
                 user.subscription_active = False
         user.save()
 
-    # ---------- CHARGE SUCCESS (first payment) ----------
+    # ---------- CHARGE SUCCESS (first payment OR renewal) ----------
     if event == 'charge.success':
         print(f"[WEBHOOK DEBUG] Processing charge.success event")
         plan_data = data.get('plan', {})
         print(f"[WEBHOOK DEBUG] plan_data: {plan_data}")
 
-        if not plan_data:
-            print(f"[WEBHOOK DEBUG] No plan_data found - ignoring event")
-            return Response({'status': 'ignored'}, status=200)
-
         customer_data = data.get('customer', {})
         authorization_data = data.get('authorization', {})
 
         subscription_code = data.get('subscription_code')
-        plan_code = plan_data.get('plan_code')
+        plan_code = plan_data.get('plan_code') if plan_data else None
         customer_email = customer_data.get('email')
         customer_code = customer_data.get('customer_code')
         authorization_code = authorization_data.get('authorization_code')
@@ -116,12 +112,51 @@ def paystack_webhook(request):
         print(f"[WEBHOOK DEBUG] Extracted data - subscription_code: {subscription_code}, plan_code: {plan_code}, email: {customer_email}, customer_code: {customer_code}")
 
         user = User.objects.filter(email=customer_email).first()
+
+        if not user:
+            print(f"[WEBHOOK DEBUG] FAILURE - User not found - Email: {customer_email}")
+            return Response({'status': 'ignored'}, status=200)
+
+        # Check if this is a renewal (no plan_data) or first payment (has plan_data)
+        if not plan_data or not plan_code:
+            print(f"[WEBHOOK DEBUG] No plan_data - This is likely a RENEWAL payment")
+            # For renewals, lookup existing subscription and use its plan
+            sub = get_subscription(subscription_code, customer_code, customer_email)
+
+            if sub and sub.plan:
+                print(f"[WEBHOOK DEBUG] Found existing subscription {sub.id} with plan {sub.plan.name}")
+                plan = sub.plan  # Use the existing plan
+
+                # Payment date
+                paid_at = data.get('paid_at') or data.get('created_at')
+                payment_date = parse_paystack_date(paid_at) or datetime.datetime.now(datetime.timezone.utc)
+                next_date = calculate_next_billing_date(plan, payment_date)
+
+                print(f"[WEBHOOK DEBUG] Renewal - Calculated dates - payment_date: {payment_date}, next_date: {next_date}")
+
+                # Update existing subscription
+                sub.authorization_code = authorization_code or sub.authorization_code
+                sub.status = 'active'
+                sub.next_billing_date = next_date
+                if subscription_code:
+                    sub.paystack_subscription_code = subscription_code
+                sub.save()
+                print(f"[WEBHOOK DEBUG] SUCCESS - Updated subscription {sub.id} for renewal payment for {user.email}")
+
+                set_user_active_state(user)
+                print(f"[WEBHOOK DEBUG] Updated user active state for {user.email}")
+                return Response({'status': 'success'}, status=200)
+            else:
+                print(f"[WEBHOOK DEBUG] FAILURE - No existing subscription found for renewal - Email: {customer_email}")
+                return Response({'status': 'ignored'}, status=200)
+
+        # First-time payment with plan_data
         plan = SubscriptionPlan.objects.filter(paystack_plan_code=plan_code).first()
 
         print(f"[WEBHOOK DEBUG] User found: {user is not None}, Plan found: {plan is not None}")
 
-        if not user or not plan:
-            print(f"[WEBHOOK DEBUG] FAILURE - User or plan not found - Email: {customer_email}, Plan: {plan_code}")
+        if not plan:
+            print(f"[WEBHOOK DEBUG] FAILURE - Plan not found - Plan: {plan_code}")
             print(f"[WEBHOOK DEBUG] Available plans: {list(SubscriptionPlan.objects.values_list('paystack_plan_code', flat=True))}")
             return Response({'status': 'ignored'}, status=200)
 
@@ -130,7 +165,7 @@ def paystack_webhook(request):
         payment_date = parse_paystack_date(paid_at) or datetime.datetime.now(datetime.timezone.utc)
         next_date = calculate_next_billing_date(plan, payment_date)
 
-        print(f"[WEBHOOK DEBUG] Calculated dates - payment_date: {payment_date}, next_date: {next_date}")
+        print(f"[WEBHOOK DEBUG] First payment - Calculated dates - payment_date: {payment_date}, next_date: {next_date}")
 
         # Lookup by subscription_code (strict!)
         sub = get_subscription(subscription_code, customer_code, customer_email)
