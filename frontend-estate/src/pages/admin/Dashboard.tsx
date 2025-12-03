@@ -271,7 +271,13 @@ const AdminDashboard: React.FC = () => {
                       )}
                     </div>
                     <h3 className="text-xs sm:text-sm font-medium text-gray-700 mb-1">{stat.title}</h3>
-                    <p className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">{stat.value}</p>
+                    <p className={`font-bold text-gray-900 ${
+                      stat.title === 'Estate Name'
+                        ? 'text-base sm:text-lg md:text-xl truncate'
+                        : 'text-2xl sm:text-3xl truncate'
+                    }`}>
+                      {stat.value}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -396,8 +402,9 @@ const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
               </div>
+          
 
-              <div className="bg-gradient-to-br from-red-50 to-red-100 border border-red-200 rounded-lg p-3 sm:p-4">
+              <div className="bg-gradient-to-br from-red-50 to-red-100 border border-red-200 rounded-lg p-3 sm:p-6 col-span-2 lg:col-span-1">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs sm:text-sm font-medium text-gray-600">Removed Staff</p>

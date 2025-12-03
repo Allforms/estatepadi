@@ -143,10 +143,31 @@ const UserSubscriptionPage: React.FC = () => {
     }
   };
 
+  const getDisplayStatus = () => {
+    if (!subStatus) return "inactive";
+
+    // Check if subscription is expired
+    if (subStatus.is_expired && !subStatus.grace_period_active) {
+      return "expired";
+    }
+
+    // Check if in grace period
+    if (subStatus.is_expired && subStatus.grace_period_active) {
+      return "grace_period";
+    }
+
+    // Return the actual status
+    return subStatus.status;
+  };
+
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case "active":
         return "bg-green-100 text-green-800 border-green-300";
+      case "expired":
+        return "bg-red-100 text-red-800 border-red-300";
+      case "grace_period":
+        return "bg-orange-100 text-orange-800 border-orange-300";
       case "cancelled":
         return "bg-red-100 text-red-800 border-red-300";
       case "past_due":
@@ -240,7 +261,7 @@ const UserSubscriptionPage: React.FC = () => {
           )}
 
           {/* Current Subscription Status */}
-          {subStatus && subStatus.status !== "inactive" && (
+          {subStatus && getDisplayStatus() !== "inactive" && (
             <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-200 overflow-hidden animate-slide-up">
               <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-5 py-4 sm:px-8 sm:py-6 text-white">
                 <div className="flex items-center justify-between">
@@ -250,7 +271,15 @@ const UserSubscriptionPage: React.FC = () => {
                     </div>
                     <div>
                       <h2 className="text-lg sm:text-2xl font-bold">Your Subscription</h2>
-                      <p className="text-xs sm:text-sm text-blue-100">Active membership details</p>
+                      <p className="text-xs sm:text-sm text-blue-100">
+                        {getDisplayStatus() === "expired"
+                          ? "Expired - Renew to continue"
+                          : getDisplayStatus() === "grace_period"
+                          ? "Expiring soon - Renew now"
+                          : getDisplayStatus() === "cancelled"
+                          ? "Cancelled subscription"
+                          : "Active membership details"}
+                      </p>
                     </div>
                   </div>
                   <button
@@ -268,17 +297,38 @@ const UserSubscriptionPage: React.FC = () => {
                   {/* Status and Plan Row */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Status Card */}
-                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-5 border-2 border-green-200">
+                    <div className={`bg-gradient-to-br rounded-2xl p-5 border-2 ${
+                      getDisplayStatus() === "expired" || getDisplayStatus() === "cancelled"
+                        ? "from-red-50 to-red-100 border-red-200"
+                        : getDisplayStatus() === "grace_period"
+                        ? "from-orange-50 to-orange-100 border-orange-200"
+                        : "from-green-50 to-emerald-50 border-green-200"
+                    }`}>
                       <div className="flex items-center justify-between mb-3">
-                        <Check className="h-7 w-7 text-green-600" />
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 ${getStatusColor(subStatus.status)}`}>
-                          {subStatus.status?.toUpperCase()}
+                        {getDisplayStatus() === "expired" || getDisplayStatus() === "cancelled" ? (
+                          <AlertCircle className="h-7 w-7 text-red-600" />
+                        ) : (
+                          <Check className="h-7 w-7 text-green-600" />
+                        )}
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 ${getStatusColor(getDisplayStatus())}`}>
+                          {getDisplayStatus() === "grace_period" ? "EXPIRING SOON" : getDisplayStatus().toUpperCase()}
                         </span>
                       </div>
                       <p className="text-xs text-gray-600 font-medium">Subscription Status</p>
                       <p className="text-xl font-bold text-gray-900 mt-1">
-                        {subStatus.status === "active" ? "Active" : subStatus.status}
+                        {getDisplayStatus() === "active"
+                          ? "Active"
+                          : getDisplayStatus() === "expired"
+                          ? "Expired"
+                          : getDisplayStatus() === "grace_period"
+                          ? "Expiring Soon"
+                          : getDisplayStatus()}
                       </p>
+                      {subStatus.is_expired && subStatus.grace_period_active && (
+                        <p className="text-xs text-orange-600 mt-2 font-medium">
+                          Grace period: {subStatus.days_until_expiry || 0} day(s) left
+                        </p>
+                      )}
                     </div>
 
                     {/* Plan Card */}
@@ -324,7 +374,7 @@ const UserSubscriptionPage: React.FC = () => {
                 <div className="border-t border-gray-200 pt-5">
                   <div className="flex flex-col gap-3">
                     {/* Renew/Pay Again Button */}
-                    {(subStatus?.status === "active" || subStatus?.status === "cancelled") && (
+                    {(getDisplayStatus() === "active" || getDisplayStatus() === "cancelled" || getDisplayStatus() === "expired" || getDisplayStatus() === "grace_period") && (
                       <button
                         onClick={handleRenewSubscription}
                         disabled={processingPayment}
@@ -338,7 +388,11 @@ const UserSubscriptionPage: React.FC = () => {
                         ) : (
                           <>
                             <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />
-                            <span>{subStatus?.status === "active" ? "Renew Subscription" : "Subscribe Again"}</span>
+                            <span>
+                              {getDisplayStatus() === "active" || getDisplayStatus() === "grace_period"
+                                ? "Renew Subscription"
+                                : "Subscribe Again"}
+                            </span>
                           </>
                         )}
                       </button>
@@ -371,7 +425,7 @@ const UserSubscriptionPage: React.FC = () => {
           )}
 
           {/* No Active Subscription Banner */}
-          {(!subStatus || subStatus.status === "inactive") && (
+          {(!subStatus || getDisplayStatus() === "inactive") && (
             <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-2xl animate-slide-up">
               <div className="flex items-center space-x-3 sm:space-x-4">
                 <div className="bg-white bg-opacity-20 rounded-full p-3 sm:p-4 flex-shrink-0">

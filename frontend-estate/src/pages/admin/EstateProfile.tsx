@@ -52,7 +52,7 @@ const EstateProfile: React.FC = () => {
       .then(res => {
         const leaders = res.data.results.map((leader: any) => ({
           id: leader.id,
-          name: leader.email,
+          name: leader.first_name,
           position: leader.position,
           email: leader.email,
           phone: leader.phone_number,
