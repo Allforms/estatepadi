@@ -25,12 +25,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='user',
             name='resident_type',
-            field=models.CharField(choices=[('tenant', 'Tenant'), ('landlord/landlady', 'Landlord/Landlady')], default=django.utils.timezone.now, max_length=20),
+            field=models.CharField(choices=[('tenant', 'Tenant'), ('landlord/landlady', 'Landlord/Landlady', 'security', 'Security')], max_length=20, null=True, blank=True),
             preserve_default=False,
         ),
-        migrations.AlterField(
-            model_name='user',
-            name='street_number',
-            field=models.CharField(max_length=20),
-        ),
+
     ]
