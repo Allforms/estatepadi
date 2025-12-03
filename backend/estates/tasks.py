@@ -82,6 +82,7 @@ def send_payment_approved_email(recipient_email, resident_name, due_title, amoun
 def sync_subscriptions_from_paystack():
     headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
     results = []
+    created_subscriptions = []
 
     print(f"[SYNC] Starting sync - Using secret key: {PAYSTACK_SECRET_KEY[:10]}...")
 
@@ -113,6 +114,7 @@ def sync_subscriptions_from_paystack():
 
     print(f"[SYNC] Grouped subscriptions for {len(user_subs)} unique emails")
 
+    # Update existing subscriptions from Paystack
     for email, subs in user_subs.items():
         try:
             user = User.objects.get(email=email)
@@ -175,7 +177,77 @@ def sync_subscriptions_from_paystack():
             "total_subs": len(subs),
         })
 
-    return {"results": results}
+    # NOW: Find local subscriptions WITHOUT Paystack subscription codes and create them
+    print(f"[SYNC] Checking for local subscriptions without Paystack subscription codes...")
+    orphaned_subs = UserSubscription.objects.filter(
+        paystack_subscription_code__in=['', None],
+        authorization_code__isnull=False,
+        paystack_customer_code__isnull=False,
+        plan__isnull=False
+    ).exclude(authorization_code='')
+
+    print(f"[SYNC] Found {orphaned_subs.count()} local subscriptions without subscription codes")
+
+    for local_sub in orphaned_subs:
+        print(f"[SYNC] Creating Paystack subscription for {local_sub.user.email}...")
+        try:
+            # Create subscription on Paystack
+            create_payload = {
+                "customer": local_sub.paystack_customer_code,
+                "plan": local_sub.plan.paystack_plan_code,
+                "authorization": local_sub.authorization_code
+            }
+
+            create_resp = requests.post(
+                f"{PAYSTACK_BASE_URL}/subscription",
+                json=create_payload,
+                headers=headers
+            )
+
+            print(f"[SYNC] Paystack subscription creation response: {create_resp.status_code}")
+
+            if create_resp.status_code in [200, 201]:
+                sub_data = create_resp.json().get('data', {})
+                subscription_code = sub_data.get('subscription_code')
+                email_token = sub_data.get('email_token', '')
+
+                # Update local subscription
+                local_sub.paystack_subscription_code = subscription_code
+                local_sub.email_token = email_token
+                local_sub.status = 'active'
+                local_sub.save()
+
+                created_subscriptions.append({
+                    "user": local_sub.user.email,
+                    "subscription_code": subscription_code,
+                    "status": "created"
+                })
+
+                print(f"[SYNC] SUCCESS - Created subscription {subscription_code} for {local_sub.user.email}")
+            else:
+                print(f"[SYNC] FAILED to create subscription for {local_sub.user.email}: {create_resp.text}")
+                created_subscriptions.append({
+                    "user": local_sub.user.email,
+                    "status": "failed",
+                    "error": create_resp.text
+                })
+        except Exception as e:
+            print(f"[SYNC] ERROR creating subscription for {local_sub.user.email}: {str(e)}")
+            created_subscriptions.append({
+                "user": local_sub.user.email,
+                "status": "error",
+                "error": str(e)
+            })
+
+    return {
+        "synced_from_paystack": results,
+        "created_on_paystack": created_subscriptions,
+        "summary": {
+            "synced_count": len(results),
+            "created_count": len([s for s in created_subscriptions if s.get('status') == 'created']),
+            "failed_count": len([s for s in created_subscriptions if s.get('status') in ['failed', 'error']])
+        }
+    }
 
 
 

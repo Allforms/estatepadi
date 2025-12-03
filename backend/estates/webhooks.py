@@ -172,6 +172,41 @@ def paystack_webhook(request):
 
         print(f"[WEBHOOK DEBUG] Existing subscription found: {sub is not None}")
 
+        # If no subscription_code from Paystack, create one via API
+        email_token = ''
+        if not subscription_code and authorization_code:
+            print(f"[WEBHOOK DEBUG] No subscription_code - Creating subscription on Paystack")
+            try:
+                import requests
+                PAYSTACK_SECRET_KEY = settings.PAYSTACK_SECRET_KEY
+                headers = {
+                    "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}",
+                    "Content-Type": "application/json"
+                }
+                payload = {
+                    "customer": customer_code,
+                    "plan": plan_code,
+                    "authorization": authorization_code
+                }
+
+                response = requests.post(
+                    "https://api.paystack.co/subscription",
+                    json=payload,
+                    headers=headers
+                )
+
+                print(f"[WEBHOOK DEBUG] Paystack subscription creation response: {response.status_code}")
+
+                if response.status_code == 200 or response.status_code == 201:
+                    sub_data = response.json().get('data', {})
+                    subscription_code = sub_data.get('subscription_code')
+                    email_token = sub_data.get('email_token', '')
+                    print(f"[WEBHOOK DEBUG] Created subscription on Paystack: {subscription_code}, email_token: {email_token}")
+                else:
+                    print(f"[WEBHOOK DEBUG] Failed to create subscription on Paystack: {response.text}")
+            except Exception as e:
+                print(f"[WEBHOOK DEBUG] Error creating subscription on Paystack: {str(e)}")
+
         if sub:
             print(f"[WEBHOOK DEBUG] Updating existing subscription {sub.id}")
             sub.authorization_code = authorization_code or sub.authorization_code
@@ -180,6 +215,8 @@ def paystack_webhook(request):
             sub.next_billing_date = next_date
             if subscription_code:
                 sub.paystack_subscription_code = subscription_code
+            if email_token:
+                sub.email_token = email_token
             sub.save()
             print(f"[WEBHOOK DEBUG] SUCCESS - Updated subscription {sub.id} for {user.email}")
         else:
@@ -190,6 +227,7 @@ def paystack_webhook(request):
                     paystack_customer_code=customer_code,
                     paystack_subscription_code=subscription_code or '',
                     authorization_code=authorization_code or '',
+                    email_token=email_token or '',
                     plan=plan,
                     status='active',
                     next_billing_date=next_date
