@@ -83,6 +83,7 @@ def sync_subscriptions_from_paystack():
     headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
     results = []
 
+    # Step 1: Fetch all subscriptions
     url = f"{PAYSTACK_BASE_URL}/subscription"
     resp = requests.get(url, headers=headers)
 
@@ -90,6 +91,103 @@ def sync_subscriptions_from_paystack():
         return {"error": "Failed to fetch subscriptions from Paystack", "response": resp.text}
 
     subscriptions = resp.json().get("data", [])
+
+    # Step 2: Also fetch recent successful transactions to catch missed webhook events
+    transactions_url = f"{PAYSTACK_BASE_URL}/transaction"
+    transactions_params = {"status": "success", "perPage": 100}  # Fetch last 100 successful transactions
+    trans_resp = requests.get(transactions_url, headers=headers, params=transactions_params)
+
+    successful_transactions = []
+    if trans_resp.status_code == 200:
+        successful_transactions = trans_resp.json().get("data", [])
+        print(f"[SYNC] Found {len(successful_transactions)} successful transactions from Paystack")
+    else:
+        print(f"[SYNC] Failed to fetch transactions: {trans_resp.text}")
+
+    # Process successful transactions that have plan data (subscription payments)
+    for transaction in successful_transactions:
+        plan_data = transaction.get("plan")
+        if not plan_data:
+            continue  # Skip non-subscription transactions
+
+        customer_data = transaction.get("customer", {})
+        customer_email = customer_data.get("email")
+        plan_code = plan_data.get("plan_code")
+
+        if not customer_email or not plan_code:
+            continue
+
+        try:
+            user = User.objects.get(email=customer_email)
+            plan = SubscriptionPlan.objects.filter(paystack_plan_code=plan_code).first()
+
+            if not plan:
+                print(f"[SYNC] Plan not found for code: {plan_code}")
+                continue
+
+            # Check if this transaction was already processed
+            existing_sub = UserSubscription.objects.filter(user=user).first()
+
+            # Calculate next billing date from transaction date
+            from dateutil.relativedelta import relativedelta
+            import datetime
+
+            paid_at = transaction.get("paid_at") or transaction.get("created_at")
+            if paid_at:
+                # Parse Paystack date
+                try:
+                    if paid_at.endswith('Z'):
+                        paid_at = paid_at.replace('Z', '+00:00')
+                    payment_date = datetime.datetime.fromisoformat(paid_at)
+                except:
+                    payment_date = datetime.datetime.now(datetime.timezone.utc)
+            else:
+                payment_date = datetime.datetime.now(datetime.timezone.utc)
+
+            # Calculate next billing based on plan interval
+            if plan.interval == 'monthly':
+                next_date = payment_date + relativedelta(months=1)
+            elif plan.interval == 'yearly':
+                next_date = payment_date + relativedelta(years=1)
+            else:
+                next_date = payment_date + relativedelta(months=1)
+
+            # Create or update subscription
+            subscription_code = transaction.get("subscription", {}).get("subscription_code") if transaction.get("subscription") else ""
+            customer_code = customer_data.get("customer_code")
+            authorization_code = transaction.get("authorization", {}).get("authorization_code")
+
+            UserSubscription.objects.update_or_create(
+                user=user,
+                defaults={
+                    "plan": plan,
+                    "paystack_subscription_code": subscription_code or existing_sub.paystack_subscription_code if existing_sub else "",
+                    "paystack_customer_code": customer_code,
+                    "status": "active",
+                    "next_billing_date": next_date,
+                    "authorization_code": authorization_code,
+                    "updated_at": timezone.now(),
+                }
+            )
+
+            # Update user active state
+            user.subscription_active = True
+            user.save()
+
+            print(f"[SYNC] Processed transaction for {customer_email} - Plan: {plan.name}")
+            results.append({
+                "email": customer_email,
+                "status": "synced from transaction",
+                "transaction_reference": transaction.get("reference"),
+                "plan": plan.name
+            })
+
+        except User.DoesNotExist:
+            print(f"[SYNC] User not found for email: {customer_email}")
+            continue
+        except Exception as e:
+            print(f"[SYNC] Error processing transaction: {str(e)}")
+            continue
 
     # Group subs by email
     user_subs = defaultdict(list)
