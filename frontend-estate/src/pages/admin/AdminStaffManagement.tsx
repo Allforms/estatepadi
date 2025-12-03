@@ -184,38 +184,38 @@ const AdminStaffManagement: React.FC = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-3">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Total Staff</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
+                <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">Total Staff</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{stats.total}</p>
               </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Users className="text-blue-600" size={24} />
+              <div className="p-1.5 sm:p-2 lg:p-3 bg-blue-100 rounded-lg">
+                <Users className="text-blue-600" size={16} />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Active Staff</p>
-                <p className="text-3xl font-bold text-green-600">{stats.active}</p>
+                <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">Active Staff</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600">{stats.active}</p>
               </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle className="text-green-600" size={24} />
+              <div className="p-1.5 sm:p-2 lg:p-3 bg-green-100 rounded-lg">
+                <CheckCircle className="text-green-600" size={16} />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Removed Staff</p>
-                <p className="text-3xl font-bold text-red-600">{stats.removed}</p>
+                <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">Removed Staff</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-red-600">{stats.removed}</p>
               </div>
-              <div className="p-3 bg-red-100 rounded-lg">
-                <XCircle className="text-red-600" size={24} />
+              <div className="p-1.5 sm:p-2 lg:p-3 bg-red-100 rounded-lg">
+                <XCircle className="text-red-600" size={16} />
               </div>
             </div>
           </div>
