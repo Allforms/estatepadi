@@ -209,12 +209,12 @@ const AdminStaffManagement: React.FC = () => {
           </div>
 
           <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-3 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex-1 min-w-0">
                 <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">Removed Staff</p>
                 <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-red-600">{stats.removed}</p>
               </div>
-              <div className="p-1.5 sm:p-2 lg:p-3 bg-red-100 rounded-lg">
+              <div className="p-1.5 sm:p-2 lg:p-3 bg-red-100 rounded-lg flex-shrink-0">
                 <XCircle className="text-red-600" size={16} />
               </div>
             </div>
