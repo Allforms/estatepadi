@@ -183,32 +183,32 @@ const AdminStaffManagement: React.FC = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-3 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex-1 min-w-0">
                 <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">Total Staff</p>
                 <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{stats.total}</p>
               </div>
-              <div className="p-1.5 sm:p-2 lg:p-3 bg-blue-100 rounded-lg">
+              <div className="p-1.5 sm:p-2 lg:p-3 bg-blue-100 rounded-lg flex-shrink-0">
                 <Users className="text-blue-600" size={16} />
               </div>
             </div>
           </div>
 
           <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-3 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex-1 min-w-0">
                 <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">Active Staff</p>
                 <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600">{stats.active}</p>
               </div>
-              <div className="p-1.5 sm:p-2 lg:p-3 bg-green-100 rounded-lg">
+              <div className="p-1.5 sm:p-2 lg:p-3 bg-green-100 rounded-lg flex-shrink-0">
                 <CheckCircle className="text-green-600" size={16} />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-3 sm:p-6">
+          <div className="col-span-2 md:col-span-1 bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-3 sm:p-6">
             <div className="flex items-center justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">Removed Staff</p>
