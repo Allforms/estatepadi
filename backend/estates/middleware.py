@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.http import HttpResponseForbidden
+from threading import current_thread
 import logging
 
 logger = logging.getLogger(__name__)
@@ -39,3 +40,25 @@ class AdminIPRestrictMiddleware:
                 logger.info(f"✅ Django admin panel access granted from IP: {ip} for path: {request.path}")
 
         return self.get_response(request)
+
+
+class AuditLogMiddleware:
+    """
+    Middleware to attach request to thread-local storage for audit logging.
+    This allows signals to access the current request and log user actions.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Attach request to current thread so signals can access it
+        current_thread().request = request
+
+        response = self.get_response(request)
+
+        # Clean up thread-local storage after request
+        if hasattr(current_thread(), 'request'):
+            delattr(current_thread(), 'request')
+
+        return response

@@ -55,9 +55,30 @@ admin.site.register(Announcement)
 admin.site.register(UserSubscriptionHistory)
 admin.site.register(ArtisanOrDomesticStaff)
 admin.site.register(Alert)
-admin.site.register(AuditLog)
 admin.site.register(Notification)
 admin.site.register(PushSubscription)
+
+
+@admin.register(AuditLog)
+class AuditLogAdmin(admin.ModelAdmin):
+    list_display = ('timestamp', 'user', 'action', 'model_name', 'object_id', 'ip_address')
+    list_filter = ('action', 'model_name', 'timestamp')
+    search_fields = ('user__email', 'model_name', 'object_id', 'ip_address')
+    readonly_fields = ('user', 'action', 'model_name', 'object_id', 'changes', 'timestamp', 'ip_address')
+    date_hierarchy = 'timestamp'
+    ordering = ('-timestamp',)
+
+    def has_add_permission(self, request):
+        # Prevent manual creation of audit logs
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        # Make audit logs read-only
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        # Prevent deletion of audit logs
+        return False
 
 @admin.register(SubscriptionPlan)
 class SubscriptionPlanAdmin(admin.ModelAdmin):

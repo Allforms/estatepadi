@@ -1,16 +1,144 @@
 # estates/signals.py
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save, pre_save, post_delete
 from django.dispatch import receiver
 from django.utils import timezone
+from threading import current_thread
 from .models import (
-    Alert, DuePayment, VisitorCode, User, 
-    ArtisanOrDomesticStaff, Announcement, Due
+    Alert, DuePayment, VisitorCode, User,
+    ArtisanOrDomesticStaff, Announcement, Due, AuditLog
 )
 from .utils.push_notification import (
     send_push_notification,
     notify_all_residents,
     notify_estate_admins
 )
+
+
+# ============================================
+# AUDIT LOG FUNCTIONALITY
+# ============================================
+
+def get_client_ip(request):
+    """Get client IP from request"""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR', '127.0.0.1')
+    return ip
+
+
+# Store original values before save to detect changes
+_pre_save_instances = {}
+
+
+@receiver(pre_save)
+def store_pre_save_instance(sender, instance, **kwargs):
+    """Store the original instance before save to detect changes"""
+    # Only track models in the estates app, exclude AuditLog itself
+    if sender._meta.app_label == 'estates' and sender.__name__ != 'AuditLog':
+        if instance.pk:
+            try:
+                old_instance = sender.objects.get(pk=instance.pk)
+                key = f"{sender.__name__}_{instance.pk}"
+                _pre_save_instances[key] = old_instance
+            except sender.DoesNotExist:
+                pass
+
+
+@receiver(post_save)
+def log_model_save(sender, instance, created, **kwargs):
+    """Log create and update actions for audit trail"""
+    # Only track models in the estates app, exclude AuditLog itself
+    if sender._meta.app_label == 'estates' and sender.__name__ != 'AuditLog':
+        # Get the user from thread-local storage (set in middleware)
+        request = getattr(current_thread(), 'request', None)
+
+        if not request or not hasattr(request, 'user') or not request.user.is_authenticated:
+            return
+
+        action = 'created' if created else 'updated'
+        changes = {}
+
+        if not created:
+            # Get changes by comparing old and new values
+            key = f"{sender.__name__}_{instance.pk}"
+            old_instance = _pre_save_instances.get(key)
+
+            if old_instance:
+                for field in instance._meta.fields:
+                    field_name = field.name
+
+                    # Skip sensitive fields
+                    if field_name in ['password', 'password_reset_code', 'verification_code']:
+                        continue
+
+                    old_value = getattr(old_instance, field_name, None)
+                    new_value = getattr(instance, field_name, None)
+
+                    # Only log if value actually changed
+                    if old_value != new_value:
+                        changes[field_name] = {
+                            'old': str(old_value) if old_value is not None else None,
+                            'new': str(new_value) if new_value is not None else None
+                        }
+
+                # Clean up stored instance
+                if key in _pre_save_instances:
+                    del _pre_save_instances[key]
+        else:
+            # For created objects, log key information
+            changes = {
+                'action': 'Object created',
+                'object': str(instance)
+            }
+
+        # Only create audit log if there are changes or it's a creation
+        if changes or created:
+            try:
+                AuditLog.objects.create(
+                    user=request.user,
+                    action=action,
+                    model_name=sender.__name__,
+                    object_id=instance.pk,
+                    changes=changes,
+                    ip_address=get_client_ip(request)
+                )
+            except Exception as e:
+                # Don't break the request if audit logging fails
+                print(f"[AUDIT LOG ERROR] Failed to create audit log: {e}")
+
+
+@receiver(post_delete)
+def log_model_delete(sender, instance, **kwargs):
+    """Log delete actions for audit trail"""
+    # Only track models in the estates app, exclude AuditLog itself
+    if sender._meta.app_label == 'estates' and sender.__name__ != 'AuditLog':
+        request = getattr(current_thread(), 'request', None)
+
+        if not request or not hasattr(request, 'user') or not request.user.is_authenticated:
+            return
+
+        try:
+            AuditLog.objects.create(
+                user=request.user,
+                action='deleted',
+                model_name=sender.__name__,
+                object_id=instance.pk,
+                changes={
+                    'deleted_object': str(instance),
+                    'action': 'Object deleted'
+                },
+                ip_address=get_client_ip(request)
+            )
+        except Exception as e:
+            # Don't break the request if audit logging fails
+            print(f"[AUDIT LOG ERROR] Failed to create audit log: {e}")
+
+
+# ============================================
+# NOTIFICATION SIGNALS
+# ============================================
 
 
 @receiver(post_save, sender=Alert)
