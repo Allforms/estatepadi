@@ -1068,7 +1068,7 @@ def payment_records_pdf_view(request):
     for p in payments:
         resident_name = f"{p.resident.first_name} {p.resident.last_name}"
         description   = p.due.title
-        amount_str    = f"${p.amount_paid:.2f}"
+        amount_str    = f"₦{p.amount_paid:.2f}"
         date_str      = timezone.localtime(p.payment_date).strftime('%Y-%m-%d')
         status        = p.status.capitalize()
 

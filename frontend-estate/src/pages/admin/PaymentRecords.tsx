@@ -214,7 +214,8 @@ const PaymentRecords: React.FC = () => {
   // };
 
   const handleExport = () => {
-    window.open(`${api.defaults.baseURL}/api/payments/report/pdf/`, "_blank");
+    const paymentRecsUrl = `${api.defaults.baseURL}/api/payments/report/pdf/`
+    window.location.href = paymentRecsUrl;
   };
 
   const getStatusColor = (status: string) => {
