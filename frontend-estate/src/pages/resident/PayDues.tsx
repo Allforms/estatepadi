@@ -137,7 +137,7 @@ const PayDues: React.FC = () => {
     setReceiptLoading(prev => ({ ...prev, [paymentId]: true }));
     try {
       const receiptUrl = `${api.defaults.baseURL}/api/payments/${paymentId}/receipt/view/`;
-      window.open(receiptUrl, '_blank');
+      window.location.href = receiptUrl;
     } catch (error) {
       console.error('Error viewing receipt:', error);
     } finally {
