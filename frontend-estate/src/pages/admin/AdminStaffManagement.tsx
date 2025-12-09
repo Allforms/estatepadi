@@ -416,7 +416,7 @@ const AdminStaffManagement: React.FC = () => {
                 <h4 className="font-semibold text-gray-900 mb-3">Registered By</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">Resident Email</p>
+                    <p className="text-sm text-gray-600">Resident Name</p>
                     <p className="font-medium text-gray-900">{selectedStaff.resident_name || 'N/A'}</p>
                   </div>
                   <div>

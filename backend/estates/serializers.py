@@ -396,7 +396,7 @@ class ContactSupportSerializer(serializers.Serializer):
     email = serializers.EmailField(required=False)  # optional, if user is authenticated we can use request.user.email
 
 class ArtisanOrDomesticStaffSerializer(serializers.ModelSerializer):
-    resident_name = serializers.CharField(source="resident.email", read_only=True)
+    resident_name = serializers.SerializerMethodField()
     estate_name = serializers.CharField(source="estate.name", read_only=True)
 
     class Meta:
@@ -407,7 +407,12 @@ class ArtisanOrDomesticStaffSerializer(serializers.ModelSerializer):
             "resident", "resident_name", "estate", "estate_name",
         ]
         read_only_fields = ["unique_id", "date_of_registration", "resident", "estate"]
-
+    def get_resident_name(self, obj):
+        if obj.resident:
+            first = obj.resident.first_name or ""
+            last = obj.resident.last_name or ""
+            return f"{first} {last}".strip()
+        return ""
     def validate(self, attrs):
         """
         Ensure phone_number is unique per estate.
