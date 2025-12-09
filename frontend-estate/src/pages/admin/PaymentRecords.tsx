@@ -8,7 +8,7 @@ import {
   FilterIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  DownloadIcon,
+  // DownloadIcon,
   EyeIcon,
 } from "lucide-react";
 import api from "../../api";
@@ -197,21 +197,21 @@ const PaymentRecords: React.FC = () => {
     }
   };
 
-  const handleDownloadReceipt = async (paymentId: number) => {
-    setReceiptLoading((prev) => ({ ...prev, [paymentId]: true }));
-    try {
-      const { downloadFile } = await import('../../utils/downloadHelpers');
-      await downloadFile(
-        `/api/payments/${paymentId}/receipt/download/`,
-        `receipt_payment_${paymentId}.pdf`
-      );
-    } catch (error) {
-      console.error("Error downloading receipt:", error);
-      alert('Failed to download receipt. Please try again.');
-    } finally {
-      setReceiptLoading((prev) => ({ ...prev, [paymentId]: false }));
-    }
-  };
+  // const handleDownloadReceipt = async (paymentId: number) => {
+  //   setReceiptLoading((prev) => ({ ...prev, [paymentId]: true }));
+  //   try {
+  //     const { downloadFile } = await import('../../utils/downloadHelpers');
+  //     await downloadFile(
+  //       `/api/payments/${paymentId}/receipt/download/`,
+  //       `receipt_payment_${paymentId}.pdf`
+  //     );
+  //   } catch (error) {
+  //     console.error("Error downloading receipt:", error);
+  //     alert('Failed to download receipt. Please try again.');
+  //   } finally {
+  //     setReceiptLoading((prev) => ({ ...prev, [paymentId]: false }));
+  //   }
+  // };
 
   const handleExport = () => {
     window.open(`${api.defaults.baseURL}/api/payments/report/pdf/`, "_blank");
@@ -485,14 +485,14 @@ const PaymentRecords: React.FC = () => {
                             >
                               <EyeIcon size={16} />
                             </button>
-                            <button
+                            {/* <button
                               onClick={() => handleDownloadReceipt(p.id)}
                               disabled={receiptLoading[p.id]}
                               className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50 transition-colors disabled:opacity-50"
                               title="Download receipt"
                             >
                               <DownloadIcon size={16} />
-                            </button>
+                            </button> */}
                           </div>
                         ) : (
                           <span className="text-gray-400 text-sm">-</span>

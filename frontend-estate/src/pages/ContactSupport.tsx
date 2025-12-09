@@ -22,12 +22,13 @@ const ContactSupport: React.FC = () => {
   const [formData, setFormData] = useState({
     subject: "",
     message: "",
-    priority: "medium",
+    priority: "",
     email: "",
     phone: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showPriorityModal, setShowPriorityModal] = useState(false);
 
   const supportCategories = [
     {
@@ -65,6 +66,41 @@ const ContactSupport: React.FC = () => {
       bgColor: "bg-purple-50",
       borderColor: "border-purple-200",
       description: "Questions, feedback, suggestions"
+    },
+  ];
+
+  const priorityOptions = [
+    {
+      value: "low",
+      label: "Low",
+      color: "text-gray-600",
+      bgColor: "bg-gray-50",
+      borderColor: "border-gray-200",
+      description: "General questions, non-urgent matters"
+    },
+    {
+      value: "medium",
+      label: "Medium",
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+      borderColor: "border-blue-200",
+      description: "Important issues, need attention soon"
+    },
+    {
+      value: "high",
+      label: "High",
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
+      borderColor: "border-orange-200",
+      description: "Significant problems affecting usage"
+    },
+    {
+      value: "urgent",
+      label: "Urgent",
+      color: "text-red-600",
+      bgColor: "bg-red-50",
+      borderColor: "border-red-200",
+      description: "Critical issues requiring immediate help"
     },
   ];
 
@@ -122,6 +158,13 @@ const ContactSupport: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate priority is selected
+    if (!formData.priority) {
+      alert("Please select a priority level for your support request.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -156,7 +199,7 @@ const ContactSupport: React.FC = () => {
       setFormData({
         subject: "",
         message: "",
-        priority: "medium",
+        priority: "",
         email: "",
         phone: "",
       });
@@ -277,7 +320,13 @@ const ContactSupport: React.FC = () => {
                     <button
                       key={category.id}
                       type="button"
-                      onClick={() => setSelectedCategory(category.id)}
+                      onClick={() => {
+                        setSelectedCategory(category.id);
+                        setFormData(prev => ({
+                          ...prev,
+                          subject: category.name
+                        }));
+                      }}
                       className={`
                         p-4 sm:p-6 rounded-lg sm:rounded-xl border-2 transition-all duration-300 text-left hover:shadow-lg hover:-translate-y-1
                         ${
@@ -352,17 +401,19 @@ const ContactSupport: React.FC = () => {
                   <label className="block text-sm sm:text-base lg:text-lg font-semibold text-gray-900 mb-2 sm:mb-3">
                     Priority
                   </label>
-                  <select
-                    name="priority"
-                    value={formData.priority}
-                    onChange={handleInputChange}
-                    className="w-full px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base lg:text-lg border-2 border-gray-300 rounded-lg sm:rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  <button
+                    type="button"
+                    onClick={() => setShowPriorityModal(true)}
+                    className={`w-full px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base lg:text-lg border-2 rounded-lg sm:rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-left ${
+                      formData.priority
+                        ? "border-gray-300 text-gray-900"
+                        : "border-gray-300 text-gray-500"
+                    }`}
                   >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="urgent">Urgent</option>
-                  </select>
+                    {formData.priority
+                      ? priorityOptions.find(p => p.value === formData.priority)?.label
+                      : "Select priority"}
+                  </button>
                 </div>
               </div>
 
@@ -411,7 +462,7 @@ const ContactSupport: React.FC = () => {
                     setFormData({
                       subject: "",
                       message: "",
-                      priority: "medium",
+                      priority: "",
                       email: "",
                       phone: "",
                     });
@@ -485,7 +536,71 @@ const ContactSupport: React.FC = () => {
         </div>
       </main>
       <Footer />
-      
+
+      {/* Priority Selection Modal */}
+      {showPriorityModal && (
+        <div className="fixed z-10 inset-0 overflow-y-auto">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              onClick={() => setShowPriorityModal(false)}
+            ></div>
+
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+
+            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6">
+              <div className="sm:flex sm:items-start">
+                <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">
+                    Select Priority Level
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    {priorityOptions.map((priority) => (
+                      <button
+                        key={priority.value}
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, priority: priority.value }));
+                          setShowPriorityModal(false);
+                        }}
+                        className={`
+                          p-4 sm:p-5 rounded-lg sm:rounded-xl border-2 transition-all duration-300 text-left hover:shadow-lg hover:-translate-y-1
+                          ${
+                            formData.priority === priority.value
+                              ? `${priority.bgColor} ${priority.borderColor} ${priority.color} shadow-lg transform -translate-y-1`
+                              : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+                          }
+                        `}
+                      >
+                        <div className="text-center sm:text-left">
+                          <h4 className={`font-bold text-base sm:text-lg mb-1 sm:mb-2 ${
+                            formData.priority === priority.value ? priority.color : "text-gray-900"
+                          }`}>
+                            {priority.label}
+                          </h4>
+                          <p className="text-xs sm:text-sm opacity-80">{priority.description}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="mt-5 sm:mt-6">
+                    <button
+                      type="button"
+                      onClick={() => setShowPriorityModal(false)}
+                      className="w-full inline-flex justify-center rounded-lg sm:rounded-xl border-2 border-gray-300 shadow-sm px-4 py-2 sm:py-3 bg-white text-sm sm:text-base font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes fade-in {
           from {

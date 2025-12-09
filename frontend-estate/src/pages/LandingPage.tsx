@@ -54,10 +54,10 @@ const LandingPage: React.FC = () => {
                 management platform. From resident management to security,
                 payments, and communications - everything in one place.
               </p>
-              <div className="mt-10 sm:flex sm:gap-4">
+              <div className="mt-10 flex flex-col sm:flex-row sm:gap-4">
                 <Link 
                   to="/register" 
-                  className="inline-flex items-center justify-center px-8 py-4 border border-transparent text-base font-semibold rounded-xl text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transform transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl"
+                  className="inline-flex items-center justify-center px-8 py-4 border border-transparent text-base font-semibold rounded-xl text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transform transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl mb-3 sm:mb-0"
                 >
                   Get Started
                 </Link>

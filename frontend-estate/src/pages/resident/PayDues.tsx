@@ -8,7 +8,7 @@ import {
   ClockIcon, 
   XCircleIcon,
   EyeIcon,
-  DownloadIcon,
+  // DownloadIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   SearchIcon
@@ -145,21 +145,21 @@ const PayDues: React.FC = () => {
     }
   };
 
-  const handleDownloadReceipt = async (paymentId: number) => {
-    setReceiptLoading(prev => ({ ...prev, [paymentId]: true }));
-    try {
-      const { downloadFile } = await import('../../utils/downloadHelpers');
-      await downloadFile(
-        `/api/payments/${paymentId}/receipt/download/`,
-        `receipt_payment_${paymentId}.pdf`
-      );
-    } catch (error) {
-      console.error('Error downloading receipt:', error);
-      alert('Failed to download receipt. Please try again.');
-    } finally {
-      setReceiptLoading(prev => ({ ...prev, [paymentId]: false }));
-    }
-  };
+  // const handleDownloadReceipt = async (paymentId: number) => {
+  //   setReceiptLoading(prev => ({ ...prev, [paymentId]: true }));
+  //   try {
+  //     const { downloadFile } = await import('../../utils/downloadHelpers');
+  //     await downloadFile(
+  //       `/api/payments/${paymentId}/receipt/download/`,
+  //       `receipt_payment_${paymentId}.pdf`
+  //     );
+  //   } catch (error) {
+  //     console.error('Error downloading receipt:', error);
+  //     alert('Failed to download receipt. Please try again.');
+  //   } finally {
+  //     setReceiptLoading(prev => ({ ...prev, [paymentId]: false }));
+  //   }
+  // };
 
   // Show dues as unpaid if no approved payment exists or latest payment is rejected
   const unpaidDues = dues.filter(due => {
@@ -433,14 +433,14 @@ const PayDues: React.FC = () => {
                             >
                               <EyeIcon size={16} />
                             </button>
-                            <button
+                            {/* <button
                               onClick={() => handleDownloadReceipt(pay.id)}
                               disabled={receiptLoading[pay.id]}
                               className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50 transition-colors disabled:opacity-50"
                               title="Download receipt"
                             >
                               <DownloadIcon size={16} />
-                            </button>
+                            </button> */}
                           </div>
                         ) : (
                           <span className="text-gray-400 text-sm">-</span>

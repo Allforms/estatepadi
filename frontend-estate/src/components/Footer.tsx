@@ -42,17 +42,17 @@ const Footer: React.FC = () => {
           id="contact"
           className="mt-8 border-t border-gray-700 pt-6 md:flex md:items-center md:justify-between text-sm"
         >
-          <div className="space-y-2 md:space-y-0 md:space-x-6 md:flex md:items-center">
-            <a href="tel:+2348137343312" className="hover:text-gray-300">
+          <div className="flex flex-col space-y-2 md:space-y-0 md:flex-row md:space-x-6 md:items-center">
+            <a href="tel:+2348137343312" className="hover:text-gray-300 block">
               📞 Phone: +234 813 734 3312
             </a>
-            <a href="mailto:founders@allformslimited.com" className="hover:text-gray-300">
+            <a href="mailto:founders@allformslimited.com" className="hover:text-gray-300 block">
               ✉️ Email: founders@allformslimited.com
             </a>
-            <Link to="/terms" className="hover:text-gray-300 underline">
+            <Link to="/terms" className="hover:text-gray-300 underline block">
               Privacy Policy
             </Link>
-            
+
           </div>
         </div>
 

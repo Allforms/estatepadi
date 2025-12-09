@@ -137,12 +137,12 @@ export default function PoliciesLayout() {
       <Navbar />
       
       {/* Progress bar */}
-      <div className="fixed top-[73px] left-0 w-full h-1 bg-gray-100 z-40">
+      {/* <div className="fixed top-[73px] left-0 w-full h-1 bg-gray-100 z-40">
         <div 
           className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300 ease-out"
           style={{ width: `${scrollProgress}%` }}
         />
-      </div>
+      </div> */}
 
       <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col lg:flex-row gap-10 min-h-[calc(100vh-200px)]" ref={containerRef}>
         {/* Enhanced Sidebar */}

@@ -141,15 +141,6 @@ const Login: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <Link to="/register" className="text-sm text-blue-600 hover:text-blue-500 hover:underline">
-                Don't have an account? Register
-              </Link>
-              <Link to="/forgot-password" className="text-sm text-red-600 hover:text-red-500 hover:underline">
-                Forgot password?
-              </Link>
-            </div>
-
             <div>
               <button
                 type="submit"
@@ -158,6 +149,15 @@ const Login: React.FC = () => {
               >
                 {isLoading ? 'Signing in...' : 'Sign in'}
               </button>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Link to="/register" className="text-sm text-blue-600 hover:text-blue-500 hover:underline">
+                Don't have an account? Register
+              </Link>
+              <Link to="/forgot-password" className="text-sm text-red-600 hover:text-red-500 hover:underline">
+                Forgot password?
+              </Link>
             </div>
           </form>
         </div>

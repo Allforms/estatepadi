@@ -11,11 +11,11 @@ import uuid
 
 
 class Estate(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     address = models.TextField()
     description = models.TextField(blank=True, null=True)
-    phone_number = models.CharField(max_length=20)
-    email = models.EmailField()
+    phone_number = models.CharField(max_length=20, unique=True)
+    email = models.EmailField(unique=True)
     logo = models.ImageField(upload_to='estate_logos/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

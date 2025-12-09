@@ -60,23 +60,62 @@ class EstateLeadershipSerializer(serializers.ModelSerializer):
 
 class EstateSerializer(serializers.ModelSerializer):
     bank_accounts = EstateBankAccountSerializer(many=True, required=False)
+
+    def validate_name(self, value):
+        """Validate estate name is unique"""
+        # Check if updating existing estate
+        instance = getattr(self, 'instance', None)
+        if instance:
+            # Exclude current instance from uniqueness check
+            if Estate.objects.filter(name__iexact=value).exclude(pk=instance.pk).exists():
+                raise serializers.ValidationError("An estate with this name already exists.")
+        else:
+            # Creating new estate
+            if Estate.objects.filter(name__iexact=value).exists():
+                raise serializers.ValidationError("An estate with this name already exists.")
+        return value
+
+    def validate_email(self, value):
+        """Validate estate email is unique"""
+        instance = getattr(self, 'instance', None)
+        if instance:
+            if Estate.objects.filter(email__iexact=value).exclude(pk=instance.pk).exists():
+                raise serializers.ValidationError("An estate with this email already exists.")
+        else:
+            if Estate.objects.filter(email__iexact=value).exists():
+                raise serializers.ValidationError("An estate with this email already exists.")
+        return value
+
+    def validate_phone_number(self, value):
+        """Validate estate phone number is unique"""
+        instance = getattr(self, 'instance', None)
+        if instance:
+            if Estate.objects.filter(phone_number=value).exclude(pk=instance.pk).exists():
+                raise serializers.ValidationError("An estate with this phone number already exists.")
+        else:
+            if Estate.objects.filter(phone_number=value).exists():
+                raise serializers.ValidationError("An estate with this phone number already exists.")
+        return value
+
     def update(self, instance, validated_data):
         bank_accounts_data = validated_data.pop('bank_accounts', None)
-        
+
         # Update estate fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-        
+
         # Handle bank accounts if provided
         if bank_accounts_data is not None:
             # Clear existing accounts and create new ones
             instance.bank_accounts.all().delete()
             for account_data in bank_accounts_data:
                 EstateBankAccount.objects.create(estate=instance, **account_data)
-        
+
         return instance
+
     estate_leaders = EstateLeadershipSerializer(many=True, read_only=True)
+
     class Meta:
         model = Estate
         fields = '__all__'

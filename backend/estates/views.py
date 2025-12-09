@@ -1162,7 +1162,7 @@ def sync_subscriptions_view(request):
 
 class ContactSupportView(generics.CreateAPIView):
     serializer_class = ContactSupportSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def perform_create(self, serializer):
         user = self.request.user
