@@ -195,6 +195,34 @@ class VerifyEmailView(generics.GenericAPIView):
         user.save()
         logger.error(f"User verified successfully: {email}")
 
+        # Send account verified email
+        try:
+            from django.template.loader import render_to_string
+
+            client = PostmarkClient(server_token=settings.POSTMARK_TOKEN)
+
+            context = {
+                'first_name': user.first_name,
+                'support_email': settings.DEFAULT_FROM_EMAIL,
+                'support_phone': '+2348137343312',
+                'current_year': timezone.now().year,
+            }
+
+            html_content = render_to_string('estates/account_verified.html', context)
+            text_content = f"Hello {user.first_name},\n\nYour email has been verified successfully. Your account is currently pending approval from your estate administrator.\n\nYou will receive a notification email once your account has been approved and you can access all platform features."
+
+            client.emails.send(
+                From=settings.POSTMARK_SENDER,
+                To=user.email,
+                Subject='Email Verified - Account Pending Approval',
+                HtmlBody=html_content,
+                TextBody=text_content,
+                MessageStream='outbound'
+            )
+            logger.info(f"Account verified email sent to {email}")
+        except Exception as e:
+            logger.error(f"Failed to send account verified email to {email}: {str(e)}")
+
         # Clear session after verification
         if hasattr(request, 'session'):
             request.session.pop('pending_verification_email', None)

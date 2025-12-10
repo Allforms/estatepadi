@@ -5,7 +5,7 @@ import {
   Clock,
   Send,
   CheckCircle,
-  AlertCircle,
+  // AlertCircle,
   MessageCircle,
   FileText,
   Bug,
@@ -433,7 +433,7 @@ const ContactSupport: React.FC = () => {
                 />
               </div>
 
-              {/* Priority Alert */}
+              {/* Priority Alert
               {formData.priority === "urgent" && (
                 <div className="bg-red-50 border-2 border-red-200 rounded-lg sm:rounded-xl p-4 sm:p-6 animate-shake">
                   <div className="flex">
@@ -452,7 +452,7 @@ const ContactSupport: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              )}
+              )} */}
 
               {/* Submit Buttons */}
               <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 pt-4 sm:pt-6">

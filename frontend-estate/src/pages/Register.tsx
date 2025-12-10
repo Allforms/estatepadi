@@ -6,6 +6,8 @@ import api from '../api';
 import { toast } from 'react-toastify';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 
 interface Estate {
   id: number;
@@ -151,11 +153,11 @@ const Register: React.FC = () => {
     setIsLoading(true);
 
     // Validate phone number
-    if (!/^\d{11}$/.test(formData.phoneNumber)) {
-      setError('Phone number must be exactly 11 digits.');
-      setIsLoading(false);
-      return;
-    }
+    // if (!/^\d{11}$/.test(formData.phoneNumber)) {
+    //   setError('Phone number must be exactly 11 digits.');
+    //   setIsLoading(false);
+    //   return;
+    // }
 
     // Validate password strength
     if (!isPasswordValid()) {
@@ -281,17 +283,18 @@ const Register: React.FC = () => {
 
               <div>
                 <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
-                <input 
-                  id="phoneNumber" 
-                  name="phoneNumber" 
-                  type="tel" 
-                  required 
-                  pattern="\d{11}" 
-                  maxLength={11} 
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                  placeholder="Enter 11-digit phone number"
-                  value={formData.phoneNumber} 
-                  onChange={handleChange} 
+                <PhoneInput
+                  international
+                  defaultCountry="NG"
+                  value={formData.phoneNumber}
+                  onChange={(value) => setFormData(prev => ({ ...prev, phoneNumber: value || '' }))}
+                  className="mt-1"
+                  numberInputProps={{
+                    className: "block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  }}
+                  style={{
+                    '--PhoneInputCountryFlag-borderColor': 'transparent',
+                  } as React.CSSProperties}
                 />
               </div>
 
@@ -335,12 +338,12 @@ const Register: React.FC = () => {
 
               <div>
                 <label htmlFor="estate" className="block text-sm font-medium text-gray-700">Estate Name</label>
-                <select 
-                  id="estate" 
-                  name="estate" 
-                  required 
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                  value={formData.estate} 
+                <select
+                  id="estate"
+                  name="estate"
+                  required
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={formData.estate}
                   onChange={handleChange}
                 >
                   <option value="">Select an estate</option>
@@ -348,6 +351,12 @@ const Register: React.FC = () => {
                     <option key={est.id} value={est.id}>{est.name}</option>
                   ))}
                 </select>
+                <p className="mt-2 text-sm text-gray-600">
+                  Estate not listed?{' '}
+                  <Link to="/register-estate" className="font-medium text-blue-600 hover:text-blue-500 hover:underline">
+                    Register it here
+                  </Link>
+                </p>
               </div>
 
               <div>
@@ -428,15 +437,6 @@ const Register: React.FC = () => {
             <div className="text-center space-y-2">
               <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500 hover:underline">
                 Already have an account? Sign in
-              </Link>
-            </div>
-
-            <div className="text-sm text-center">
-              <Link
-                to="/register-estate"
-                className="font-medium text-green-600 hover:text-green-500"
-              >
-                Register Your Estate
               </Link>
             </div>
           </form>

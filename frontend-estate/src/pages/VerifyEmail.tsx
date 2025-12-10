@@ -5,6 +5,7 @@ import { BuildingIcon, RefreshCw } from 'lucide-react';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { Link } from 'react-router-dom';
 
 const VerifyEmail: React.FC = () => {
   const [code, setCode] = useState('');
@@ -181,9 +182,10 @@ const VerifyEmail: React.FC = () => {
           <div className="mt-6 text-center">
             <p className="text-xs text-gray-500">
               Still having trouble? 
-              <a href="mailto:support@estatepadi.com" className="font-medium text-blue-600 hover:text-blue-500 ml-1">
+              <Link to="/contact-support" className="font-medium text-blue-600 hover:text-blue-500 ml-1">
                 Contact Support
-              </a>
+              </Link>
+              
             </p>
           </div>
         </div>

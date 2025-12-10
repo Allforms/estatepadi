@@ -6,57 +6,47 @@ const Footer: React.FC = () => {
   return (
     <footer className="bg-gray-800 text-gray-400">
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        
-        <div className="md:flex md:items-center md:justify-between">
-          <div className="flex justify-center md:justify-start">
-            <img src={Logo} alt="EstatePadi Logo" className="h-6 w-auto" />
-          </div>
 
-          <div className="mt-8 md:mt-0">
-            <p className="text-center md:text-left text-base">
-              &copy; 2025 EstatePadi - Allforms Limited. All rights reserved.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-8 border-t border-gray-700 pt-8 md:flex md:items-center md:justify-between">
-          <div className="flex space-x-6 md:order-2">
-            <Link to="/login" className="hover:text-gray-300">
-              Sign In
-            </Link>
-            <Link to="/register" className="hover:text-gray-300">
-              Register
-            </Link>
-            <Link to="/register-estate" className="hover:text-gray-300">
-              Register Estate
+        {/* Logo and Description */}
+        <div className="text-center md:text-left">
+          <div className="flex justify-center md:justify-start mb-4">
+            <Link to="/">
+              <img src={Logo} alt="EstatePadi Logo" className="h-6 w-auto" />
             </Link>
           </div>
-
-          <p className="mt-8 text-base md:mt-0 md:order-1">
+          <p className="text-base">
             Modern estate management solution for residential communities.
           </p>
         </div>
 
-       {/* Contact Info and Privacy Policy */}
-        <div
-          id="contact"
-          className="mt-8 border-t border-gray-700 pt-6 md:flex md:items-center md:justify-between text-sm"
-        >
-          <div className="flex flex-col space-y-2 md:space-y-0 md:flex-row md:space-x-6 md:items-center">
-            <a href="tel:+2348137343312" className="hover:text-gray-300 block">
-              📞 Phone: +234 813 734 3312
-            </a>
-            <a href="mailto:founders@allformslimited.com" className="hover:text-gray-300 block">
-              ✉️ Email: founders@allformslimited.com
-            </a>
-            <Link to="/terms" className="hover:text-gray-300 underline block">
+        {/* Navigation Links */}
+        <div className="mt-8 border-t border-gray-700 pt-8">
+          <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6 justify-center md:justify-start">
+            <Link to="/login" className="hover:text-gray-300">
+              Sign In
+            </Link>
+            <Link to="/register" className="hover:text-gray-300">
+              Register as resident
+            </Link>
+            <Link to="/register-estate" className="hover:text-gray-300">
+              Register your estate
+            </Link>
+            <Link to="/contact-support" className="hover:text-gray-300">
+              Contact Us
+            </Link>
+            <Link to="/terms" className="hover:text-gray-300 underline">
               Privacy Policy
             </Link>
-
           </div>
         </div>
 
-        
+        {/* Copyright */}
+        <div className="mt-8 border-t border-gray-700 pt-6">
+          <p className="text-center md:text-left text-sm">
+            &copy; 2025 EstatePadi - Allforms Limited. All rights reserved.
+          </p>
+        </div>
+
       </div>
     </footer>
   );
