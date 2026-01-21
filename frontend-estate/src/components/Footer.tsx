@@ -43,7 +43,7 @@ const Footer: React.FC = () => {
         {/* Copyright */}
         <div className="mt-8 border-t border-gray-700 pt-6">
           <p className="text-center md:text-left text-sm">
-            &copy; 2025 EstatePadi - Allforms Limited. All rights reserved.
+            &copy; 2026 EstatePadi - Allforms Limited. All rights reserved.
           </p>
         </div>
 

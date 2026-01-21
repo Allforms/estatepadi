@@ -404,3 +404,4 @@ def cleanup_expired_subscriptions():
     
     logger.info(f"Cleaned up {count} old subscriptions")
     return count
+    
