@@ -30,7 +30,7 @@ const ResidentDashboard: React.FC = () => {
         : [];
       setUpcomingDues(dataArray);
     } catch (err) {
-      console.error('Error fetching dues:', err);
+      //console.error('Error fetching dues:', err);
     } finally {
       setLoading(prev => ({ ...prev, dues: false }));
     }
@@ -49,7 +49,7 @@ const ResidentDashboard: React.FC = () => {
       const results = Array.isArray(res.data.results) ? res.data.results : [];
       setRecentVisitors(results);
     } catch (err) {
-      console.error('Error fetching visitors:', err);
+      //console.error('Error fetching visitors:', err);
     } finally {
       setLoading(prev => ({ ...prev, visitors: false }));
     }
@@ -65,7 +65,7 @@ const ResidentDashboard: React.FC = () => {
           : [];
       setAnnouncements(dataArray);
     } catch (err) {
-      console.error('Error fetching announcements:', err);
+      //console.error('Error fetching announcements:', err);
     } finally {
       setLoading(prev => ({ ...prev, announcements: false }));
     }
@@ -83,7 +83,7 @@ const ResidentDashboard: React.FC = () => {
       const activeCount = dataArray.filter((s: any) => s.status === 'active').length;
       setStaffCount({ active: activeCount, total: dataArray.length });
     } catch (err) {
-      console.error('Error fetching staff count:', err);
+      //console.error('Error fetching staff count:', err);
     } finally {
       setLoading(prev => ({ ...prev, staff: false }));
     }
@@ -99,7 +99,7 @@ const ResidentDashboard: React.FC = () => {
           : [];
       setAlertCount(dataArray.length);
     } catch (err) {
-      console.error('Error fetching alert count:', err);
+      //console.error('Error fetching alert count:', err);
     } finally {
       setLoading(prev => ({ ...prev, alerts: false }));
     }

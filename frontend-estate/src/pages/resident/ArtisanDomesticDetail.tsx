@@ -38,7 +38,7 @@ const ArtisanDomesticDetail: React.FC = () => {
         gender: res.data.gender
       });
     } catch (err) {
-      console.error('Error fetching staff detail:', err);
+      //console.error('Error fetching staff detail:', err);
       setError('Failed to load staff details');
     } finally {
       setLoading(false);
@@ -55,7 +55,7 @@ const ArtisanDomesticDetail: React.FC = () => {
       setStaff(res.data);
       setEditing(false);
     } catch (err: any) {
-      console.error('Error updating staff:', err);
+      //console.error('Error updating staff:', err);
       setError(err.response?.data?.detail || 'Failed to update staff member');
     } finally {
       setSubmitting(false);
@@ -74,7 +74,7 @@ const ArtisanDomesticDetail: React.FC = () => {
       setShowDisableModal(false);
       setDisableReason('');
     } catch (err: any) {
-      console.error('Error disabling staff:', err);
+      //console.error('Error disabling staff:', err);
       setError(err.response?.data?.detail || 'Failed to disable staff member');
     } finally {
       setSubmitting(false);
@@ -90,7 +90,7 @@ const ArtisanDomesticDetail: React.FC = () => {
       await api.delete(`/api/artisans-domestics/${id}/`);
       navigate('/resident/artisans-domestics');
     } catch (err: any) {
-      console.error('Error deleting staff:', err);
+      //console.error('Error deleting staff:', err);
       setError(err.response?.data?.detail || 'Failed to delete staff member');
     }
   };

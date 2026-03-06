@@ -38,7 +38,7 @@ const ContactSupport: React.FC = () => {
       color: "text-green-600",
       bgColor: "bg-green-50",
       borderColor: "border-green-200",
-      description: "Payment issues, invoices, refunds"
+      description: "Payment issues, invoices, refunds",
     },
     {
       id: "technical",
@@ -47,7 +47,7 @@ const ContactSupport: React.FC = () => {
       color: "text-red-600",
       bgColor: "bg-red-50",
       borderColor: "border-red-200",
-      description: "Bugs, performance, technical problems"
+      description: "Bugs, performance, technical problems",
     },
     {
       id: "account",
@@ -56,7 +56,7 @@ const ContactSupport: React.FC = () => {
       color: "text-blue-600",
       bgColor: "bg-blue-50",
       borderColor: "border-blue-200",
-      description: "Profile, settings, access issues"
+      description: "Profile, settings, access issues",
     },
     {
       id: "general",
@@ -65,7 +65,7 @@ const ContactSupport: React.FC = () => {
       color: "text-purple-600",
       bgColor: "bg-purple-50",
       borderColor: "border-purple-200",
-      description: "Questions, feedback, suggestions"
+      description: "Questions, feedback, suggestions",
     },
   ];
 
@@ -76,7 +76,7 @@ const ContactSupport: React.FC = () => {
       color: "text-gray-600",
       bgColor: "bg-gray-50",
       borderColor: "border-gray-200",
-      description: "General questions, non-urgent matters"
+      description: "General questions, non-urgent matters",
     },
     {
       value: "medium",
@@ -84,7 +84,7 @@ const ContactSupport: React.FC = () => {
       color: "text-blue-600",
       bgColor: "bg-blue-50",
       borderColor: "border-blue-200",
-      description: "Important issues, need attention soon"
+      description: "Important issues, need attention soon",
     },
     {
       value: "high",
@@ -92,7 +92,7 @@ const ContactSupport: React.FC = () => {
       color: "text-orange-600",
       bgColor: "bg-orange-50",
       borderColor: "border-orange-200",
-      description: "Significant problems affecting usage"
+      description: "Significant problems affecting usage",
     },
     {
       value: "urgent",
@@ -100,7 +100,7 @@ const ContactSupport: React.FC = () => {
       color: "text-red-600",
       bgColor: "bg-red-50",
       borderColor: "border-red-200",
-      description: "Critical issues requiring immediate help"
+      description: "Critical issues requiring immediate help",
     },
   ];
 
@@ -110,8 +110,12 @@ const ContactSupport: React.FC = () => {
 
   const handleEmailContact = () => {
     const subject = "Support Request";
-    const body = "Hello,\n\nI need assistance with:\n\n[Please describe your issue here]\n\nBest regards";
-    window.open(`mailto:founders@allformslimited.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, "_self");
+    const body =
+      "Hello,\n\nI need assistance with:\n\n[Please describe your issue here]\n\nBest regards";
+    window.open(
+      `mailto:founders@allformslimited.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+      "_self",
+    );
   };
 
   const contactMethods = [
@@ -150,7 +154,7 @@ const ContactSupport: React.FC = () => {
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -188,7 +192,7 @@ const ContactSupport: React.FC = () => {
 
       setIsSubmitted(true);
     } catch (err) {
-      console.error(err);
+      //console.error(err);
       alert("There was an error sending your message. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -214,7 +218,9 @@ const ContactSupport: React.FC = () => {
         <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
           <div className="space-y-6 animate-fade-in">
             <div className="text-center px-4">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Contact Support</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                Contact Support
+              </h1>
               <p className="mt-2 text-sm sm:text-base text-gray-500">
                 We're here to help you with any questions or issues
               </p>
@@ -236,7 +242,8 @@ const ContactSupport: React.FC = () => {
                   <p className="text-xs sm:text-sm text-gray-500">
                     Ticket ID:{" "}
                     <span className="font-mono font-medium">
-                      #SP-{Math.random().toString(36).substr(2, 8).toUpperCase()}
+                      #SP-
+                      {Math.random().toString(36).substr(2, 8).toUpperCase()}
                     </span>
                   </p>
                 </div>
@@ -260,7 +267,8 @@ const ContactSupport: React.FC = () => {
               Contact Support
             </h1>
             <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto">
-              We're here to help you with any questions or issues. Choose how you'd like to get in touch.
+              We're here to help you with any questions or issues. Choose how
+              you'd like to get in touch.
             </p>
           </div>
 
@@ -301,17 +309,27 @@ const ContactSupport: React.FC = () => {
           <div className="bg-white shadow-xl sm:shadow-2xl rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden animate-fade-in">
             <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
               <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center">
-                <FileText size={24} className="mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
+                <FileText
+                  size={24}
+                  className="mr-2 sm:mr-3 text-blue-600 flex-shrink-0"
+                />
                 <span>Submit Support Request</span>
               </h2>
               <p className="text-sm sm:text-base lg:text-lg text-gray-600 mt-2 sm:mt-3">
-                Fill out the details below and we'll get back to you as soon as possible
+                Fill out the details below and we'll get back to you as soon as
+                possible
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
+            <form
+              onSubmit={handleSubmit}
+              className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8"
+            >
               {/* Category Selection */}
-              <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+              <div
+                className="animate-fade-in-up"
+                style={{ animationDelay: "100ms" }}
+              >
                 <label className="block text-base sm:text-lg lg:text-xl font-semibold text-gray-900 mb-3 sm:mb-6">
                   What can we help you with?
                 </label>
@@ -322,9 +340,9 @@ const ContactSupport: React.FC = () => {
                       type="button"
                       onClick={() => {
                         setSelectedCategory(category.id);
-                        setFormData(prev => ({
+                        setFormData((prev) => ({
                           ...prev,
-                          subject: category.name
+                          subject: category.name,
                         }));
                       }}
                       className={`
@@ -343,7 +361,9 @@ const ContactSupport: React.FC = () => {
                         <h4 className="font-bold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2">
                           {category.name}
                         </h4>
-                        <p className="text-xs sm:text-sm opacity-80">{category.description}</p>
+                        <p className="text-xs sm:text-sm opacity-80">
+                          {category.description}
+                        </p>
                       </div>
                     </button>
                   ))}
@@ -351,7 +371,10 @@ const ContactSupport: React.FC = () => {
               </div>
 
               {/* Contact Information */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+              <div
+                className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 animate-fade-in-up"
+                style={{ animationDelay: "200ms" }}
+              >
                 <div>
                   <label className="block text-sm sm:text-base lg:text-lg font-semibold text-gray-900 mb-2 sm:mb-3">
                     Email Address
@@ -368,7 +391,10 @@ const ContactSupport: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm sm:text-base lg:text-lg font-semibold text-gray-900 mb-2 sm:mb-3">
-                    Phone Number <span className="text-gray-500 font-normal text-xs sm:text-sm">(Optional)</span>
+                    Phone Number{" "}
+                    <span className="text-gray-500 font-normal text-xs sm:text-sm">
+                      (Optional)
+                    </span>
                   </label>
                   <input
                     type="tel"
@@ -382,7 +408,10 @@ const ContactSupport: React.FC = () => {
               </div>
 
               {/* Subject and Priority */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
+              <div
+                className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 animate-fade-in-up"
+                style={{ animationDelay: "300ms" }}
+              >
                 <div className="lg:col-span-2">
                   <label className="block text-sm sm:text-base lg:text-lg font-semibold text-gray-900 mb-2 sm:mb-3">
                     Subject
@@ -411,14 +440,19 @@ const ContactSupport: React.FC = () => {
                     }`}
                   >
                     {formData.priority
-                      ? priorityOptions.find(p => p.value === formData.priority)?.label
+                      ? priorityOptions.find(
+                          (p) => p.value === formData.priority,
+                        )?.label
                       : "Select priority"}
                   </button>
                 </div>
               </div>
 
               {/* Message */}
-              <div className="animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+              <div
+                className="animate-fade-in-up"
+                style={{ animationDelay: "400ms" }}
+              >
                 <label className="block text-sm sm:text-base lg:text-lg font-semibold text-gray-900 mb-2 sm:mb-3">
                   Message
                 </label>
@@ -496,29 +530,32 @@ const ContactSupport: React.FC = () => {
           {/* FAQ Section */}
           <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl sm:rounded-2xl p-6 sm:p-8 border-2 border-gray-200 animate-fade-in">
             <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-6 sm:mb-8 flex items-center justify-center text-center">
-              <HelpCircle size={28} className="mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
+              <HelpCircle
+                size={28}
+                className="mr-2 sm:mr-3 text-blue-600 flex-shrink-0"
+              />
               <span>Frequently Asked Questions</span>
             </h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {[
                 {
                   q: "How do I reset my password?",
-                  a: "You can reset your password from the login page using the 'Forgot Password' link."
+                  a: "You can reset your password from the login page using the 'Forgot Password' link.",
                 },
                 {
                   q: "How do I update payment information?",
-                  a: "Go to your profile settings and navigate to the billing section to update payment details."
+                  a: "Go to your profile settings and navigate to the billing section to update payment details.",
                 },
                 {
                   q: "What are your support hours?",
-                  a: "Our phone support is available Mon-Fri 9AM-6PM. Live chat and email support are available 24/7."
+                  a: "Our phone support is available Mon-Fri 9AM-6PM. Live chat and email support are available 24/7.",
                 },
                 {
                   q: "How long does it take to get a response?",
-                  a: "Email responses typically take 24 hours. Live chat and phone support provide immediate assistance."
-                }
+                  a: "Email responses typically take 24 hours. Live chat and phone support provide immediate assistance.",
+                },
               ].map((faq, index) => (
-                <div 
+                <div
                   key={index}
                   className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 border-2 border-gray-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-fade-in-up"
                   style={{ animationDelay: `${index * 100}ms` }}
@@ -526,9 +563,7 @@ const ContactSupport: React.FC = () => {
                   <h4 className="font-bold text-base sm:text-lg lg:text-xl text-gray-900 mb-2 sm:mb-3">
                     {faq.q}
                   </h4>
-                  <p className="text-sm sm:text-base text-gray-600">
-                    {faq.a}
-                  </p>
+                  <p className="text-sm sm:text-base text-gray-600">{faq.a}</p>
                 </div>
               ))}
             </div>
@@ -546,7 +581,9 @@ const ContactSupport: React.FC = () => {
               onClick={() => setShowPriorityModal(false)}
             ></div>
 
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">
+              &#8203;
+            </span>
 
             <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6">
               <div className="sm:flex sm:items-start">
@@ -561,7 +598,10 @@ const ContactSupport: React.FC = () => {
                         key={priority.value}
                         type="button"
                         onClick={() => {
-                          setFormData(prev => ({ ...prev, priority: priority.value }));
+                          setFormData((prev) => ({
+                            ...prev,
+                            priority: priority.value,
+                          }));
                           setShowPriorityModal(false);
                         }}
                         className={`
@@ -574,12 +614,18 @@ const ContactSupport: React.FC = () => {
                         `}
                       >
                         <div className="text-center sm:text-left">
-                          <h4 className={`font-bold text-base sm:text-lg mb-1 sm:mb-2 ${
-                            formData.priority === priority.value ? priority.color : "text-gray-900"
-                          }`}>
+                          <h4
+                            className={`font-bold text-base sm:text-lg mb-1 sm:mb-2 ${
+                              formData.priority === priority.value
+                                ? priority.color
+                                : "text-gray-900"
+                            }`}
+                          >
                             {priority.label}
                           </h4>
-                          <p className="text-xs sm:text-sm opacity-80">{priority.description}</p>
+                          <p className="text-xs sm:text-sm opacity-80">
+                            {priority.description}
+                          </p>
                         </div>
                       </button>
                     ))}

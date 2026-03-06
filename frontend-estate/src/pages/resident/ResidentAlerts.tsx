@@ -36,11 +36,11 @@ const ResidentAlerts: React.FC = () => {
       const dataArray = Array.isArray(res.data)
         ? res.data
         : Array.isArray(res.data.results)
-        ? res.data.results
-        : [];
+          ? res.data.results
+          : [];
       setAlerts(dataArray);
     } catch (err) {
-      console.error("Error fetching alerts:", err);
+      //console.error("Error fetching alerts:", err);
     } finally {
       setLoading(false);
     }
@@ -69,13 +69,13 @@ const ResidentAlerts: React.FC = () => {
       setShowModal(false);
       setFormData({ alert_type: "", other_reason: "" });
       setSuccess(
-        "Alert sent successfully! Admin and security have been notified."
+        "Alert sent successfully! Admin and security have been notified.",
       );
       setTimeout(() => setSuccess(""), 5000);
     } catch (err: any) {
-      console.error("Error creating alert:", err);
+      //console.error("Error creating alert:", err);
       setError(
-        err.response?.data?.detail || "Failed to send alert. Please try again."
+        err.response?.data?.detail || "Failed to send alert. Please try again.",
       );
     } finally {
       setSubmitting(false);
@@ -261,7 +261,7 @@ const ResidentAlerts: React.FC = () => {
                               {getAlertIcon(alert.alert_type)}
                               <span
                                 className={`ml-2 px-2 inline-flex text-xs font-semibold rounded-full border ${getAlertBadgeColor(
-                                  alert.alert_type
+                                  alert.alert_type,
                                 )}`}
                               >
                                 {alert.alert_type.charAt(0).toUpperCase() +
@@ -299,7 +299,7 @@ const ResidentAlerts: React.FC = () => {
                           <div className="flex items-center justify-between mb-2">
                             <span
                               className={`px-2 inline-flex text-xs font-semibold rounded-full border ${getAlertBadgeColor(
-                                alert.alert_type
+                                alert.alert_type,
                               )}`}
                             >
                               {alert.alert_type.charAt(0).toUpperCase() +

@@ -93,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return loggedInUser;
   
     } catch (error: any) {
-      console.error('Login error:', error);
+      //console.error('Login error:', error);
       if (error.response?.data) {
         const backendMessage = error.response.data.detail || JSON.stringify(error.response.data);
         throw new Error(backendMessage);
@@ -116,13 +116,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(refreshedUser);
       localStorage.setItem('user', JSON.stringify(refreshedUser));
       
-      console.log('User data refreshed successfully');
+      //console.log('User data refreshed successfully');
     } catch (error: any) {
-      console.error('Failed to refresh user data:', error);
+      //console.error('Failed to refresh user data:', error);
       
       // If we get a 401 or 403, the user might be logged out
       if (error.response?.status === 401 || error.response?.status === 403) {
-        console.log('User session appears to be invalid, logging out...');
+        //console.log('User session appears to be invalid, logging out...');
         await logout();
       }
       
@@ -137,7 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await getCsrfToken();
 
       await api.post('/api/auth/register/', userData);
-      console.log('Registration successful');
+      //console.log('Registration successful');
     } catch (error: any) {
       if (error.response?.data) {
         const backendMessage = error.response.data.detail || JSON.stringify(error.response.data);

@@ -45,7 +45,9 @@ const ResidentsList: React.FC = () => {
   useEffect(() => {
     api.get<Resident[]>('/api/admin/residents/')
       .then(res => setResidents(res.data))
-      .catch(err => console.error('Failed to load residents:', err))
+      .catch(err => {
+        //console.error('Failed to load residents:', err);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -105,7 +107,9 @@ const ResidentsList: React.FC = () => {
         );
         setShowApproveConfirm(null);
       })
-      .catch(console.error);
+      .catch(err => {
+        //console.error(err);
+      });
   };
 
   const handleDelete = () => {
@@ -113,7 +117,9 @@ const ResidentsList: React.FC = () => {
     api.delete(`/api/admin/delete-resident/${showDeleteConfirm}/`)
       .then(() => {
         setResidents(rs => rs.filter(r => r.id !== showDeleteConfirm));
-        setShowDeleteConfirm(null);
+        setSherr => {
+        //console.error(err);
+      }rm(null);
       })
       .catch(console.error);
   };

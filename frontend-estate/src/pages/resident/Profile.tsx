@@ -24,7 +24,7 @@ const ResidentProfile: React.FC = () => {
       const res = await api.get('/api/resident/profile/');
       setProfileData(res.data);
     } catch (err) {
-      console.error('Error fetching profile:', err);
+      //console.error('Error fetching profile:', err);
     }
   };
 
@@ -44,7 +44,7 @@ const ResidentProfile: React.FC = () => {
       setIsEditing(false);
       fetchProfile();
     } catch (err) {
-      console.error('Error updating profile:', err);
+      //console.error('Error updating profile:', err);
       alert('Failed to update profile.');
     }
   };

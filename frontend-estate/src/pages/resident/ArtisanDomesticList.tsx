@@ -34,7 +34,7 @@ const ArtisanDomesticList: React.FC = () => {
       const dataArray = Array.isArray(res.data) ? res.data : Array.isArray(res.data.results) ? res.data.results : [];
       setStaff(dataArray);
     } catch (err) {
-      console.error('Error fetching staff:', err);
+      //console.error('Error fetching staff:', err);
     } finally {
       setLoading(false);
     }
@@ -51,7 +51,7 @@ const ArtisanDomesticList: React.FC = () => {
       setShowModal(false);
       setFormData({ name: '', role: '', phone_number: '', gender: 'male' });
     } catch (err: any) {
-      console.error('Error creating staff:', err.response?.data);
+      //console.error('Error creating staff:', err.response?.data);
       setError(
         JSON.stringify(err.response?.data, null, 2) || 
         "Failed to add staff member. Please try again."

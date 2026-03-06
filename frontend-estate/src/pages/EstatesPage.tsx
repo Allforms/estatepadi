@@ -1,8 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import api from '../api';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import { MapPin, Phone, Mail, Building, Users, Shield, Star, ArrowRight } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import api from "../api";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Building,
+  Users,
+  Shield,
+  Star,
+  ArrowRight,
+} from "lucide-react";
 
 interface Estate {
   id: number;
@@ -17,19 +26,24 @@ interface Estate {
 const EstatesPage: React.FC = () => {
   const [estates, setEstates] = useState<Estate[]>([]);
   const [loading, setLoading] = useState(true);
-  
 
   useEffect(() => {
-    api.get('/api/estates/')
-      .then(res => setEstates(res.data.results))
-      .catch(err => console.error('Failed to load estates:', err))
+    api
+      .get("/api/estates/")
+      .then((res) => setEstates(res.data.results))
+      .catch((err) => {
+        //console.error('Failed to load estates:', err);
+      })
       .finally(() => setLoading(false));
   }, []);
 
   const LoadingSkeleton = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {[...Array(6)].map((_, i) => (
-        <div key={i} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div
+          key={i}
+          className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+        >
           <div className="h-48 bg-gray-200 animate-pulse"></div>
           <div className="p-6 space-y-4">
             <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
@@ -53,9 +67,12 @@ const EstatesPage: React.FC = () => {
       <div className="mx-auto w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mb-8">
         <Building className="w-16 h-16 text-blue-600" />
       </div>
-      <h3 className="text-2xl font-bold text-gray-900 mb-4">No Estates Available</h3>
+      <h3 className="text-2xl font-bold text-gray-900 mb-4">
+        No Estates Available
+      </h3>
       <p className="text-gray-600 max-w-md mx-auto">
-        We're currently updating our estate listings. Please check back soon for exciting new properties.
+        We're currently updating our estate listings. Please check back soon for
+        exciting new properties.
       </p>
     </div>
   );
@@ -63,7 +80,7 @@ const EstatesPage: React.FC = () => {
   return (
     <>
       <Navbar />
-      
+
       {/* Hero Section */}
       <div className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-purple-900 overflow-hidden">
         <div className="absolute inset-0 bg-black opacity-20"></div>
@@ -72,7 +89,7 @@ const EstatesPage: React.FC = () => {
           <div className="absolute top-0 right-0 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
           <div className="absolute -bottom-8 left-20 w-96 h-96 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
         </div>
-        
+
         <div className="relative max-w-7xl mx-auto px-4 py-24 sm:py-32">
           <div className="text-center space-y-8">
             <div className="space-y-4">
@@ -83,15 +100,17 @@ const EstatesPage: React.FC = () => {
               <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight">
                 Our Managed
                 <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  {' '}Estates
+                  {" "}
+                  Estates
                 </span>
               </h1>
               <p className="text-xl text-blue-100 max-w-3xl mx-auto leading-relaxed">
-                Discover exceptional residential communities managed with care, security, and modern amenities. 
-                Your perfect home awaits in one of our premium estates.
+                Discover exceptional residential communities managed with care,
+                security, and modern amenities. Your perfect home awaits in one
+                of our premium estates.
               </p>
             </div>
-            
+
             <div className="flex flex-wrap justify-center gap-8 text-white">
               <div className="flex items-center space-x-2">
                 <Users className="w-5 h-5 text-blue-300" />
@@ -124,8 +143,9 @@ const EstatesPage: React.FC = () => {
                   Featured Estates
                 </h2>
                 <p className="text-gray-600 max-w-2xl mx-auto">
-                  Each estate is carefully selected and managed to provide the highest standards of living, 
-                  security, and community experience.
+                  Each estate is carefully selected and managed to provide the
+                  highest standards of living, security, and community
+                  experience.
                 </p>
               </div>
 
@@ -136,7 +156,7 @@ const EstatesPage: React.FC = () => {
                     className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 transform hover:-translate-y-2"
                     style={{
                       animationDelay: `${index * 150}ms`,
-                      animation: 'fadeInUp 0.6s ease-out forwards'
+                      animation: "fadeInUp 0.6s ease-out forwards",
                     }}
                   >
                     {/* Estate Logo/Image */}
@@ -153,7 +173,7 @@ const EstatesPage: React.FC = () => {
                         </div>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      
+
                       {/* Floating Badge */}
                       <div className="absolute top-4 right-4 bg-white bg-opacity-90 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-semibold text-gray-700">
                         Premium
@@ -175,22 +195,24 @@ const EstatesPage: React.FC = () => {
                       <div className="space-y-3 pt-4 border-t border-gray-100">
                         <div className="flex items-start space-x-3 text-sm">
                           <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-600 leading-relaxed">{estate.address}</span>
+                          <span className="text-gray-600 leading-relaxed">
+                            {estate.address}
+                          </span>
                         </div>
-                        
+
                         <div className="flex items-center space-x-3 text-sm">
                           <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                          <a 
+                          <a
                             href={`tel:${estate.phone_number}`}
                             className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
                           >
                             {estate.phone_number}
                           </a>
                         </div>
-                        
+
                         <div className="flex items-center space-x-3 text-sm">
                           <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                          <a 
+                          <a
                             href={`mailto:${estate.email}`}
                             className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
                           >
@@ -217,8 +239,9 @@ const EstatesPage: React.FC = () => {
                   Ready to Find Your Perfect Home?
                 </h3>
                 <p className="text-blue-100 mb-8 max-w-2xl mx-auto">
-                  Contact us today to schedule a visit to any of our premium estates. 
-                  Our team is ready to help you find the perfect community for your lifestyle.
+                  Contact us today to schedule a visit to any of our premium
+                  estates. Our team is ready to help you find the perfect
+                  community for your lifestyle.
                 </p>
                 <button className="bg-white text-blue-600 px-8 py-3 rounded-xl font-semibold hover:bg-gray-100 transition-colors duration-200 transform hover:scale-105">
                   Contact Us Today
@@ -236,7 +259,11 @@ const EstatesPage: React.FC = () => {
           <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center mb-4">
-                <img className="h-12 w-12 rounded-full" src="https://randomuser.me/api/portraits/men/30.jpg" alt="Testimonial" />
+                <img
+                  className="h-12 w-12 rounded-full"
+                  src="https://randomuser.me/api/portraits/men/30.jpg"
+                  alt="Testimonial"
+                />
                 <div className="ml-4">
                   <h4 className="text-lg font-medium text-gray-900">
                     John Williams
@@ -252,7 +279,11 @@ const EstatesPage: React.FC = () => {
             </div>
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center mb-4">
-                <img className="h-12 w-12 rounded-full" src="https://randomuser.me/api/portraits/women/62.jpg" alt="Testimonial" />
+                <img
+                  className="h-12 w-12 rounded-full"
+                  src="https://randomuser.me/api/portraits/women/62.jpg"
+                  alt="Testimonial"
+                />
                 <div className="ml-4">
                   <h4 className="text-lg font-medium text-gray-900">
                     Sarah Johnson
@@ -268,7 +299,11 @@ const EstatesPage: React.FC = () => {
             </div>
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center mb-4">
-                <img className="h-12 w-12 rounded-full" src="https://randomuser.me/api/portraits/men/59.jpg" alt="Testimonial" />
+                <img
+                  className="h-12 w-12 rounded-full"
+                  src="https://randomuser.me/api/portraits/men/59.jpg"
+                  alt="Testimonial"
+                />
                 <div className="ml-4">
                   <h4 className="text-lg font-medium text-gray-900">
                     Michael Brown
@@ -287,8 +322,9 @@ const EstatesPage: React.FC = () => {
       </div>
 
       {/* Custom Styles */}
-      <style dangerouslySetInnerHTML={{
-        __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
           @keyframes fadeInUp {
             from {
               opacity: 0;
@@ -333,8 +369,9 @@ const EstatesPage: React.FC = () => {
             -webkit-box-orient: vertical;
             overflow: hidden;
           }
-        `
-      }} />
+        `,
+        }}
+      />
 
       <Footer />
     </>

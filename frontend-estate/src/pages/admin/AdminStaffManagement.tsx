@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import AdminLayout from '../../components/layouts/AdminLayout';
-import AdminBottomNav from '../../components/layouts/AdminBottomNav';
+import React, { useEffect, useState } from "react";
+import AdminLayout from "../../components/layouts/AdminLayout";
+import AdminBottomNav from "../../components/layouts/AdminBottomNav";
 import {
   Users,
   Search,
@@ -11,9 +11,9 @@ import {
   Calendar,
   AlertCircle,
   CheckCircle,
-  XCircle
-} from 'lucide-react';
-import api from '../../api';
+  XCircle,
+} from "lucide-react";
+import api from "../../api";
 
 interface Staff {
   id: number;
@@ -35,11 +35,11 @@ const AdminStaffManagement: React.FC = () => {
   const [staff, setStaff] = useState<Staff[]>([]);
   const [filteredStaff, setFilteredStaff] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [disableReason, setDisableReason] = useState('');
+  const [disableReason, setDisableReason] = useState("");
   const [processingDisable, setProcessingDisable] = useState(false);
 
   useEffect(() => {
@@ -52,41 +52,43 @@ const AdminStaffManagement: React.FC = () => {
 
   const fetchStaff = async () => {
     try {
-        const response = await api.get('/api/artisans-domestics/');
+      const response = await api.get("/api/artisans-domestics/");
 
-        // Handle both paginated & non-paginated responses
-        const data = Array.isArray(response.data) ? response.data : response.data.results;
+      // Handle both paginated & non-paginated responses
+      const data = Array.isArray(response.data)
+        ? response.data
+        : response.data.results;
 
-        console.log('Staff data:', data);
-        
-        setStaff(data);
-        setFilteredStaff(data);
+      //console.log('Staff data:', data);
+
+      setStaff(data);
+      setFilteredStaff(data);
     } catch (error) {
-        console.error('Failed to fetch staff:', error);
+      //console.error('Failed to fetch staff:', error);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
+  };
 
   const filterStaff = () => {
     let filtered = [...staff];
 
     // Status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(s => s.status === statusFilter);
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((s) => s.status === statusFilter);
     }
 
     // Search filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(s => {
-        const name = s.name?.toLowerCase() || '';
-        const role = s.role?.toLowerCase() || '';
-        const uniqueId = s.unique_id?.toLowerCase() || '';
-        const phone = s.phone_number || '';
-        const residentName = s.resident_name?.toLowerCase() || '';
-        const estateName = s.estate_name?.toLowerCase() || '';
-        
+      filtered = filtered.filter((s) => {
+        const name = s.name?.toLowerCase() || "";
+        const role = s.role?.toLowerCase() || "";
+        const uniqueId = s.unique_id?.toLowerCase() || "";
+        const phone = s.phone_number || "";
+        const residentName = s.resident_name?.toLowerCase() || "";
+        const estateName = s.estate_name?.toLowerCase() || "";
+
         return (
           name.includes(term) ||
           role.includes(term) ||
@@ -103,31 +105,42 @@ const AdminStaffManagement: React.FC = () => {
 
   const handleDisableStaff = async (staffId: number) => {
     if (!disableReason.trim()) {
-      alert('Please provide a reason for removal');
+      alert("Please provide a reason for removal");
       return;
     }
 
     setProcessingDisable(true);
     try {
       await api.patch(`/api/artisans-domestics/${staffId}/disable/`, {
-        removal_reason: disableReason
+        removal_reason: disableReason,
       });
-      
+
       setShowModal(false);
-      setDisableReason('');
+      setDisableReason("");
       setSelectedStaff(null);
       fetchStaff();
     } catch (error) {
-      console.error('Failed to disable staff:', error);
-      alert('Failed to disable staff. Please try again.');
+      //console.error('Failed to disable staff:', error);
+      alert("Failed to disable staff. Please try again.");
     } finally {
       setProcessingDisable(false);
     }
   };
 
   const exportToCSV = () => {
-    const headers = ['ID', 'Name', 'Role', 'Phone', 'Gender', 'Unique ID', 'Resident Email', 'Estate', 'Status', 'Registration Date'];
-    const rows = filteredStaff.map(s => [
+    const headers = [
+      "ID",
+      "Name",
+      "Role",
+      "Phone",
+      "Gender",
+      "Unique ID",
+      "Resident Email",
+      "Estate",
+      "Status",
+      "Registration Date",
+    ];
+    const rows = filteredStaff.map((s) => [
       s.id,
       s.name,
       s.role,
@@ -137,26 +150,26 @@ const AdminStaffManagement: React.FC = () => {
       s.resident_name,
       s.estate_name,
       s.status,
-      new Date(s.date_of_registration).toLocaleDateString()
+      new Date(s.date_of_registration).toLocaleDateString(),
     ]);
 
     const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
+      headers.join(","),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+    ].join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csvContent], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `estate-staff-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `estate-staff-${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
   };
 
   const stats = {
     total: staff.length,
-    active: staff.filter(s => s.status === 'active').length,
-    removed: staff.filter(s => s.status === 'removed').length
+    active: staff.filter((s) => s.status === "active").length,
+    removed: staff.filter((s) => s.status === "removed").length,
   };
 
   if (loading) {
@@ -174,12 +187,15 @@ const AdminStaffManagement: React.FC = () => {
 
   return (
     <AdminLayout title="Staff Management">
-      
       <div className="space-y-6 sm:space-x-6">
         {/* Header */}
         <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl p-6 shadow-lg">
-          <h2 className="text-2xl font-bold mb-2">Artisans & Domestic Staff Management</h2>
-          <p className="opacity-90">Monitor and manage all registered staff across your estate</p>
+          <h2 className="text-2xl font-bold mb-2">
+            Artisans & Domestic Staff Management
+          </h2>
+          <p className="opacity-90">
+            Monitor and manage all registered staff across your estate
+          </p>
         </div>
 
         {/* Stats Cards */}
@@ -187,8 +203,12 @@ const AdminStaffManagement: React.FC = () => {
           <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-3 sm:p-6">
             <div className="flex items-center justify-between gap-2">
               <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">Total Staff</p>
-                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{stats.total}</p>
+                <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">
+                  Total Staff
+                </p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+                  {stats.total}
+                </p>
               </div>
               <div className="p-1.5 sm:p-2 lg:p-3 bg-blue-100 rounded-lg flex-shrink-0">
                 <Users className="text-blue-600" size={16} />
@@ -199,8 +219,12 @@ const AdminStaffManagement: React.FC = () => {
           <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-3 sm:p-6">
             <div className="flex items-center justify-between gap-2">
               <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">Active Staff</p>
-                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600">{stats.active}</p>
+                <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">
+                  Active Staff
+                </p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600">
+                  {stats.active}
+                </p>
               </div>
               <div className="p-1.5 sm:p-2 lg:p-3 bg-green-100 rounded-lg flex-shrink-0">
                 <CheckCircle className="text-green-600" size={16} />
@@ -211,8 +235,12 @@ const AdminStaffManagement: React.FC = () => {
           <div className="col-span-2 md:col-span-1 bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-3 sm:p-6">
             <div className="flex items-center justify-between gap-2">
               <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">Removed Staff</p>
-                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-red-600">{stats.removed}</p>
+                <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">
+                  Removed Staff
+                </p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-red-600">
+                  {stats.removed}
+                </p>
               </div>
               <div className="p-1.5 sm:p-2 lg:p-3 bg-red-100 rounded-lg flex-shrink-0">
                 <XCircle className="text-red-600" size={16} />
@@ -225,7 +253,10 @@ const AdminStaffManagement: React.FC = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={20}
+              />
               <input
                 type="text"
                 placeholder="Search by name, role, ID, phone, resident email, or estate..."
@@ -267,34 +298,59 @@ const AdminStaffManagement: React.FC = () => {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Staff Details</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Contact</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Resident Info</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Staff Details
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Contact
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Resident Info
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredStaff.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                      <AlertCircle className="mx-auto mb-2 text-gray-400" size={48} />
+                    <td
+                      colSpan={5}
+                      className="px-6 py-12 text-center text-gray-500"
+                    >
+                      <AlertCircle
+                        className="mx-auto mb-2 text-gray-400"
+                        size={48}
+                      />
                       <p className="text-lg font-medium">No staff found</p>
-                      <p className="text-sm">Try adjusting your filters or search terms</p>
+                      <p className="text-sm">
+                        Try adjusting your filters or search terms
+                      </p>
                     </td>
                   </tr>
                 ) : (
                   filteredStaff.map((s) => (
-                    <tr key={s.id} className="hover:bg-gray-50 transition-colors">
+                    <tr
+                      key={s.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-3">
                           <div className="flex-shrink-0 h-12 w-12 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold">
                             {s.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-semibold text-gray-900">{s.name}</p>
+                            <p className="font-semibold text-gray-900">
+                              {s.name}
+                            </p>
                             <p className="text-sm text-gray-600">{s.role}</p>
-                            <p className="text-xs text-gray-500 font-mono">ID: {s.unique_id}</p>
+                            <p className="text-xs text-gray-500 font-mono">
+                              ID: {s.unique_id}
+                            </p>
                           </div>
                         </div>
                       </td>
@@ -304,23 +360,31 @@ const AdminStaffManagement: React.FC = () => {
                             <Phone size={14} className="mr-2 text-gray-400" />
                             {s.phone_number}
                           </div>
-                          <p className="text-xs text-gray-500 capitalize">{s.gender}</p>
+                          <p className="text-xs text-gray-500 capitalize">
+                            {s.gender}
+                          </p>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="space-y-1">
-                          <p className="text-sm font-medium text-gray-900">{s.resident_name || 'N/A'}</p>
-                          <p className="text-xs text-gray-500">Estate: {s.estate_name || 'N/A'}</p>
+                          <p className="text-sm font-medium text-gray-900">
+                            {s.resident_name || "N/A"}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Estate: {s.estate_name || "N/A"}
+                          </p>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="space-y-2">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                            s.status === 'active'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {s.status === 'active' ? (
+                          <span
+                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                              s.status === "active"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {s.status === "active" ? (
                               <CheckCircle size={12} className="mr-1" />
                             ) : (
                               <XCircle size={12} className="mr-1" />
@@ -329,7 +393,9 @@ const AdminStaffManagement: React.FC = () => {
                           </span>
                           <div className="flex items-center text-xs text-gray-500">
                             <Calendar size={12} className="mr-1" />
-                            {new Date(s.date_of_registration).toLocaleDateString()}
+                            {new Date(
+                              s.date_of_registration,
+                            ).toLocaleDateString()}
                           </div>
                         </div>
                       </td>
@@ -345,7 +411,7 @@ const AdminStaffManagement: React.FC = () => {
                           >
                             <Eye size={18} />
                           </button>
-                          {s.status === 'active' && (
+                          {s.status === "active" && (
                             <button
                               onClick={() => {
                                 setSelectedStaff(s);
@@ -373,7 +439,9 @@ const AdminStaffManagement: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
-              <h3 className="text-2xl font-bold text-gray-900">Staff Details</h3>
+              <h3 className="text-2xl font-bold text-gray-900">
+                Staff Details
+              </h3>
             </div>
 
             <div className="p-6 space-y-6">
@@ -381,31 +449,43 @@ const AdminStaffManagement: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-600">Name</p>
-                  <p className="font-semibold text-gray-900">{selectedStaff.name}</p>
+                  <p className="font-semibold text-gray-900">
+                    {selectedStaff.name}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Role</p>
-                  <p className="font-semibold text-gray-900">{selectedStaff.role}</p>
+                  <p className="font-semibold text-gray-900">
+                    {selectedStaff.role}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Phone Number</p>
-                  <p className="font-semibold text-gray-900">{selectedStaff.phone_number}</p>
+                  <p className="font-semibold text-gray-900">
+                    {selectedStaff.phone_number}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Gender</p>
-                  <p className="font-semibold text-gray-900 capitalize">{selectedStaff.gender}</p>
+                  <p className="font-semibold text-gray-900 capitalize">
+                    {selectedStaff.gender}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Unique ID</p>
-                  <p className="font-semibold text-gray-900 font-mono">{selectedStaff.unique_id}</p>
+                  <p className="font-semibold text-gray-900 font-mono">
+                    {selectedStaff.unique_id}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Status</p>
-                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                    selectedStaff.status === 'active'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
+                  <span
+                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                      selectedStaff.status === "active"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
                     {selectedStaff.status}
                   </span>
                 </div>
@@ -413,30 +493,42 @@ const AdminStaffManagement: React.FC = () => {
 
               {/* Resident Info */}
               <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-3">Registered By</h4>
+                <h4 className="font-semibold text-gray-900 mb-3">
+                  Registered By
+                </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-600">Resident Name</p>
-                    <p className="font-medium text-gray-900">{selectedStaff.resident_name || 'N/A'}</p>
+                    <p className="font-medium text-gray-900">
+                      {selectedStaff.resident_name || "N/A"}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Estate</p>
-                    <p className="font-medium text-gray-900">{selectedStaff.estate_name || 'N/A'}</p>
+                    <p className="font-medium text-gray-900">
+                      {selectedStaff.estate_name || "N/A"}
+                    </p>
                   </div>
                 </div>
               </div>
 
               {selectedStaff.removal_reason && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-red-900 mb-2">Removal Reason</h4>
-                  <p className="text-sm text-red-800">{selectedStaff.removal_reason}</p>
+                  <h4 className="font-semibold text-red-900 mb-2">
+                    Removal Reason
+                  </h4>
+                  <p className="text-sm text-red-800">
+                    {selectedStaff.removal_reason}
+                  </p>
                 </div>
               )}
 
               {/* Disable Section */}
-              {selectedStaff.status === 'active' && (
+              {selectedStaff.status === "active" && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 mb-3">Disable Staff Access</h4>
+                  <h4 className="font-semibold text-gray-900 mb-3">
+                    Disable Staff Access
+                  </h4>
                   <textarea
                     value={disableReason}
                     onChange={(e) => setDisableReason(e.target.value)}
@@ -452,28 +544,30 @@ const AdminStaffManagement: React.FC = () => {
               <button
                 onClick={() => {
                   setShowModal(false);
-                  setDisableReason('');
+                  setDisableReason("");
                   setSelectedStaff(null);
                 }}
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Close
               </button>
-              {selectedStaff.status === 'active' && (
+              {selectedStaff.status === "active" && (
                 <button
                   onClick={() => handleDisableStaff(selectedStaff.id)}
                   disabled={processingDisable || !disableReason.trim()}
                   className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {processingDisable ? 'Processing...' : 'Disable Staff'}
+                  {processingDisable ? "Processing..." : "Disable Staff"}
                 </button>
               )}
             </div>
           </div>
         </div>
       )}
-      <br /><br /><br />
-      <AdminBottomNav/>
+      <br />
+      <br />
+      <br />
+      <AdminBottomNav />
     </AdminLayout>
   );
 };

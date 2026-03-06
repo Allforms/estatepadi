@@ -1,37 +1,37 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { BuildingIcon, AlertCircleIcon, ImageIcon } from 'lucide-react';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { BuildingIcon, AlertCircleIcon, ImageIcon } from "lucide-react";
 
-import api from '../api';
-import { toast } from 'react-toastify';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import api from "../api";
+import { toast } from "react-toastify";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 const RegisterEstate: React.FC = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    name: '',
-    address: '',
-    description: '',
-    phoneNumber: '',
-    email: '',
-    logo: null as File | null
+    name: "",
+    address: "",
+    description: "",
+    phoneNumber: "",
+    email: "",
+    logo: null as File | null,
   });
 
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   const formatErrorMessage = (error: any): string => {
     // If error is a string, return it directly
-    if (typeof error === 'string') {
+    if (typeof error === "string") {
       return error;
     }
 
     // If error is an object with an error property
-    if (error && typeof error === 'object') {
+    if (error && typeof error === "object") {
       if (error.error) {
         return error.error;
       }
@@ -71,14 +71,16 @@ const RegisterEstate: React.FC = () => {
     }
 
     // Default fallback message
-    return 'Estate registration failed. Please check your details and try again.';
+    return "Estate registration failed. Please check your details and try again.";
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -86,20 +88,20 @@ const RegisterEstate: React.FC = () => {
     const file = e.target.files?.[0];
     if (file) {
       // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setError('Please select a valid image file for the logo.');
-        return;
-      }
-      
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setError('Logo file size must be less than 5MB.');
+      if (!file.type.startsWith("image/")) {
+        setError("Please select a valid image file for the logo.");
         return;
       }
 
-      setFormData(prev => ({
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Logo file size must be less than 5MB.");
+        return;
+      }
+
+      setFormData((prev) => ({
         ...prev,
-        logo: file
+        logo: file,
       }));
 
       // Create preview
@@ -108,19 +110,21 @@ const RegisterEstate: React.FC = () => {
         setLogoPreview(event.target?.result as string);
       };
       reader.readAsDataURL(file);
-      setError('');
+      setError("");
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setFieldErrors({});
     setIsLoading(true);
 
     // Validate phone number
     if (!/^\d{11}$/.test(formData.phoneNumber)) {
-      setFieldErrors({ phoneNumber: 'Phone number must be exactly 11 digits.' });
+      setFieldErrors({
+        phoneNumber: "Phone number must be exactly 11 digits.",
+      });
       setIsLoading(false);
       return;
     }
@@ -128,19 +132,19 @@ const RegisterEstate: React.FC = () => {
     try {
       // Create FormData for file upload
       const submitData = new FormData();
-      submitData.append('name', formData.name);
-      submitData.append('address', formData.address);
-      submitData.append('description', formData.description);
-      submitData.append('phone_number', formData.phoneNumber);
-      submitData.append('email', formData.email);
+      submitData.append("name", formData.name);
+      submitData.append("address", formData.address);
+      submitData.append("description", formData.description);
+      submitData.append("phone_number", formData.phoneNumber);
+      submitData.append("email", formData.email);
 
       if (formData.logo) {
-        submitData.append('logo', formData.logo);
+        submitData.append("logo", formData.logo);
       }
 
-      await api.post('/api/estates/', submitData, {
+      await api.post("/api/estates/", submitData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       });
 
@@ -148,22 +152,21 @@ const RegisterEstate: React.FC = () => {
 
       // Reset form
       setFormData({
-        name: '',
-        address: '',
-        description: '',
-        phoneNumber: '',
-        email: '',
-        logo: null
+        name: "",
+        address: "",
+        description: "",
+        phoneNumber: "",
+        email: "",
+        logo: null,
       });
       setLogoPreview(null);
 
       // Navigate to estates list or dashboard
       setTimeout(() => {
-        navigate('/estates'); // Adjust navigation path as needed
+        navigate("/estates"); // Adjust navigation path as needed
       }, 2500);
-
     } catch (err: any) {
-      console.log('Error response:', err.response?.data);
+      //console.log('Error response:', err.response?.data);
 
       // Handle field-specific validation errors
       if (err.response?.data) {
@@ -172,24 +175,34 @@ const RegisterEstate: React.FC = () => {
 
         // Map backend field names to frontend field names and extract error messages
         if (responseData.name) {
-          errors.name = Array.isArray(responseData.name) ? responseData.name[0] : responseData.name;
+          errors.name = Array.isArray(responseData.name)
+            ? responseData.name[0]
+            : responseData.name;
         }
         if (responseData.email) {
-          errors.email = Array.isArray(responseData.email) ? responseData.email[0] : responseData.email;
+          errors.email = Array.isArray(responseData.email)
+            ? responseData.email[0]
+            : responseData.email;
         }
         if (responseData.phone_number) {
-          errors.phoneNumber = Array.isArray(responseData.phone_number) ? responseData.phone_number[0] : responseData.phone_number;
+          errors.phoneNumber = Array.isArray(responseData.phone_number)
+            ? responseData.phone_number[0]
+            : responseData.phone_number;
         }
         if (responseData.address) {
-          errors.address = Array.isArray(responseData.address) ? responseData.address[0] : responseData.address;
+          errors.address = Array.isArray(responseData.address)
+            ? responseData.address[0]
+            : responseData.address;
         }
         if (responseData.description) {
-          errors.description = Array.isArray(responseData.description) ? responseData.description[0] : responseData.description;
+          errors.description = Array.isArray(responseData.description)
+            ? responseData.description[0]
+            : responseData.description;
         }
 
         if (Object.keys(errors).length > 0) {
           setFieldErrors(errors);
-          toast.error('Please fix the errors in the form');
+          toast.error("Please fix the errors in the form");
           setIsLoading(false);
           return;
         }
@@ -225,14 +238,15 @@ const RegisterEstate: React.FC = () => {
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <div className="flex items-center">
-                  <AlertCircleIcon size={20} className="text-red-500 mr-3 flex-shrink-0" />
+                  <AlertCircleIcon
+                    size={20}
+                    className="text-red-500 mr-3 flex-shrink-0"
+                  />
                   <div>
                     <h3 className="text-sm font-medium text-red-800">
                       Registration failed
                     </h3>
-                    <p className="mt-1 text-sm text-red-700">
-                      {error}
-                    </p>
+                    <p className="mt-1 text-sm text-red-700">{error}</p>
                   </div>
                 </div>
               </div>
@@ -240,7 +254,12 @@ const RegisterEstate: React.FC = () => {
 
             <div className="space-y-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Estate Name</label>
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Estate Name
+                </label>
                 <input
                   id="name"
                   name="name"
@@ -248,20 +267,27 @@ const RegisterEstate: React.FC = () => {
                   required
                   className={`mt-1 block w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 ${
                     fieldErrors.name
-                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                      ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                      : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                   }`}
                   placeholder="Enter estate name"
                   value={formData.name}
                   onChange={handleChange}
                 />
                 {fieldErrors.name && (
-                  <p className="mt-1 text-sm text-red-600">{fieldErrors.name}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {fieldErrors.name}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="address" className="block text-sm font-medium text-gray-700">Estate Address</label>
+                <label
+                  htmlFor="address"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Estate Address
+                </label>
                 <input
                   id="address"
                   name="address"
@@ -269,20 +295,27 @@ const RegisterEstate: React.FC = () => {
                   required
                   className={`mt-1 block w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 ${
                     fieldErrors.address
-                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                      ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                      : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                   }`}
                   placeholder="Enter complete estate address"
                   value={formData.address}
                   onChange={handleChange}
                 />
                 {fieldErrors.address && (
-                  <p className="mt-1 text-sm text-red-600">{fieldErrors.address}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {fieldErrors.address}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
+                <label
+                  htmlFor="description"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Description
+                </label>
                 <textarea
                   id="description"
                   name="description"
@@ -290,20 +323,27 @@ const RegisterEstate: React.FC = () => {
                   rows={4}
                   className={`mt-1 block w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 resize-vertical ${
                     fieldErrors.description
-                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                      ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                      : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                   }`}
                   placeholder="Describe the estate (amenities, features, etc.)"
                   value={formData.description}
                   onChange={handleChange}
                 />
                 {fieldErrors.description && (
-                  <p className="mt-1 text-sm text-red-600">{fieldErrors.description}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {fieldErrors.description}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
+                <label
+                  htmlFor="phoneNumber"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Phone Number
+                </label>
                 <input
                   id="phoneNumber"
                   name="phoneNumber"
@@ -313,20 +353,27 @@ const RegisterEstate: React.FC = () => {
                   maxLength={11}
                   className={`mt-1 block w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 ${
                     fieldErrors.phoneNumber
-                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                      ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                      : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                   }`}
                   placeholder="Enter 11-digit phone number"
                   value={formData.phoneNumber}
                   onChange={handleChange}
                 />
                 {fieldErrors.phoneNumber && (
-                  <p className="mt-1 text-sm text-red-600">{fieldErrors.phoneNumber}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {fieldErrors.phoneNumber}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Email Address
+                </label>
                 <input
                   id="email"
                   name="email"
@@ -334,41 +381,50 @@ const RegisterEstate: React.FC = () => {
                   required
                   className={`mt-1 block w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 ${
                     fieldErrors.email
-                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                      ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                      : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                   }`}
                   placeholder="Enter estate email address"
                   value={formData.email}
                   onChange={handleChange}
                 />
                 {fieldErrors.email && (
-                  <p className="mt-1 text-sm text-red-600">{fieldErrors.email}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {fieldErrors.email}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="logo" className="block text-sm font-medium text-gray-700">Estate Logo</label>
+                <label
+                  htmlFor="logo"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Estate Logo
+                </label>
                 <div className="mt-1">
-                  <input 
-                    id="logo" 
-                    name="logo" 
-                    type="file" 
+                  <input
+                    id="logo"
+                    name="logo"
+                    type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={handleFileChange} 
+                    onChange={handleFileChange}
                   />
-                  <label 
-                    htmlFor="logo" 
+                  <label
+                    htmlFor="logo"
                     className="cursor-pointer flex items-center justify-center w-full px-3 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500"
                   >
                     <ImageIcon size={20} className="mr-2" />
-                    {formData.logo ? formData.logo.name : 'Choose estate logo (optional)'}
+                    {formData.logo
+                      ? formData.logo.name
+                      : "Choose estate logo (optional)"}
                   </label>
                   {logoPreview && (
                     <div className="mt-2 flex justify-center">
-                      <img 
-                        src={logoPreview} 
-                        alt="Logo preview" 
+                      <img
+                        src={logoPreview}
+                        alt="Logo preview"
                         className="h-20 w-20 object-cover rounded-lg border border-gray-200"
                       />
                     </div>
@@ -381,25 +437,36 @@ const RegisterEstate: React.FC = () => {
             </div>
 
             <div className="text-sm text-center text-gray-600">
-              By registering an estate, you agree to our{' '}
-              <Link to="/terms" className="text-blue-600 hover:underline">Terms</Link>,{' '}
-              <Link to="/terms" className="text-blue-600 hover:underline">Privacy Policy</Link>{' '}
-              and{' '}
-              <Link to="/terms" className="text-blue-600 hover:underline">Cookies Policy</Link>.
+              By registering an estate, you agree to our{" "}
+              <Link to="/terms" className="text-blue-600 hover:underline">
+                Terms
+              </Link>
+              ,{" "}
+              <Link to="/terms" className="text-blue-600 hover:underline">
+                Privacy Policy
+              </Link>{" "}
+              and{" "}
+              <Link to="/terms" className="text-blue-600 hover:underline">
+                Cookies Policy
+              </Link>
+              .
             </div>
 
             <div>
-              <button 
-                type="submit" 
-                disabled={isLoading} 
+              <button
+                type="submit"
+                disabled={isLoading}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
-                {isLoading ? 'Registering Estate...' : 'Register Estate'}
+                {isLoading ? "Registering Estate..." : "Register Estate"}
               </button>
             </div>
 
             <div className="text-center">
-              <Link to="/estates" className="font-medium text-blue-600 hover:text-blue-500 hover:underline">
+              <Link
+                to="/estates"
+                className="font-medium text-blue-600 hover:text-blue-500 hover:underline"
+              >
                 View all estates
               </Link>
             </div>

@@ -60,7 +60,7 @@ const PayDues: React.FC = () => {
       const data = Array.isArray(res.data) ? res.data : res.data.results || [];
       setDues(data);
     } catch (err) {
-      console.error('Error fetching dues:', err);
+      //console.error('Error fetching dues:', err);
     }
   };
 
@@ -90,7 +90,7 @@ const PayDues: React.FC = () => {
       
       setPayments(paymentsWithReceipts);
     } catch (err) {
-      console.error('Error fetching payments:', err);
+      //console.error('Error fetching payments:', err);
     }
   };
 
@@ -127,7 +127,7 @@ const PayDues: React.FC = () => {
       fetchPayments();
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (err) {
-      console.error('Error submitting payment:', err);
+      //console.error('Error submitting payment:', err);
     } finally {
       setSubmitting(false);
     }
@@ -139,7 +139,7 @@ const PayDues: React.FC = () => {
       const receiptUrl = `${api.defaults.baseURL}/api/payments/${paymentId}/receipt/view/`;
       window.location.href = receiptUrl;
     } catch (error) {
-      console.error('Error viewing receipt:', error);
+      //console.error('Error viewing receipt:', error);
     } finally {
       setReceiptLoading(prev => ({ ...prev, [paymentId]: false }));
     }

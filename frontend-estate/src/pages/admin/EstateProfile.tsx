@@ -26,7 +26,9 @@ const EstateProfile: React.FC = () => {
       .then(res => {
         setEstateId(res.data.estate.id);
       })
-      .catch(console.error);
+      .catch(err => {
+        //console.error(err);
+      });
   }, []);
 
   useEffect(() => {
@@ -46,7 +48,9 @@ const EstateProfile: React.FC = () => {
         setLogoPreview(data.logo || '');
         setBankAccounts(data.bank_accounts || []);
       })
-      .catch(console.error);
+      .catch(err => {
+        //console.error(err);
+      });
 
     api.get(`/api/estates/${estateId}/leadership/`)
       .then(res => {
@@ -60,7 +64,9 @@ const EstateProfile: React.FC = () => {
         }));
         setLeadershipData(leaders);
       })
-      .catch(console.error);
+      .catch(err => {
+        //console.error(err);
+      });
   }, [estateId]);
 
   const handleEstateChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -138,7 +144,7 @@ const EstateProfile: React.FC = () => {
       try {
         await saveBankAccounts();
       } catch (bankError) {
-        console.warn('Bank account save failed:', bankError);
+        //console.warn('Bank account save failed:', bankError);
         // Continue with estate update even if bank accounts fail
         alert('Estate updated successfully! Note: Bank account changes may not be saved yet.');
       }
@@ -147,7 +153,7 @@ const EstateProfile: React.FC = () => {
       
       alert('Estate updated successfully!');
     } catch (error) {
-      console.error('Update failed:', error);
+      //console.error('Update failed:', error);
       alert('Failed to update estate. Please try again.');
     } finally {
       setIsLoading(false);
@@ -178,11 +184,11 @@ const EstateProfile: React.FC = () => {
     } else {
       // Try to delete existing account from backend
       try {
-        await api.delete(`/api/estates/${estateId}/bank-accounts/${accountId}/`);
+        //await api.delete(`/api/estates/${estateId}/bank-accounts/${accountId}/`);
         setBankAccounts(bankAccounts.filter(acc => acc.id !== accountId));
         alert('Bank account deleted successfully!');
       } catch (error) {
-        console.error('Error deleting bank account:', error);
+        //console.error('Error deleting bank account:', error);
         // If delete endpoint doesn't exist, just remove from UI
         setBankAccounts(bankAccounts.filter(acc => acc.id !== accountId));
         alert('Bank account removed from list. Changes will be saved when you save the estate.');
@@ -236,22 +242,22 @@ const EstateProfile: React.FC = () => {
 
         // Try updating estate with bank accounts
         try {
-          await api.patch(`/api/estates/${estateId}/`, {
+          //await api.patch(`/api/estates/${estateId}/`, {
             bank_accounts: allAccounts
           });
         } catch (patchError) {
-          console.warn('Bank account updates not supported by backend yet');
+          //console.warn('Bank account updates not supported by backend yet');
           // For now, just show a message to the user
           throw new Error('Bank account management is not yet implemented in the backend. Please contact your administrator.');
         }
       }
 
       // Refresh bank accounts data
-      const response = await api.get(`/api/estates/${estateId}/`);
+      //const response = await api.get(`/api/estates/${estateId}/`);
       setBankAccounts(response.data.bank_accounts || []);
       
     } catch (error) {
-      console.error('Error saving bank accounts:', error);
+      //console.error('Error saving bank accounts:', error);
       throw error;
     }
   };

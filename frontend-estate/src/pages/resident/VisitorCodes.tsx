@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import ResidentLayout from '../../components/layouts/ResidentLayout';
-import ResidentBottomNav from '../../components/layouts/ResidentBottomNav';
+import React, { useEffect, useState } from "react";
+import ResidentLayout from "../../components/layouts/ResidentLayout";
+import ResidentBottomNav from "../../components/layouts/ResidentBottomNav";
 import {
   KeyIcon,
   ClockIcon,
   RefreshCwIcon,
   CopyIcon,
   CheckIcon,
-  AlertCircleIcon
-} from 'lucide-react';
-import api from '../../api';
+  AlertCircleIcon,
+} from "lucide-react";
+import api from "../../api";
 
 interface VisitorCode {
   id: number;
@@ -26,7 +26,7 @@ interface VisitorCode {
 
 const VisitorCodes: React.FC = () => {
   const [showGenerateForm, setShowGenerateForm] = useState(false);
-  const [formData, setFormData] = useState({ visitor_name: '', purpose: '' });
+  const [formData, setFormData] = useState({ visitor_name: "", purpose: "" });
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [visitorCodes, setVisitorCodes] = useState<VisitorCode[]>([]);
@@ -38,15 +38,13 @@ const VisitorCodes: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
 
-  
   // New state for current visitor info
-  const [currentVisitorName, setCurrentVisitorName] = useState<string>('');
-  const [currentHomeAddress, setCurrentHomeAddress] = useState<string>('');
+  const [currentVisitorName, setCurrentVisitorName] = useState<string>("");
+  const [currentHomeAddress, setCurrentHomeAddress] = useState<string>("");
 
-  useEffect(() => { 
-    fetchVisitorCodes(1); 
+  useEffect(() => {
+    fetchVisitorCodes(1);
   }, []);
-  
 
   const fetchVisitorCodes = async (page = 1) => {
     setLoading(true);
@@ -55,10 +53,10 @@ const VisitorCodes: React.FC = () => {
       // console.log(`Fetching visitor codes - Page ${page}...`);
       const res = await api.get(`/api/visitor-codes/?page=${page}`);
       // console.log('API Response:', res.data);
-  
+
       let dataArray: VisitorCode[] = [];
       let count = 0;
-  
+
       if (res.data.results && Array.isArray(res.data.results)) {
         dataArray = res.data.results;
         count = res.data.count || 0;
@@ -72,61 +70,71 @@ const VisitorCodes: React.FC = () => {
       } else {
         // console.warn('Unexpected API response structure:', res.data);
       }
-  
+
       setVisitorCodes(dataArray);
       setCurrentPage(page);
       setTotalPages(Math.ceil(count / 10)); // Assuming 10 per page (default from DRF)
     } catch (err: any) {
-      console.error('Error fetching visitor codes:', err);
-      setError(err.response?.data?.message || err.message || 'Failed to fetch visitor codes');
+      //console.error('Error fetching visitor codes:', err);
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to fetch visitor codes",
+      );
     } finally {
       setLoading(false);
     }
   };
-  
-  
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     try {
-      const res = await api.post('/api/visitor-codes/', formData);
+      const res = await api.post("/api/visitor-codes/", formData);
       // console.log('Generated code response:', res.data);
-      
+
       setGeneratedCode(res.data.code);
-      
+
       // Store visitor info before clearing formData
       setCurrentVisitorName(formData.visitor_name);
-      setCurrentHomeAddress(res.data.resident?.home_address || 'N/A');
-      
-      const remaining = Math.floor((new Date(res.data.expires_at).getTime() - Date.now())/1000);
+      setCurrentHomeAddress(res.data.resident?.home_address || "N/A");
+
+      const remaining = Math.floor(
+        (new Date(res.data.expires_at).getTime() - Date.now()) / 1000,
+      );
       setCountdown(remaining > 0 ? remaining : 0);
       startCountdown();
-      
+
       // Refresh the codes list
       await fetchVisitorCodes();
-      
+
       setShowGenerateForm(false);
-      setFormData({ visitor_name: '', purpose: '' });
-      setCopied(false); 
-      setCopiedAll(false); 
+      setFormData({ visitor_name: "", purpose: "" });
+      setCopied(false);
+      setCopiedAll(false);
     } catch (err: any) {
-      console.error('Error generating code:', err);
-      setError(err.response?.data?.message || err.message || 'Failed to generate visitor code');
+      //console.error('Error generating code:', err);
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to generate visitor code",
+      );
     }
   };
 
   const startCountdown = () => {
     const timer = setInterval(() => {
-      setCountdown(prev => {
-        if (prev === null || prev <= 1) { 
-          clearInterval(timer); 
-          return 0; 
+      setCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          clearInterval(timer);
+          return 0;
         }
         return prev - 1;
       });
@@ -134,27 +142,27 @@ const VisitorCodes: React.FC = () => {
   };
 
   const formatTime = (seconds: number | null): string => {
-    if (!seconds) return '00:00';
-    const m = String(Math.floor(seconds/60)).padStart(2,'0');
-    const s = String(seconds%60).padStart(2,'0');
+    if (!seconds) return "00:00";
+    const m = String(Math.floor(seconds / 60)).padStart(2, "0");
+    const s = String(seconds % 60).padStart(2, "0");
     return `${m}:${s}`;
   };
 
   const copyToClipboard = async () => {
     if (!generatedCode) return;
-    
+
     try {
       await navigator.clipboard.writeText(generatedCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy code:', err);
+      //console.error('Failed to copy code:', err);
       // Fallback for browsers that don't support clipboard API
-      const textArea = document.createElement('textarea');
+      const textArea = document.createElement("textarea");
       textArea.value = generatedCode;
       document.body.appendChild(textArea);
       textArea.select();
-      document.execCommand('copy');
+      document.execCommand("copy");
       document.body.removeChild(textArea);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -163,7 +171,7 @@ const VisitorCodes: React.FC = () => {
 
   const copyAllDetails = async () => {
     if (!generatedCode || !currentVisitorName) return;
-    
+
     const allDetails = `Hi ${currentVisitorName},
 
 Your one-time access code is:
@@ -185,13 +193,13 @@ Powered by EstatePadi 🚀`;
       setCopiedAll(true);
       setTimeout(() => setCopiedAll(false), 2000);
     } catch (err) {
-      console.error('Failed to copy all details:', err);
+      //console.error('Failed to copy all details:', err);
       // Fallback for browsers that don't support clipboard API
-      const textArea = document.createElement('textarea');
+      const textArea = document.createElement("textarea");
       textArea.value = allDetails;
       document.body.appendChild(textArea);
       textArea.select();
-      document.execCommand('copy');
+      document.execCommand("copy");
       document.body.removeChild(textArea);
       setCopiedAll(true);
       setTimeout(() => setCopiedAll(false), 2000);
@@ -240,9 +248,11 @@ Powered by EstatePadi 🚀`;
 
         {/* Header + Generate Button */}
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-800">Visitor Access Management</h2>
-          <button 
-            onClick={() => setShowGenerateForm(true)} 
+          <h2 className="text-xl font-semibold text-gray-800">
+            Visitor Access Management
+          </h2>
+          <button
+            onClick={() => setShowGenerateForm(true)}
             className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition-colors"
           >
             <KeyIcon size={18} className="mr-2" /> Generate New Code
@@ -252,10 +262,15 @@ Powered by EstatePadi 🚀`;
         {/* Generate Form */}
         {showGenerateForm && (
           <div className="max-w-md mx-auto bg-white shadow-md rounded-lg p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-5">Generate New Visitor Code</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-5">
+              Generate New Visitor Code
+            </h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="visitor_name" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="visitor_name"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Visitor Name
                 </label>
                 <input
@@ -270,7 +285,10 @@ Powered by EstatePadi 🚀`;
                 />
               </div>
               <div>
-                <label htmlFor="purpose" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="purpose"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Purpose of Visit
                 </label>
                 <select
@@ -281,7 +299,9 @@ Powered by EstatePadi 🚀`;
                   onChange={handleChange}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="" disabled>Select purpose</option>
+                  <option value="" disabled>
+                    Select purpose
+                  </option>
                   <option value="family">Family Visit</option>
                   <option value="friend">Friend Visit</option>
                   <option value="delivery">Delivery</option>
@@ -290,15 +310,15 @@ Powered by EstatePadi 🚀`;
                 </select>
               </div>
               <div className="flex justify-end space-x-3 mt-6">
-                <button 
-                  type="button" 
-                  onClick={() => setShowGenerateForm(false)} 
+                <button
+                  type="button"
+                  onClick={() => setShowGenerateForm(false)}
                   className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Generate Code
@@ -312,11 +332,11 @@ Powered by EstatePadi 🚀`;
         {generatedCode && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
             <KeyIcon size={32} className="text-blue-600 mb-3 mx-auto" />
-            
+
             <p className="text-lg font-semibold text-gray-800 mb-2">
-              Hi {currentVisitorName || 'Visitor'},
+              Hi {currentVisitorName || "Visitor"},
             </p>
-            
+
             <p className="text-sm text-gray-700 mb-3">
               Your one-time access code is:
             </p>
@@ -330,18 +350,22 @@ Powered by EstatePadi 🚀`;
                 className="p-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-700 transition-colors"
                 title={copied ? "Copied!" : "Copy code"}
               >
-                {copied ? <CheckIcon size={20} className="text-green-600" /> : <CopyIcon size={20} />}
+                {copied ? (
+                  <CheckIcon size={20} className="text-green-600" />
+                ) : (
+                  <CopyIcon size={20} />
+                )}
               </button>
             </div>
 
             <p className="text-sm text-gray-600 mb-2">
-              Location: <strong className="text-gray-800">
-                {currentHomeAddress}
-              </strong>
+              Location:{" "}
+              <strong className="text-gray-800">{currentHomeAddress}</strong>
             </p>
 
             <div className="flex items-center justify-center text-sm text-blue-700 mb-1">
-              <ClockIcon size={16} className="mr-1" /> Expires in {formatTime(countdown)}
+              <ClockIcon size={16} className="mr-1" /> Expires in{" "}
+              {formatTime(countdown)}
             </div>
 
             <p className="text-xs text-gray-500 mt-2">
@@ -354,15 +378,27 @@ Powered by EstatePadi 🚀`;
                 onClick={copyAllDetails}
                 className="flex items-center justify-center mx-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm transition-colors"
               >
-                {copiedAll ? <CheckIcon size={16} className="mr-2 text-green-400" /> : <CopyIcon size={16} className="mr-2" />}
-                {copiedAll ? 'All Details Copied!' : 'Copy All Details'}
+                {copiedAll ? (
+                  <CheckIcon size={16} className="mr-2 text-green-400" />
+                ) : (
+                  <CopyIcon size={16} className="mr-2" />
+                )}
+                {copiedAll ? "All Details Copied!" : "Copy All Details"}
               </button>
             </div>
 
             <div className="mt-6 text-xs text-gray-400">
-              Want to enjoy <span className="text-blue-700 font-medium">EstatePadi</span> in your estate?
+              Want to enjoy{" "}
+              <span className="text-blue-700 font-medium">EstatePadi</span> in
+              your estate?
               <br />
-              Email us at <a href="mailto:info@estatepadi.com" className="text-blue-600 underline">info@estatepadi.com</a>
+              Email us at{" "}
+              <a
+                href="mailto:info@estatepadi.com"
+                className="text-blue-600 underline"
+              >
+                info@estatepadi.com
+              </a>
               <br />
               <span className="mt-2 block">Powered by EstatePadi 🚀</span>
             </div>
@@ -377,7 +413,8 @@ Powered by EstatePadi 🚀`;
                 Recent Visitor Codes
               </h3>
               <p className="mt-1 text-sm text-gray-500">
-                History of recently generated codes. ({visitorCodes.length} total)
+                History of recently generated codes. ({visitorCodes.length}{" "}
+                total)
               </p>
             </div>
             <button
@@ -385,8 +422,11 @@ Powered by EstatePadi 🚀`;
               disabled={loading}
               className="flex items-center px-3 py-1 text-sm border rounded-md hover:bg-gray-50 disabled:opacity-50 transition-colors"
             >
-              <RefreshCwIcon size={14} className={`mr-1 ${loading ? 'animate-spin' : ''}`} />
-              {loading ? 'Loading...' : 'Refresh'}
+              <RefreshCwIcon
+                size={14}
+                className={`mr-1 ${loading ? "animate-spin" : ""}`}
+              />
+              {loading ? "Loading..." : "Refresh"}
             </button>
           </div>
 
@@ -403,7 +443,6 @@ Powered by EstatePadi 🚀`;
               <p className="text-red-600 mb-2">Failed to load visitor codes</p>
               <button
                 onClick={() => fetchVisitorCodes(currentPage)}
-
                 className="text-blue-600 hover:text-blue-800 text-sm underline"
               >
                 Try again
@@ -437,14 +476,19 @@ Powered by EstatePadi 🚀`;
                 <tbody className="bg-white divide-y divide-gray-200">
                   {visitorCodes.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-gray-500">
+                      <td
+                        colSpan={6}
+                        className="py-8 text-center text-gray-500"
+                      >
                         <KeyIcon className="h-8 w-8 mx-auto mb-3 text-gray-300" />
                         <p>No visitor codes generated yet.</p>
-                        <p className="text-sm mt-1">Generate your first visitor code to get started.</p>
+                        <p className="text-sm mt-1">
+                          Generate your first visitor code to get started.
+                        </p>
                       </td>
                     </tr>
                   ) : (
-                    visitorCodes.map(code => (
+                    visitorCodes.map((code) => (
                       <tr key={code.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {code.visitor_name}
@@ -482,12 +526,17 @@ Powered by EstatePadi 🚀`;
                   </button>
 
                   <span className="text-sm text-gray-600">
-                    Page <span className="font-semibold text-gray-800">{currentPage}</span> of {totalPages}
+                    Page{" "}
+                    <span className="font-semibold text-gray-800">
+                      {currentPage}
+                    </span>{" "}
+                    of {totalPages}
                   </span>
 
                   <button
                     onClick={() => {
-                      if (currentPage < totalPages) fetchVisitorCodes(currentPage + 1);
+                      if (currentPage < totalPages)
+                        fetchVisitorCodes(currentPage + 1);
                     }}
                     disabled={currentPage >= totalPages}
                     className="px-3 py-1 border rounded disabled:opacity-50 hover:bg-gray-50"
@@ -496,14 +545,14 @@ Powered by EstatePadi 🚀`;
                   </button>
                 </div>
               )}
-
-
             </div>
           )}
         </div>
       </div>
-      <br /><br /><br />
-      <ResidentBottomNav/>
+      <br />
+      <br />
+      <br />
+      <ResidentBottomNav />
     </ResidentLayout>
   );
 };

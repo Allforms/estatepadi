@@ -1,30 +1,36 @@
-import React, { useEffect, useState } from 'react';
-import AdminLayout from '../../components/layouts/AdminLayout';
-import { EditIcon, SaveIcon, TrashIcon, AlertCircleIcon, UserCircle } from 'lucide-react';
-import api from '../../api';
-import AdminBottomNav from '../../components/layouts/AdminBottomNav';
+import React, { useEffect, useState } from "react";
+import AdminLayout from "../../components/layouts/AdminLayout";
+import {
+  EditIcon,
+  SaveIcon,
+  TrashIcon,
+  AlertCircleIcon,
+  UserCircle,
+} from "lucide-react";
+import api from "../../api";
+import AdminBottomNav from "../../components/layouts/AdminBottomNav";
 
 const AdminProfile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const [profileData, setProfileData] = useState({
-    email: '',
-    first_name: '',
-    last_name: '',
-    phone_number: '',
-    home_address: '',
-    street_number: '',
-    resident_type: '',
-    date_joined: '',
+    email: "",
+    first_name: "",
+    last_name: "",
+    phone_number: "",
+    home_address: "",
+    street_number: "",
+    resident_type: "",
+    date_joined: "",
   });
 
   const fetchProfile = async () => {
     try {
-      const res = await api.get('/api/resident/profile/');
+      const res = await api.get("/api/resident/profile/");
       setProfileData(res.data);
     } catch (err) {
-      console.error('Error fetching profile:', err);
+      //console.error('Error fetching profile:', err);
     }
   };
 
@@ -32,32 +38,35 @@ const AdminProfile: React.FC = () => {
     fetchProfile();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
-    setProfileData(prev => ({ ...prev, [name]: value }));
+    setProfileData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSave = async () => {
     try {
-      await api.patch('/api/resident/profile/', profileData);
-      alert('Profile updated successfully.');
+      await api.patch("/api/resident/profile/", profileData);
+      alert("Profile updated successfully.");
       setIsEditing(false);
       fetchProfile();
     } catch (err) {
-      console.error('Error updating profile:', err);
-      alert('Failed to update profile.');
+      //console.error('Error updating profile:', err);
+      alert("Failed to update profile.");
     }
   };
 
   const handleDeleteAccount = () => {
-    alert('Your account deletion request has been submitted. An admin will process your request.');
+    alert(
+      "Your account deletion request has been submitted. An admin will process your request.",
+    );
     setShowDeleteConfirm(false);
   };
 
   return (
     <AdminLayout title="My Profile">
       <div className="space-y-6 max-w-4xl mx-auto px-4">
-        
         {/* Profile Image and Name */}
         <div className="flex flex-col sm:flex-row items-center sm:justify-between bg-white shadow rounded-lg p-6">
           <div className="flex items-center space-x-4">
@@ -105,7 +114,9 @@ const AdminProfile: React.FC = () => {
         {/* Profile Details */}
         <div className="bg-white shadow rounded-lg p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">First Name</label>
+            <label className="block text-sm font-medium text-gray-700">
+              First Name
+            </label>
             {isEditing ? (
               <input
                 name="first_name"
@@ -119,7 +130,9 @@ const AdminProfile: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Last Name</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Last Name
+            </label>
             {isEditing ? (
               <input
                 name="last_name"
@@ -133,7 +146,9 @@ const AdminProfile: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Phone Number
+            </label>
             {isEditing ? (
               <input
                 name="phone_number"
@@ -147,7 +162,9 @@ const AdminProfile: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Street Number</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Street Number
+            </label>
             {isEditing ? (
               <input
                 name="street_number"
@@ -161,7 +178,9 @@ const AdminProfile: React.FC = () => {
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700">Home Address</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Home Address
+            </label>
             {isEditing ? (
               <input
                 name="home_address"
@@ -175,7 +194,9 @@ const AdminProfile: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Resident Type</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Resident Type
+            </label>
             {isEditing ? (
               <select
                 name="resident_type"
@@ -188,12 +209,16 @@ const AdminProfile: React.FC = () => {
                 <option value="landlord/landlady">Landlord/Landlady</option>
               </select>
             ) : (
-              <p className="mt-1 text-gray-900">{profileData.resident_type || '-'}</p>
+              <p className="mt-1 text-gray-900">
+                {profileData.resident_type || "-"}
+              </p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Date Joined</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Date Joined
+            </label>
             <p className="mt-1 text-gray-900">
               {new Date(profileData.date_joined).toLocaleDateString()}
             </p>
@@ -206,10 +231,13 @@ const AdminProfile: React.FC = () => {
             <div className="bg-white rounded-lg shadow-lg p-6 space-y-4 max-w-sm w-full">
               <div className="flex items-center space-x-3">
                 <AlertCircleIcon className="text-red-500" />
-                <h2 className="text-lg font-medium text-gray-900">Delete Account?</h2>
+                <h2 className="text-lg font-medium text-gray-900">
+                  Delete Account?
+                </h2>
               </div>
               <p className="text-sm text-gray-500">
-                Are you sure you want to delete your account? This will notify an admin to process your request.
+                Are you sure you want to delete your account? This will notify
+                an admin to process your request.
               </p>
               <div className="flex justify-end space-x-2">
                 <button
@@ -229,8 +257,10 @@ const AdminProfile: React.FC = () => {
           </div>
         )}
       </div>
-      <br /><br /><br />
-      <AdminBottomNav/>
+      <br />
+      <br />
+      <br />
+      <AdminBottomNav />
     </AdminLayout>
   );
 };

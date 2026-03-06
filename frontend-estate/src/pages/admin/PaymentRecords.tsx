@@ -41,7 +41,7 @@ const PaymentRecords: React.FC = () => {
   const [filterMonth, setFilterMonth] = useState<"all" | string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [receiptLoading, setReceiptLoading] = useState<Record<number, boolean>>(
-    {}
+    {},
   );
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -50,46 +50,45 @@ const PaymentRecords: React.FC = () => {
   }, []);
 
   const loadPayments = async () => {
-  try {
-    const allData: Payment[] = [];
-    let nextUrl: string | null = '/api/payments/';
-    
-    while (nextUrl) {
-      const res: AxiosResponse = await api.get(nextUrl);
-      const pageData = Array.isArray(res.data)
-        ? res.data
-        : res.data.results;
+    try {
+      const allData: Payment[] = [];
+      let nextUrl: string | null = "/api/payments/";
 
-      allData.push(...pageData);
-      nextUrl = Array.isArray(res.data) ? null : res.data.next;
-    }
+      while (nextUrl) {
+        const res: AxiosResponse = await api.get(nextUrl);
+        const pageData = Array.isArray(res.data) ? res.data : res.data.results;
 
-    
-    const paymentsWithReceipts = await Promise.all(
-      allData.map(async (payment: Payment) => {
-        if (payment.status === 'approved') {
-          try {
-            const receiptRes = await api.get(`/api/payments/${payment.id}/receipt/info/`);
-            return {
-              ...payment,
-              has_receipt: receiptRes.data.has_receipt,
-              receipt_url: receiptRes.data.receipt_url
-            };
-          } catch (err) {
-            return { ...payment, has_receipt: false };
+        allData.push(...pageData);
+        nextUrl = Array.isArray(res.data) ? null : res.data.next;
+      }
+
+      const paymentsWithReceipts = await Promise.all(
+        allData.map(async (payment: Payment) => {
+          if (payment.status === "approved") {
+            try {
+              const receiptRes = await api.get(
+                `/api/payments/${payment.id}/receipt/info/`,
+              );
+              return {
+                ...payment,
+                has_receipt: receiptRes.data.has_receipt,
+                receipt_url: receiptRes.data.receipt_url,
+              };
+            } catch (err) {
+              return { ...payment, has_receipt: false };
+            }
           }
-        }
-        return payment;
-      })
-    );
-    
-    setPayments(paymentsWithReceipts);
-  } catch (err) {
-    console.error('Failed to load payments:', err);
-  } finally {
-    setLoading(false);
-  }
-};
+          return payment;
+        }),
+      );
+
+      setPayments(paymentsWithReceipts);
+    } catch (err) {
+      //console.error('Failed to load payments:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Generate available months dynamically from payment data
   const availableMonths = useMemo(() => {
@@ -97,7 +96,7 @@ const PaymentRecords: React.FC = () => {
     payments.forEach((payment) => {
       const date = new Date(payment.payment_date);
       const monthKey = `${date.getFullYear()}-${String(
-        date.getMonth() + 1
+        date.getMonth() + 1,
       ).padStart(2, "0")}`;
       months.add(monthKey);
     });
@@ -135,7 +134,7 @@ const PaymentRecords: React.FC = () => {
       .sort(
         (a, b) =>
           new Date(b.payment_date).getTime() -
-          new Date(a.payment_date).getTime()
+          new Date(a.payment_date).getTime(),
       );
   }, [payments, searchTerm, filterStatus, filterMonth]);
 
@@ -153,7 +152,7 @@ const PaymentRecords: React.FC = () => {
   const handleVerify = async (id: number) => {
     if (
       !window.confirm(
-        "Are you sure you want to approve this payment? This action will generate a receipt for the resident."
+        "Are you sure you want to approve this payment? This action will generate a receipt for the resident.",
       )
     )
       return;
@@ -162,14 +161,14 @@ const PaymentRecords: React.FC = () => {
       // Reload payments to get updated receipt info
       loadPayments();
     } catch (error) {
-      console.error("Error approving payment:", error);
+      //console.error("Error approving payment:", error);
     }
   };
 
   const handleReject = (id: number) => {
     if (
       !window.confirm(
-        "Are you sure you want to reject this payment? The resident will be notified of the rejection."
+        "Are you sure you want to reject this payment? The resident will be notified of the rejection.",
       )
     )
       return;
@@ -177,10 +176,12 @@ const PaymentRecords: React.FC = () => {
       .post(`/api/admin/reject-payment/${id}/`)
       .then(() =>
         setPayments((ps) =>
-          ps.map((p) => (p.id === id ? { ...p, status: "rejected" } : p))
-        )
+          ps.map((p) => (p.id === id ? { ...p, status: "rejected" } : p)),
+        ),
       )
-      .catch(console.error);
+      .catch((err) => {
+        //console.error(err);
+      });
   };
 
   const handleViewEvidence = (url: string) => window.open(url, "_blank");
@@ -189,9 +190,9 @@ const PaymentRecords: React.FC = () => {
     setReceiptLoading((prev) => ({ ...prev, [paymentId]: true }));
     try {
       const receiptUrl = `${api.defaults.baseURL}/api/payments/${paymentId}/receipt/view/`;
-      window.location.href = receiptUrl;
+      //window.location.href = receiptUrl;
     } catch (error) {
-      console.error("Error viewing receipt:", error);
+      //console.error("Error viewing receipt:", error);
     } finally {
       setReceiptLoading((prev) => ({ ...prev, [paymentId]: false }));
     }
@@ -214,7 +215,7 @@ const PaymentRecords: React.FC = () => {
   // };
 
   const handleExport = () => {
-    const paymentRecsUrl = `${api.defaults.baseURL}/api/payments/report/pdf/`
+    const paymentRecsUrl = `${api.defaults.baseURL}/api/payments/report/pdf/`;
     window.location.href = paymentRecsUrl;
   };
 
@@ -237,7 +238,9 @@ const PaymentRecords: React.FC = () => {
         <div className="p-4 sm:p-6 text-center">
           <div className="flex flex-col items-center space-y-3 sm:space-y-4">
             <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600"></div>
-            <p className="text-base sm:text-lg text-gray-600">Loading payments...</p>
+            <p className="text-base sm:text-lg text-gray-600">
+              Loading payments...
+            </p>
           </div>
         </div>
       </AdminLayout>
@@ -266,7 +269,10 @@ const PaymentRecords: React.FC = () => {
               onClick={handleExport}
               className="flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-lg shadow-sm text-xs sm:text-sm font-medium hover:bg-green-700 active:scale-95 transition-all"
             >
-              <FileTextIcon size={16} className="sm:w-[18px] sm:h-[18px] mr-2" />
+              <FileTextIcon
+                size={16}
+                className="sm:w-[18px] sm:h-[18px] mr-2"
+              />
               Generate Report
             </button>
           </div>
@@ -282,19 +288,25 @@ const PaymentRecords: React.FC = () => {
               </p>
             </div>
             <div className="bg-green-50 p-3 sm:p-4 rounded-lg border border-green-200">
-              <p className="text-xs sm:text-sm text-green-600 font-medium truncate">Approved</p>
+              <p className="text-xs sm:text-sm text-green-600 font-medium truncate">
+                Approved
+              </p>
               <p className="text-xl sm:text-2xl font-bold text-green-900">
                 {payments.filter((p) => p.status === "approved").length}
               </p>
             </div>
             <div className="bg-yellow-50 p-3 sm:p-4 rounded-lg border border-yellow-200">
-              <p className="text-xs sm:text-sm text-yellow-600 font-medium truncate">Pending</p>
+              <p className="text-xs sm:text-sm text-yellow-600 font-medium truncate">
+                Pending
+              </p>
               <p className="text-xl sm:text-2xl font-bold text-yellow-900">
                 {payments.filter((p) => p.status === "pending").length}
               </p>
             </div>
             <div className="bg-red-50 p-3 sm:p-4 rounded-lg border border-red-200">
-              <p className="text-xs sm:text-sm text-red-600 font-medium truncate">Rejected</p>
+              <p className="text-xs sm:text-sm text-red-600 font-medium truncate">
+                Rejected
+              </p>
               <p className="text-xl sm:text-2xl font-bold text-red-900">
                 {payments.filter((p) => p.status === "rejected").length}
               </p>
@@ -308,7 +320,10 @@ const PaymentRecords: React.FC = () => {
             {/* Search */}
             <div className="relative flex-1 min-w-full sm:min-w-64">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <SearchIcon size={16} className="sm:w-[18px] sm:h-[18px] text-gray-400" />
+                <SearchIcon
+                  size={16}
+                  className="sm:w-[18px] sm:h-[18px] text-gray-400"
+                />
               </div>
               <input
                 type="text"
@@ -321,7 +336,10 @@ const PaymentRecords: React.FC = () => {
 
             {/* Status Filter */}
             <div className="flex items-center space-x-2">
-              <FilterIcon size={16} className="sm:w-[18px] sm:h-[18px] text-gray-500" />
+              <FilterIcon
+                size={16}
+                className="sm:w-[18px] sm:h-[18px] text-gray-500"
+              />
               <select
                 className="border border-gray-300 rounded-lg py-2 pl-3 pr-8 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={filterStatus}
@@ -461,7 +479,7 @@ const PaymentRecords: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`px-3 py-1 inline-flex text-xs font-medium rounded-full border ${getStatusColor(
-                            p.status
+                            p.status,
                           )}`}
                         >
                           {p.status.charAt(0).toUpperCase() + p.status.slice(1)}
@@ -508,7 +526,10 @@ const PaymentRecords: React.FC = () => {
                                 className="flex items-center space-x-1 px-2 sm:px-3 py-1.5 text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 rounded-lg transition-colors active:scale-95"
                                 title="Approve payment"
                               >
-                                <CheckCircleIcon size={14} className="sm:w-4 sm:h-4" />
+                                <CheckCircleIcon
+                                  size={14}
+                                  className="sm:w-4 sm:h-4"
+                                />
                                 <span className="text-xs font-medium">
                                   Approve
                                 </span>
@@ -518,7 +539,10 @@ const PaymentRecords: React.FC = () => {
                                 className="flex items-center space-x-1 px-2 sm:px-3 py-1.5 text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 rounded-lg transition-colors active:scale-95"
                                 title="Reject payment"
                               >
-                                <XCircleIcon size={14} className="sm:w-4 sm:h-4" />
+                                <XCircleIcon
+                                  size={14}
+                                  className="sm:w-4 sm:h-4"
+                                />
                                 <span className="text-xs font-medium">
                                   Reject
                                 </span>
@@ -575,7 +599,10 @@ const PaymentRecords: React.FC = () => {
                       if (!isNearCurrentPage && !isFirstOrLast) {
                         if (page === 2 || page === totalPages - 1) {
                           return (
-                            <span key={page} className="text-gray-400 px-1 sm:px-2 text-xs sm:text-sm">
+                            <span
+                              key={page}
+                              className="text-gray-400 px-1 sm:px-2 text-xs sm:text-sm"
+                            >
                               ...
                             </span>
                           );
@@ -596,7 +623,7 @@ const PaymentRecords: React.FC = () => {
                           {page}
                         </button>
                       );
-                    }
+                    },
                   )}
                 </div>
 
@@ -614,8 +641,10 @@ const PaymentRecords: React.FC = () => {
           </div>
         )}
       </div>
-      <br /><br /><br />
-       <AdminBottomNav/>
+      <br />
+      <br />
+      <br />
+      <AdminBottomNav />
     </AdminLayout>
   );
 };
