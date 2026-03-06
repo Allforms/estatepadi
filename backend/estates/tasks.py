@@ -142,11 +142,12 @@ def sync_subscriptions_from_paystack():
         plan = SubscriptionPlan.objects.filter(paystack_plan_code=plan_code).first() if plan_code else None
 
         # update main record with chosen sub
+        # Use both user AND subscription_code to identify the correct subscription
         local_sub, _ = UserSubscription.objects.update_or_create(
             user=user,
+            paystack_subscription_code=chosen_sub.get("subscription_code"),
             defaults={
                 "plan": plan,
-                "paystack_subscription_code": chosen_sub.get("subscription_code"),
                 "paystack_customer_code": chosen_sub.get("customer", {}).get("customer_code"),
                 "status": chosen_sub.get("status"),
                 "next_billing_date": chosen_sub.get("next_payment_date"),
