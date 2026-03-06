@@ -5,7 +5,8 @@
  * Detects if the app is running in a WebView/mobile app environment
  */
 export const isWebView = (): boolean => {
-  const userAgent = navigator.userAgent || (navigator as any).vendor || (window as any).opera;
+  const userAgent =
+    navigator.userAgent || (navigator as any).vendor || (window as any).opera;
 
   return (
     // Android WebView
@@ -27,30 +28,32 @@ export const downloadFile = async (
   url: string,
   filename: string,
   options?: {
-    responseType?: 'blob' | 'arraybuffer';
+    responseType?: "blob" | "arraybuffer";
     onProgress?: (progress: number) => void;
-  }
+  },
 ): Promise<void> => {
   const isInWebView = isWebView();
 
   if (isInWebView) {
     // For WebView/mobile apps: Open directly in new window
     // The backend will handle the download with proper headers
-    const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
-    window.open(fullUrl, '_blank');
+    const fullUrl = url.startsWith("http")
+      ? url
+      : `${window.location.origin}${url}`;
+    window.open(fullUrl, "_blank");
     return;
   }
 
   // For regular browsers: Use blob download
   try {
-    const axios = (await import('../api')).default;
+    const axios = (await import("../api")).default;
 
     const response = await axios.get(url, {
-      responseType: options?.responseType || 'blob',
+      responseType: options?.responseType || "blob",
       onDownloadProgress: (progressEvent) => {
         if (options?.onProgress && progressEvent.total) {
           const percentCompleted = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total
+            (progressEvent.loaded * 100) / progressEvent.total,
           );
           options.onProgress(percentCompleted);
         }
@@ -59,9 +62,9 @@ export const downloadFile = async (
 
     // Create blob link to download
     const blobUrl = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = blobUrl;
-    link.setAttribute('download', filename);
+    link.setAttribute("download", filename);
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -76,8 +79,10 @@ export const downloadFile = async (
  * Opens a file for viewing (inline) with WebView compatibility
  */
 export const viewFile = (url: string): void => {
-  const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
-  window.open(fullUrl, '_blank');
+  const fullUrl = url.startsWith("http")
+    ? url
+    : `${window.location.origin}${url}`;
+  window.open(fullUrl, "_blank");
 };
 
 /**
@@ -90,7 +95,10 @@ export const getUserAgentInfo = (): {
   platform: string;
 } => {
   const userAgent = navigator.userAgent;
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+  const isMobile =
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      userAgent,
+    );
 
   return {
     userAgent,

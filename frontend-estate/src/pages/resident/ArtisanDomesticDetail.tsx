@@ -1,9 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import ResidentLayout from '../../components/layouts/ResidentLayout';
-import ResidentBottomNav from '../../components/layouts/ResidentBottomNav';
-import { UserIcon, PhoneIcon, CalendarIcon, ShieldIcon, AlertTriangleIcon, ArrowLeftIcon, EditIcon, TrashIcon } from 'lucide-react';
-import api from '../../api';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import ResidentLayout from "../../components/layouts/ResidentLayout";
+import ResidentBottomNav from "../../components/layouts/ResidentBottomNav";
+import {
+  UserIcon,
+  PhoneIcon,
+  CalendarIcon,
+  ShieldIcon,
+  AlertTriangleIcon,
+  ArrowLeftIcon,
+  EditIcon,
+  TrashIcon,
+} from "lucide-react";
+import api from "../../api";
 
 const ArtisanDomesticDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -13,14 +22,14 @@ const ArtisanDomesticDetail: React.FC = () => {
   const [editing, setEditing] = useState(false);
   const [showDisableModal, setShowDisableModal] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    role: '',
-    phone_number: '',
-    gender: 'male'
+    name: "",
+    role: "",
+    phone_number: "",
+    gender: "male",
   });
-  const [disableReason, setDisableReason] = useState('');
+  const [disableReason, setDisableReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetchStaffDetail();
@@ -35,11 +44,11 @@ const ArtisanDomesticDetail: React.FC = () => {
         name: res.data.name,
         role: res.data.role,
         phone_number: res.data.phone_number,
-        gender: res.data.gender
+        gender: res.data.gender,
       });
     } catch (err) {
       //console.error('Error fetching staff detail:', err);
-      setError('Failed to load staff details');
+      setError("Failed to load staff details");
     } finally {
       setLoading(false);
     }
@@ -48,7 +57,7 @@ const ArtisanDomesticDetail: React.FC = () => {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    setError('');
+    setError("");
 
     try {
       const res = await api.patch(`/api/artisans-domestics/${id}/`, formData);
@@ -56,7 +65,7 @@ const ArtisanDomesticDetail: React.FC = () => {
       setEditing(false);
     } catch (err: any) {
       //console.error('Error updating staff:', err);
-      setError(err.response?.data?.detail || 'Failed to update staff member');
+      setError(err.response?.data?.detail || "Failed to update staff member");
     } finally {
       setSubmitting(false);
     }
@@ -64,34 +73,38 @@ const ArtisanDomesticDetail: React.FC = () => {
 
   const handleDisable = async () => {
     setSubmitting(true);
-    setError('');
+    setError("");
 
     try {
       const res = await api.patch(`/api/artisans-domestics/${id}/disable/`, {
-        removal_reason: disableReason
+        removal_reason: disableReason,
       });
       setStaff(res.data);
       setShowDisableModal(false);
-      setDisableReason('');
+      setDisableReason("");
     } catch (err: any) {
       //console.error('Error disabling staff:', err);
-      setError(err.response?.data?.detail || 'Failed to disable staff member');
+      setError(err.response?.data?.detail || "Failed to disable staff member");
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to permanently delete this staff member?')) {
+    if (
+      !window.confirm(
+        "Are you sure you want to permanently delete this staff member?",
+      )
+    ) {
       return;
     }
 
     try {
       await api.delete(`/api/artisans-domestics/${id}/`);
-      navigate('/resident/artisans-domestics');
+      navigate("/resident/artisans-domestics");
     } catch (err: any) {
       //console.error('Error deleting staff:', err);
-      setError(err.response?.data?.detail || 'Failed to delete staff member');
+      setError(err.response?.data?.detail || "Failed to delete staff member");
     }
   };
 
@@ -111,7 +124,7 @@ const ArtisanDomesticDetail: React.FC = () => {
         <div className="bg-white shadow sm:rounded-lg p-6">
           <p className="text-red-600">Staff member not found</p>
           <button
-            onClick={() => navigate('/resident/artisans-domestics')}
+            onClick={() => navigate("/resident/artisans-domestics")}
             className="mt-4 inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
           >
             <ArrowLeftIcon size={16} className="mr-2" />
@@ -128,7 +141,7 @@ const ArtisanDomesticDetail: React.FC = () => {
         {/* Back Button */}
         <div>
           <button
-            onClick={() => navigate('/resident/artisans-domestics')}
+            onClick={() => navigate("/resident/artisans-domestics")}
             className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <ArrowLeftIcon size={16} className="mr-2" />
@@ -150,12 +163,14 @@ const ArtisanDomesticDetail: React.FC = () => {
                 <UserIcon size={32} className="text-blue-600" />
               </div>
               <div>
-                <h3 className="text-xl leading-6 font-medium text-gray-900">{staff.name}</h3>
+                <h3 className="text-xl leading-6 font-medium text-gray-900">
+                  {staff.name}
+                </h3>
                 <p className="mt-1 text-sm text-gray-500">{staff.role}</p>
               </div>
             </div>
             <div className="flex gap-2">
-              {staff.status === 'active' && !editing && (
+              {staff.status === "active" && !editing && (
                 <button
                   onClick={() => setEditing(true)}
                   className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -164,7 +179,7 @@ const ArtisanDomesticDetail: React.FC = () => {
                   Edit
                 </button>
               )}
-              {staff.status === 'active' && (
+              {staff.status === "active" && (
                 <button
                   onClick={() => setShowDisableModal(true)}
                   className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
@@ -188,44 +203,63 @@ const ArtisanDomesticDetail: React.FC = () => {
               <form onSubmit={handleUpdate} className="space-y-6">
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Name</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Name
+                    </label>
                     <input
                       type="text"
                       required
                       value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Role</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Role
+                    </label>
                     <input
                       type="text"
                       required
                       value={formData.role}
-                      onChange={(e) => setFormData({...formData, role: e.target.value})}
+                      onChange={(e) =>
+                        setFormData({ ...formData, role: e.target.value })
+                      }
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Phone Number
+                    </label>
                     <input
                       type="tel"
                       required
                       value={formData.phone_number}
-                      onChange={(e) => setFormData({...formData, phone_number: e.target.value})}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          phone_number: e.target.value,
+                        })
+                      }
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Gender</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Gender
+                    </label>
                     <select
                       required
                       value={formData.gender}
-                      onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                      onChange={(e) =>
+                        setFormData({ ...formData, gender: e.target.value })
+                      }
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     >
                       <option value="male">Male</option>
@@ -240,7 +274,7 @@ const ArtisanDomesticDetail: React.FC = () => {
                     disabled={submitting}
                     className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                   >
-                    {submitting ? 'Saving...' : 'Save Changes'}
+                    {submitting ? "Saving..." : "Save Changes"}
                   </button>
                   <button
                     type="button"
@@ -250,7 +284,7 @@ const ArtisanDomesticDetail: React.FC = () => {
                         name: staff.name,
                         role: staff.role,
                         phone_number: staff.phone_number,
-                        gender: staff.gender
+                        gender: staff.gender,
                       });
                     }}
                     className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -266,12 +300,16 @@ const ArtisanDomesticDetail: React.FC = () => {
                     <PhoneIcon size={16} className="mr-2" />
                     Phone Number
                   </dt>
-                  <dd className="mt-1 text-sm text-gray-900">{staff.phone_number}</dd>
+                  <dd className="mt-1 text-sm text-gray-900">
+                    {staff.phone_number}
+                  </dd>
                 </div>
 
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Gender</dt>
-                  <dd className="mt-1 text-sm text-gray-900 capitalize">{staff.gender}</dd>
+                  <dd className="mt-1 text-sm text-gray-900 capitalize">
+                    {staff.gender}
+                  </dd>
                 </div>
 
                 <div>
@@ -279,7 +317,9 @@ const ArtisanDomesticDetail: React.FC = () => {
                     <ShieldIcon size={16} className="mr-2" />
                     Unique ID
                   </dt>
-                  <dd className="mt-1 text-sm text-gray-900 font-mono">{staff.unique_id}</dd>
+                  <dd className="mt-1 text-sm text-gray-900 font-mono">
+                    {staff.unique_id}
+                  </dd>
                 </div>
 
                 <div>
@@ -295,12 +335,14 @@ const ArtisanDomesticDetail: React.FC = () => {
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Status</dt>
                   <dd className="mt-1">
-                    <span className={`px-2 inline-flex text-xs font-semibold rounded-full ${
-                      staff.status === 'active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {staff.status === 'active' ? 'Active' : 'Removed'}
+                    <span
+                      className={`px-2 inline-flex text-xs font-semibold rounded-full ${
+                        staff.status === "active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {staff.status === "active" ? "Active" : "Removed"}
                     </span>
                   </dd>
                 </div>
@@ -328,9 +370,15 @@ const ArtisanDomesticDetail: React.FC = () => {
               <ShieldIcon size={20} className="text-blue-600" />
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-800">Staff ID Information</h3>
+              <h3 className="text-sm font-medium text-blue-800">
+                Staff ID Information
+              </h3>
               <div className="mt-2 text-sm text-blue-700">
-                <p>This unique ID ({staff.unique_id}) can be used by security personnel to verify this staff member's identity at the estate entrance.</p>
+                <p>
+                  This unique ID ({staff.unique_id}) can be used by security
+                  personnel to verify this staff member's identity at the estate
+                  entrance.
+                </p>
               </div>
             </div>
           </div>
@@ -341,10 +389,15 @@ const ArtisanDomesticDetail: React.FC = () => {
       {showDisableModal && (
         <div className="fixed z-10 inset-0 overflow-y-auto">
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowDisableModal(false)}></div>
-            
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-            
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              onClick={() => setShowDisableModal(false)}
+            ></div>
+
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">
+              &#8203;
+            </span>
+
             <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
               <div className="sm:flex sm:items-start">
                 <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 sm:mx-0 sm:h-10 sm:w-10">
@@ -354,9 +407,10 @@ const ArtisanDomesticDetail: React.FC = () => {
                   <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
                     Disable Staff Member
                   </h3>
-                  
+
                   <p className="text-sm text-gray-500 mb-4">
-                    Are you sure you want to disable {staff.name}? This will prevent them from accessing the estate.
+                    Are you sure you want to disable {staff.name}? This will
+                    prevent them from accessing the estate.
                   </p>
 
                   <div>
@@ -379,7 +433,7 @@ const ArtisanDomesticDetail: React.FC = () => {
                       disabled={submitting}
                       className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-yellow-600 text-base font-medium text-white hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
                     >
-                      {submitting ? 'Disabling...' : 'Disable Staff'}
+                      {submitting ? "Disabling..." : "Disable Staff"}
                     </button>
                     <button
                       type="button"
@@ -395,8 +449,10 @@ const ArtisanDomesticDetail: React.FC = () => {
           </div>
         </div>
       )}
-      <br /><br /><br />
-      <ResidentBottomNav/>
+      <br />
+      <br />
+      <br />
+      <ResidentBottomNav />
     </ResidentLayout>
   );
 };

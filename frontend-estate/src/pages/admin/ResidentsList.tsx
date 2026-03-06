@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import AdminLayout from '../../components/layouts/AdminLayout';
-import AdminBottomNav from '../../components/layouts/AdminBottomNav';
+import React, { useEffect, useState, useMemo } from "react";
+import AdminLayout from "../../components/layouts/AdminLayout";
+import AdminBottomNav from "../../components/layouts/AdminBottomNav";
 import {
   SearchIcon,
   FileTextIcon,
@@ -11,9 +11,9 @@ import {
   ChevronRightIcon,
   UsersIcon,
   XIcon,
-  AlertCircleIcon
-} from 'lucide-react';
-import api from '../../api';
+  AlertCircleIcon,
+} from "lucide-react";
+import api from "../../api";
 
 interface Resident {
   id: number;
@@ -31,21 +31,28 @@ interface Resident {
 const ResidentsList: React.FC = () => {
   const [residents, setResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all'|'approved'|'pending'>('all');
-  const [filterHouseType, setFilterHouseType] = useState('');
-  const [filterResidentType, setFilterResidentType] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState<
+    "all" | "approved" | "pending"
+  >("all");
+  const [filterHouseType, setFilterHouseType] = useState("");
+  const [filterResidentType, setFilterResidentType] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
-  const [showApproveConfirm, setShowApproveConfirm] = useState<number | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(
+    null,
+  );
+  const [showApproveConfirm, setShowApproveConfirm] = useState<number | null>(
+    null,
+  );
   const itemsPerPage = 10;
 
   // Fetch all residents on mount
   useEffect(() => {
-    api.get<Resident[]>('/api/admin/residents/')
-      .then(res => setResidents(res.data))
-      .catch(err => {
+    api
+      .get<Resident[]>("/api/admin/residents/")
+      .then((res) => setResidents(res.data))
+      .catch((err) => {
         //console.error('Failed to load residents:', err);
       })
       .finally(() => setLoading(false));
@@ -53,37 +60,62 @@ const ResidentsList: React.FC = () => {
 
   // Get unique values for filter dropdowns
   const { houseTypes, residentTypes } = useMemo(() => {
-    const houseTypes = [...new Set(residents.map(r => r.house_type))].filter(Boolean).sort();
-    const residentTypes = [...new Set(residents.map(r => r.resident_type))].filter(Boolean).sort();
+    const houseTypes = [...new Set(residents.map((r) => r.house_type))]
+      .filter(Boolean)
+      .sort();
+    const residentTypes = [...new Set(residents.map((r) => r.resident_type))]
+      .filter(Boolean)
+      .sort();
     return { houseTypes, residentTypes };
   }, [residents]);
 
   // Filter residents
   const filteredResidents = useMemo(() => {
-    return residents.filter(r => {
-      const fullName = `${r.first_name} ${r.last_name}`.toLowerCase();
-      const matchesSearch =
-        fullName.includes(searchTerm.toLowerCase()) ||
-        r.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        r.home_address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        r.phone_number.includes(searchTerm);
-      
-      const matchesStatus =
-        filterStatus === 'all' ||
-        (filterStatus === 'approved' && r.is_approved) ||
-        (filterStatus === 'pending' && !r.is_approved);
-      
-      const matchesHouseType = !filterHouseType || r.house_type === filterHouseType;
-      const matchesResidentType = !filterResidentType || r.resident_type === filterResidentType;
-      
-      return matchesSearch && matchesStatus && matchesHouseType && matchesResidentType;
-    }).sort((a, b) => new Date(b.date_joined).getTime() - new Date(a.date_joined).getTime());
-  }, [residents, searchTerm, filterStatus, filterHouseType, filterResidentType]);
+    return residents
+      .filter((r) => {
+        const fullName = `${r.first_name} ${r.last_name}`.toLowerCase();
+        const matchesSearch =
+          fullName.includes(searchTerm.toLowerCase()) ||
+          r.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          r.home_address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          r.phone_number.includes(searchTerm);
+
+        const matchesStatus =
+          filterStatus === "all" ||
+          (filterStatus === "approved" && r.is_approved) ||
+          (filterStatus === "pending" && !r.is_approved);
+
+        const matchesHouseType =
+          !filterHouseType || r.house_type === filterHouseType;
+        const matchesResidentType =
+          !filterResidentType || r.resident_type === filterResidentType;
+
+        return (
+          matchesSearch &&
+          matchesStatus &&
+          matchesHouseType &&
+          matchesResidentType
+        );
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.date_joined).getTime() - new Date(a.date_joined).getTime(),
+      );
+  }, [
+    residents,
+    searchTerm,
+    filterStatus,
+    filterHouseType,
+    filterResidentType,
+  ]);
 
   // Pagination
   const totalPages = Math.ceil(filteredResidents.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedResidents = filteredResidents.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedResidents = filteredResidents.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -93,54 +125,58 @@ const ResidentsList: React.FC = () => {
   // Statistics
   const stats = useMemo(() => {
     const total = filteredResidents.length;
-    const approved = filteredResidents.filter(r => r.is_approved).length;
+    const approved = filteredResidents.filter((r) => r.is_approved).length;
     const pending = total - approved;
     return { total, approved, pending };
   }, [filteredResidents]);
 
   const handleApprove = () => {
     if (showApproveConfirm === null) return;
-    api.post(`/api/admin/approve-resident/${showApproveConfirm}/`)
+    api
+      .post(`/api/admin/approve-resident/${showApproveConfirm}/`)
       .then(() => {
-        setResidents(rs =>
-          rs.map(r => r.id === showApproveConfirm ? { ...r, is_approved: true } : r)
+        setResidents((rs) =>
+          rs.map((r) =>
+            r.id === showApproveConfirm ? { ...r, is_approved: true } : r,
+          ),
         );
         setShowApproveConfirm(null);
       })
-      .catch(err => {
+      .catch((err) => {
         //console.error(err);
       });
   };
 
   const handleDelete = () => {
     if (showDeleteConfirm === null) return;
-    api.delete(`/api/admin/delete-resident/${showDeleteConfirm}/`)
+    api
+      .delete(`/api/admin/delete-resident/${showDeleteConfirm}/`)
       .then(() => {
-        setResidents(rs => rs.filter(r => r.id !== showDeleteConfirm));
-        setSherr => {
-        //console.error(err);
-      }rm(null);
+        setResidents((rs) => rs.filter((r) => r.id !== showDeleteConfirm));
+        setShowDeleteConfirm(null);
       })
-      .catch(console.error);
+      .catch((err) => {
+        //console.error(err);
+      });
   };
 
   const handleExport = () => {
-    window.open(`${api.defaults.baseURL}/api/admin/residents/pdf/`, '_blank');
+    window.open(`${api.defaults.baseURL}/api/admin/residents/pdf/`, "_blank");
   };
 
   const clearFilters = () => {
-    setSearchTerm('');
-    setFilterStatus('all');
-    setFilterHouseType('');
-    setFilterResidentType('');
+    setSearchTerm("");
+    setFilterStatus("all");
+    setFilterHouseType("");
+    setFilterResidentType("");
     setCurrentPage(1);
   };
 
   const activeFiltersCount = [
     searchTerm,
-    filterStatus !== 'all' ? filterStatus : '',
+    filterStatus !== "all" ? filterStatus : "",
     filterHouseType,
-    filterResidentType
+    filterResidentType,
   ].filter(Boolean).length;
 
   if (loading) {
@@ -164,8 +200,12 @@ const ResidentsList: React.FC = () => {
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg sm:rounded-xl p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-blue-600 truncate">Total Residents</p>
-                <p className="text-2xl sm:text-3xl font-bold text-blue-900">{stats.total}</p>
+                <p className="text-xs sm:text-sm font-medium text-blue-600 truncate">
+                  Total Residents
+                </p>
+                <p className="text-2xl sm:text-3xl font-bold text-blue-900">
+                  {stats.total}
+                </p>
               </div>
               <UsersIcon size={20} className="sm:w-6 sm:h-6 text-blue-600" />
             </div>
@@ -173,17 +213,28 @@ const ResidentsList: React.FC = () => {
           <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg sm:rounded-xl p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-green-600 truncate">Approved</p>
-                <p className="text-2xl sm:text-3xl font-bold text-green-900">{stats.approved}</p>
+                <p className="text-xs sm:text-sm font-medium text-green-600 truncate">
+                  Approved
+                </p>
+                <p className="text-2xl sm:text-3xl font-bold text-green-900">
+                  {stats.approved}
+                </p>
               </div>
-              <CheckCircleIcon size={20} className="sm:w-6 sm:h-6 text-green-600" />
+              <CheckCircleIcon
+                size={20}
+                className="sm:w-6 sm:h-6 text-green-600"
+              />
             </div>
           </div>
           <div className="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-lg sm:rounded-xl p-3 sm:p-6 col-span-2 lg:col-span-1">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-amber-600 truncate">Pending Approval</p>
-                <p className="text-2xl sm:text-3xl font-bold text-amber-900">{stats.pending}</p>
+                <p className="text-xs sm:text-sm font-medium text-amber-600 truncate">
+                  Pending Approval
+                </p>
+                <p className="text-2xl sm:text-3xl font-bold text-amber-900">
+                  {stats.pending}
+                </p>
               </div>
               <XCircleIcon size={20} className="sm:w-6 sm:h-6 text-amber-600" />
             </div>
@@ -194,7 +245,9 @@ const ResidentsList: React.FC = () => {
         <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-between sm:items-center gap-3 sm:gap-4">
             <div className="flex items-center space-x-2 sm:space-x-3">
-              <h2 className="text-base sm:text-lg font-semibold text-gray-900">All Residents</h2>
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900">
+                All Residents
+              </h2>
               {filteredResidents.length !== residents.length && (
                 <span className="text-xs sm:text-sm text-gray-500">
                   ({filteredResidents.length} of {residents.length})
@@ -207,8 +260,8 @@ const ResidentsList: React.FC = () => {
                 onClick={() => setShowFilters(!showFilters)}
                 className={`flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all active:scale-95 ${
                   showFilters || activeFiltersCount > 0
-                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
                 <FilterIcon size={14} className="sm:w-4 sm:h-4" />
@@ -236,12 +289,15 @@ const ResidentsList: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {/* Search */}
                 <div className="relative">
-                  <SearchIcon size={16} className="sm:w-5 sm:h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <SearchIcon
+                    size={16}
+                    className="sm:w-5 sm:h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  />
                   <input
                     type="text"
                     placeholder="Search residents..."
                     value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-9 sm:pl-10 pr-4 py-2 text-xs sm:text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -249,7 +305,7 @@ const ResidentsList: React.FC = () => {
                 {/* Status Filter */}
                 <select
                   value={filterStatus}
-                  onChange={e => setFilterStatus(e.target.value as any)}
+                  onChange={(e) => setFilterStatus(e.target.value as any)}
                   className="px-3 py-2 text-xs sm:text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="all">All Status</option>
@@ -260,24 +316,28 @@ const ResidentsList: React.FC = () => {
                 {/* House Type Filter */}
                 <select
                   value={filterHouseType}
-                  onChange={e => setFilterHouseType(e.target.value)}
+                  onChange={(e) => setFilterHouseType(e.target.value)}
                   className="px-3 py-2 text-xs sm:text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">All House Types</option>
-                  {houseTypes.map(type => (
-                    <option key={type} value={type}>{type}</option>
+                  {houseTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
                   ))}
                 </select>
 
                 {/* Resident Type Filter */}
                 <select
                   value={filterResidentType}
-                  onChange={e => setFilterResidentType(e.target.value)}
+                  onChange={(e) => setFilterResidentType(e.target.value)}
                   className="px-3 py-2 text-xs sm:text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">All Resident Types</option>
-                  {residentTypes.map(type => (
-                    <option key={type} value={type}>{type}</option>
+                  {residentTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -289,15 +349,21 @@ const ResidentsList: React.FC = () => {
                     {searchTerm && (
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         Search: "{searchTerm}"
-                        <button onClick={() => setSearchTerm('')} className="ml-1 hover:text-blue-600">
+                        <button
+                          onClick={() => setSearchTerm("")}
+                          className="ml-1 hover:text-blue-600"
+                        >
                           <XIcon size={14} />
                         </button>
                       </span>
                     )}
-                    {filterStatus !== 'all' && (
+                    {filterStatus !== "all" && (
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         Status: {filterStatus}
-                        <button onClick={() => setFilterStatus('all')} className="ml-1 hover:text-blue-600">
+                        <button
+                          onClick={() => setFilterStatus("all")}
+                          className="ml-1 hover:text-blue-600"
+                        >
                           <XIcon size={14} />
                         </button>
                       </span>
@@ -305,7 +371,10 @@ const ResidentsList: React.FC = () => {
                     {filterHouseType && (
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         House: {filterHouseType}
-                        <button onClick={() => setFilterHouseType('')} className="ml-1 hover:text-blue-600">
+                        <button
+                          onClick={() => setFilterHouseType("")}
+                          className="ml-1 hover:text-blue-600"
+                        >
                           <XIcon size={14} />
                         </button>
                       </span>
@@ -313,7 +382,10 @@ const ResidentsList: React.FC = () => {
                     {filterResidentType && (
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         Type: {filterResidentType}
-                        <button onClick={() => setFilterResidentType('')} className="ml-1 hover:text-blue-600">
+                        <button
+                          onClick={() => setFilterResidentType("")}
+                          className="ml-1 hover:text-blue-600"
+                        >
                           <XIcon size={14} />
                         </button>
                       </span>
@@ -337,7 +409,16 @@ const ResidentsList: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  {['Name','Contact','Address', 'House Type', 'Resident Type','Status','Join Date','Actions'].map(h => (
+                  {[
+                    "Name",
+                    "Contact",
+                    "Address",
+                    "House Type",
+                    "Resident Type",
+                    "Status",
+                    "Join Date",
+                    "Actions",
+                  ].map((h) => (
                     <th
                       key={h}
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -354,7 +435,9 @@ const ResidentsList: React.FC = () => {
                       <div className="flex flex-col items-center space-y-3">
                         <UsersIcon size={48} className="text-gray-300" />
                         <p className="text-gray-500 font-medium">
-                          {activeFiltersCount > 0 ? 'No residents match your filters' : 'No residents found'}
+                          {activeFiltersCount > 0
+                            ? "No residents match your filters"
+                            : "No residents found"}
                         </p>
                         {activeFiltersCount > 0 && (
                           <button
@@ -368,37 +451,51 @@ const ResidentsList: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  paginatedResidents.map(resident => (
-                    <tr key={resident.id} className="hover:bg-gray-50 transition-colors">
+                  paginatedResidents.map((resident) => (
+                    <tr
+                      key={resident.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
                           {resident.first_name} {resident.last_name}
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900">{resident.email}</div>
-                        <div className="text-sm text-gray-500">{resident.phone_number}</div>
+                        <div className="text-sm text-gray-900">
+                          {resident.email}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {resident.phone_number}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900 max-w-xs truncate" title={resident.home_address}>
+                        <div
+                          className="text-sm text-gray-900 max-w-xs truncate"
+                          title={resident.home_address}
+                        >
                           {resident.home_address}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{resident.house_type}</div>
+                        <div className="text-sm text-gray-900">
+                          {resident.house_type}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{resident.resident_type}</div>
+                        <div className="text-sm text-gray-900">
+                          {resident.resident_type}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full border ${
                             resident.is_approved
-                              ? 'bg-green-100 text-green-800 border-green-200'
-                              : 'bg-amber-100 text-amber-800 border-amber-200'
+                              ? "bg-green-100 text-green-800 border-green-200"
+                              : "bg-amber-100 text-amber-800 border-amber-200"
                           }`}
                         >
-                          {resident.is_approved ? 'Approved' : 'Pending'}
+                          {resident.is_approved ? "Approved" : "Pending"}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -417,8 +514,13 @@ const ResidentsList: React.FC = () => {
                               className="flex items-center space-x-1 px-2 sm:px-3 py-1.5 text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 rounded-lg transition-colors active:scale-95"
                               title="Approve resident"
                             >
-                              <CheckCircleIcon size={14} className="sm:w-4 sm:h-4" />
-                              <span className="text-xs font-medium">Approve</span>
+                              <CheckCircleIcon
+                                size={14}
+                                className="sm:w-4 sm:h-4"
+                              />
+                              <span className="text-xs font-medium">
+                                Approve
+                              </span>
                             </button>
                           )}
                           <button
@@ -443,7 +545,12 @@ const ResidentsList: React.FC = () => {
             <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-t border-gray-100">
               <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
                 <div className="text-xs sm:text-sm text-gray-700">
-                  Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredResidents.length)} of {filteredResidents.length} residents
+                  Showing {startIndex + 1} to{" "}
+                  {Math.min(
+                    startIndex + itemsPerPage,
+                    filteredResidents.length,
+                  )}{" "}
+                  of {filteredResidents.length} residents
                 </div>
 
                 <div className="flex items-center space-x-2">
@@ -456,36 +563,48 @@ const ResidentsList: React.FC = () => {
                   </button>
 
                   <div className="flex items-center space-x-1">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
-                      const isCurrentPage = page === currentPage;
-                      const isNearCurrentPage = Math.abs(page - currentPage) <= 2;
-                      const isFirstOrLast = page === 1 || page === totalPages;
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (page) => {
+                        const isCurrentPage = page === currentPage;
+                        const isNearCurrentPage =
+                          Math.abs(page - currentPage) <= 2;
+                        const isFirstOrLast = page === 1 || page === totalPages;
 
-                      if (!isNearCurrentPage && !isFirstOrLast) {
-                        if (page === 2 || page === totalPages - 1) {
-                          return <span key={page} className="text-gray-400 text-xs sm:text-sm">...</span>;
+                        if (!isNearCurrentPage && !isFirstOrLast) {
+                          if (page === 2 || page === totalPages - 1) {
+                            return (
+                              <span
+                                key={page}
+                                className="text-gray-400 text-xs sm:text-sm"
+                              >
+                                ...
+                              </span>
+                            );
+                          }
+                          return null;
                         }
-                        return null;
-                      }
 
-                      return (
-                        <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
-                          className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-medium transition-all active:scale-95 ${
-                            isCurrentPage
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-100'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      );
-                    })}
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-medium transition-all active:scale-95 ${
+                              isCurrentPage
+                                ? "bg-blue-600 text-white"
+                                : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      },
+                    )}
                   </div>
 
                   <button
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    onClick={() =>
+                      setCurrentPage(Math.min(totalPages, currentPage + 1))
+                    }
                     disabled={currentPage === totalPages}
                     className="p-1.5 sm:p-2 rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors active:scale-95"
                   >
@@ -505,10 +624,13 @@ const ResidentsList: React.FC = () => {
             <div className="p-4 sm:p-6">
               <div className="flex items-center mb-3 sm:mb-4">
                 <AlertCircleIcon className="h-5 w-5 sm:h-6 sm:w-6 text-red-600 mr-2 sm:mr-3" />
-                <h3 className="text-base sm:text-lg font-semibold text-gray-800">Confirm Deletion</h3>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-800">
+                  Confirm Deletion
+                </h3>
               </div>
               <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-                Are you sure you want to delete this resident? This action cannot be undone.
+                Are you sure you want to delete this resident? This action
+                cannot be undone.
               </p>
               <div className="flex justify-end gap-2 sm:gap-3">
                 <button
@@ -536,10 +658,13 @@ const ResidentsList: React.FC = () => {
             <div className="p-4 sm:p-6">
               <div className="flex items-center mb-3 sm:mb-4">
                 <CheckCircleIcon className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 mr-2 sm:mr-3" />
-                <h3 className="text-base sm:text-lg font-semibold text-gray-800">Confirm Approval</h3>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-800">
+                  Confirm Approval
+                </h3>
               </div>
               <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-                Are you sure you want to approve this resident? They will gain access to the system.
+                Are you sure you want to approve this resident? They will gain
+                access to the system.
               </p>
               <div className="flex justify-end gap-2 sm:gap-3">
                 <button
@@ -559,8 +684,10 @@ const ResidentsList: React.FC = () => {
           </div>
         </div>
       )}
-      <br /><br /><br />
-       <AdminBottomNav/>
+      <br />
+      <br />
+      <br />
+      <AdminBottomNav />
     </AdminLayout>
   );
 };

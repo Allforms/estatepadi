@@ -1,19 +1,19 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import ResidentLayout from '../../components/layouts/ResidentLayout';
-import ResidentBottomNav from '../../components/layouts/ResidentBottomNav';
-import { 
-  CreditCardIcon, 
-  UploadIcon, 
-  CheckCircleIcon, 
-  ClockIcon, 
+import React, { useEffect, useState, useMemo } from "react";
+import ResidentLayout from "../../components/layouts/ResidentLayout";
+import ResidentBottomNav from "../../components/layouts/ResidentBottomNav";
+import {
+  CreditCardIcon,
+  UploadIcon,
+  CheckCircleIcon,
+  ClockIcon,
   XCircleIcon,
   EyeIcon,
   // DownloadIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  SearchIcon
-} from 'lucide-react';
-import api from '../../api';
+  SearchIcon,
+} from "lucide-react";
+import api from "../../api";
 
 interface Due {
   id: number;
@@ -27,7 +27,7 @@ interface Payment {
   due: number;
   due_title: string;
   amount_paid: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
   payment_date: string;
   payment_evidence: string;
   has_receipt?: boolean;
@@ -39,14 +39,16 @@ const PayDues: React.FC = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [selectedDue, setSelectedDue] = useState<number | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [amountPaid, setAmountPaid] = useState<string>('');
+  const [amountPaid, setAmountPaid] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [receiptLoading, setReceiptLoading] = useState<Record<number, boolean>>({});
-  
+  const [receiptLoading, setReceiptLoading] = useState<Record<number, boolean>>(
+    {},
+  );
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const itemsPerPage = 5;
 
   useEffect(() => {
@@ -56,7 +58,7 @@ const PayDues: React.FC = () => {
 
   const fetchDues = async () => {
     try {
-      const res = await api.get('/api/dues/');
+      const res = await api.get("/api/dues/");
       const data = Array.isArray(res.data) ? res.data : res.data.results || [];
       setDues(data);
     } catch (err) {
@@ -66,28 +68,30 @@ const PayDues: React.FC = () => {
 
   const fetchPayments = async () => {
     try {
-      const res = await api.get('/api/payments/');
+      const res = await api.get("/api/payments/");
       const data = Array.isArray(res.data) ? res.data : res.data.results || [];
-      
+
       // Check receipt availability for approved payments
       const paymentsWithReceipts = await Promise.all(
         data.map(async (payment: Payment) => {
-          if (payment.status === 'approved') {
+          if (payment.status === "approved") {
             try {
-              const receiptRes = await api.get(`/api/payments/${payment.id}/receipt/info/`);
+              const receiptRes = await api.get(
+                `/api/payments/${payment.id}/receipt/info/`,
+              );
               return {
                 ...payment,
                 has_receipt: receiptRes.data.has_receipt,
-                receipt_url: receiptRes.data.receipt_url
+                receipt_url: receiptRes.data.receipt_url,
               };
             } catch (err) {
               return { ...payment, has_receipt: false };
             }
           }
           return payment;
-        })
+        }),
       );
-      
+
       setPayments(paymentsWithReceipts);
     } catch (err) {
       //console.error('Error fetching payments:', err);
@@ -101,8 +105,8 @@ const PayDues: React.FC = () => {
   };
 
   const handleSelectDue = (id: number) => {
-    setSelectedDue(prev => (prev === id ? null : id));
-    setAmountPaid('');
+    setSelectedDue((prev) => (prev === id ? null : id));
+    setAmountPaid("");
     setUploadedFile(null);
   };
 
@@ -112,18 +116,18 @@ const PayDues: React.FC = () => {
     setSubmitting(true);
 
     const form = new FormData();
-    form.append('due', selectedDue.toString());
-    form.append('payment_evidence', uploadedFile);
-    form.append('amount_paid', amountPaid);
+    form.append("due", selectedDue.toString());
+    form.append("payment_evidence", uploadedFile);
+    form.append("amount_paid", amountPaid);
 
     try {
-      await api.post('/api/payments/', form, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      await api.post("/api/payments/", form, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
       setShowSuccess(true);
       setSelectedDue(null);
       setUploadedFile(null);
-      setAmountPaid('');
+      setAmountPaid("");
       fetchPayments();
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (err) {
@@ -134,14 +138,14 @@ const PayDues: React.FC = () => {
   };
 
   const handleViewReceipt = async (paymentId: number) => {
-    setReceiptLoading(prev => ({ ...prev, [paymentId]: true }));
+    setReceiptLoading((prev) => ({ ...prev, [paymentId]: true }));
     try {
       const receiptUrl = `${api.defaults.baseURL}/api/payments/${paymentId}/receipt/view/`;
       window.location.href = receiptUrl;
     } catch (error) {
       //console.error('Error viewing receipt:', error);
     } finally {
-      setReceiptLoading(prev => ({ ...prev, [paymentId]: false }));
+      setReceiptLoading((prev) => ({ ...prev, [paymentId]: false }));
     }
   };
 
@@ -162,18 +166,27 @@ const PayDues: React.FC = () => {
   // };
 
   // Show dues as unpaid if no approved payment exists or latest payment is rejected
-  const unpaidDues = dues.filter(due => {
-    const relatedPayments = payments.filter(p => p.due === due.id);
+  const unpaidDues = dues.filter((due) => {
+    const relatedPayments = payments.filter((p) => p.due === due.id);
     if (relatedPayments.length === 0) return true;
-    const latestPayment = relatedPayments.sort((a, b) => new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime())[0];
-    return latestPayment.status !== 'approved';
+    const latestPayment = relatedPayments.sort(
+      (a, b) =>
+        new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime(),
+    )[0];
+    return latestPayment.status !== "approved";
   });
 
   // Filter and paginate payments
   const filteredPayments = useMemo(() => {
-    return payments.filter(payment => 
-      payment.due_title.toLowerCase().includes(searchTerm.toLowerCase())
-    ).sort((a, b) => new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime());
+    return payments
+      .filter((payment) =>
+        payment.due_title.toLowerCase().includes(searchTerm.toLowerCase()),
+      )
+      .sort(
+        (a, b) =>
+          new Date(b.payment_date).getTime() -
+          new Date(a.payment_date).getTime(),
+      );
   }, [payments, searchTerm]);
 
   // Pagination calculations
@@ -194,7 +207,10 @@ const PayDues: React.FC = () => {
           <div className="bg-green-50 border-l-4 border-green-400 p-4">
             <div className="flex items-center">
               <CheckCircleIcon size={24} className="text-green-400" />
-              <p className="ml-3 text-green-700">Payment evidence uploaded successfully! Admin will verify shortly.</p>
+              <p className="ml-3 text-green-700">
+                Payment evidence uploaded successfully! Admin will verify
+                shortly.
+              </p>
             </div>
           </div>
         )}
@@ -204,30 +220,42 @@ const PayDues: React.FC = () => {
           <div className="lg:col-span-2 bg-white shadow rounded-lg">
             <div className="px-4 py-5 sm:px-6">
               <h3 className="text-lg font-medium text-gray-900">Unpaid Dues</h3>
-              <p className="mt-1 text-sm text-gray-500">Select a due to make a payment.</p>
+              <p className="mt-1 text-sm text-gray-500">
+                Select a due to make a payment.
+              </p>
             </div>
             <ul className="divide-y divide-gray-200">
               {unpaidDues.length > 0 ? (
-                unpaidDues.map(due => (
+                unpaidDues.map((due) => (
                   <li
                     key={due.id}
-                    className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${selectedDue === due.id ? 'bg-blue-50' : ''}`}
+                    className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${selectedDue === due.id ? "bg-blue-50" : ""}`}
                     onClick={() => handleSelectDue(due.id)}
                   >
                     <div className="flex justify-between items-center">
                       <div>
-                        <h4 className="text-base font-medium text-gray-900">{due.title}</h4>
-                        <p className="text-sm text-gray-500">Due by: {new Date(due.due_date).toLocaleDateString()}</p>
+                        <h4 className="text-base font-medium text-gray-900">
+                          {due.title}
+                        </h4>
+                        <p className="text-sm text-gray-500">
+                          Due by: {new Date(due.due_date).toLocaleDateString()}
+                        </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-base font-semibold text-gray-900">₦{due.amount.toLocaleString()}</p>
-                        <span className="px-2 inline-flex text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Unpaid</span>
+                        <p className="text-base font-semibold text-gray-900">
+                          ₦{due.amount.toLocaleString()}
+                        </p>
+                        <span className="px-2 inline-flex text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                          Unpaid
+                        </span>
                       </div>
                     </div>
                   </li>
                 ))
               ) : (
-                <li className="p-4 text-center text-gray-500">No unpaid dues at this time.</li>
+                <li className="p-4 text-center text-gray-500">
+                  No unpaid dues at this time.
+                </li>
               )}
             </ul>
           </div>
@@ -235,22 +263,34 @@ const PayDues: React.FC = () => {
           {/* Payment Upload */}
           <div className="bg-white shadow rounded-lg">
             <div className="px-4 py-5 sm:px-6">
-              <h3 className="text-lg font-medium text-gray-900">Upload Payment Evidence</h3>
-              <p className="mt-1 text-sm text-gray-500">Upload proof of payment.</p>
+              <h3 className="text-lg font-medium text-gray-900">
+                Upload Payment Evidence
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Upload proof of payment.
+              </p>
             </div>
             <div className="border-t border-gray-200 p-4">
               <form onSubmit={handleSubmit} className="space-y-4">
                 {selectedDue ? (
                   <div className="p-3 bg-blue-50 rounded-md">
-                    <p className="text-sm font-medium text-gray-900">Selected Due:</p>
-                    <p className="font-semibold text-blue-700">{dues.find(d => d.id === selectedDue)?.title}</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      Selected Due:
+                    </p>
+                    <p className="font-semibold text-blue-700">
+                      {dues.find((d) => d.id === selectedDue)?.title}
+                    </p>
                   </div>
                 ) : (
-                  <div className="p-3 bg-gray-50 rounded-md text-center text-gray-500">Please select a due</div>
+                  <div className="p-3 bg-gray-50 rounded-md text-center text-gray-500">
+                    Please select a due
+                  </div>
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Amount Paid (₦)</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Amount Paid (₦)
+                  </label>
                   <input
                     type="number"
                     step="0.01"
@@ -264,11 +304,16 @@ const PayDues: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Upload Receipt/Evidence</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Upload Receipt/Evidence
+                  </label>
                   <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors">
                     <div className="space-y-1 text-center">
                       <UploadIcon size={36} className="mx-auto text-gray-400" />
-                      <label htmlFor="file-upload" className="cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-500">
+                      <label
+                        htmlFor="file-upload"
+                        className="cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-500"
+                      >
                         <span>Upload a file</span>
                         <input
                           id="file-upload"
@@ -279,21 +324,27 @@ const PayDues: React.FC = () => {
                           disabled={!selectedDue}
                         />
                       </label>
-                      <p className="text-xs text-gray-500">PNG, JPG, PDF up to 10MB</p>
+                      <p className="text-xs text-gray-500">
+                        PNG, JPG, PDF up to 10MB
+                      </p>
                       {uploadedFile && (
-                        <p className="text-green-600 text-sm font-medium">File: {uploadedFile.name}</p>
+                        <p className="text-green-600 text-sm font-medium">
+                          File: {uploadedFile.name}
+                        </p>
                       )}
                     </div>
                   </div>
                 </div>
-                
+
                 <button
                   type="submit"
-                  disabled={!selectedDue || !uploadedFile || !amountPaid || submitting}
+                  disabled={
+                    !selectedDue || !uploadedFile || !amountPaid || submitting
+                  }
                   className={`w-full flex justify-center items-center py-2 px-4 rounded-md text-sm font-medium text-white transition-colors ${
-                    (!selectedDue || !uploadedFile || !amountPaid || submitting) 
-                      ? 'bg-gray-400 cursor-not-allowed' 
-                      : 'bg-blue-600 hover:bg-blue-700'
+                    !selectedDue || !uploadedFile || !amountPaid || submitting
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-blue-600 hover:bg-blue-700"
                   }`}
                 >
                   {submitting ? (
@@ -318,17 +369,22 @@ const PayDues: React.FC = () => {
           <div className="px-4 py-5 sm:px-6">
             <div className="flex flex-wrap justify-between items-center">
               <div>
-                <h3 className="text-lg font-medium text-gray-900">Payment History</h3>
+                <h3 className="text-lg font-medium text-gray-900">
+                  Payment History
+                </h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  Record of your previous payments. 
+                  Record of your previous payments.
                   {filteredPayments.length > 0 && (
                     <span className="ml-2">
-                      Showing {Math.min(startIndex + 1, filteredPayments.length)} to {Math.min(endIndex, filteredPayments.length)} of {filteredPayments.length} payments
+                      Showing{" "}
+                      {Math.min(startIndex + 1, filteredPayments.length)} to{" "}
+                      {Math.min(endIndex, filteredPayments.length)} of{" "}
+                      {filteredPayments.length} payments
                     </span>
                   )}
                 </p>
               </div>
-              
+
               {/* Search */}
               <div className="relative mt-2 sm:mt-0">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -339,22 +395,34 @@ const PayDues: React.FC = () => {
                   placeholder="Search payments..."
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
             </div>
           </div>
-          
+
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount Paid</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Evidence</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Due
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Amount Paid
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Evidence
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Receipt
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -364,24 +432,32 @@ const PayDues: React.FC = () => {
                       <div className="flex flex-col items-center space-y-3">
                         <CreditCardIcon size={48} className="text-gray-300" />
                         <p className="text-gray-500 font-medium">
-                          {payments.length === 0 ? 'No payments submitted yet' : 'No payments match your search'}
+                          {payments.length === 0
+                            ? "No payments submitted yet"
+                            : "No payments match your search"}
                         </p>
-                        {payments.length > 0 && filteredPayments.length === 0 && (
-                          <button
-                            onClick={() => setSearchTerm('')}
-                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                          >
-                            Clear search
-                          </button>
-                        )}
+                        {payments.length > 0 &&
+                          filteredPayments.length === 0 && (
+                            <button
+                              onClick={() => setSearchTerm("")}
+                              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            >
+                              Clear search
+                            </button>
+                          )}
                       </div>
                     </td>
                   </tr>
                 ) : (
-                  paginatedPayments.map(pay => (
-                    <tr key={pay.id} className="hover:bg-gray-50 transition-colors">
+                  paginatedPayments.map((pay) => (
+                    <tr
+                      key={pay.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
                       <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900">{pay.due_title}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {pay.due_title}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
@@ -397,22 +473,31 @@ const PayDues: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full ${
-                          pay.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          pay.status === 'approved' ? 'bg-green-100 text-green-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {pay.status === 'pending' && <ClockIcon size={12} />}
-                          {pay.status === 'approved' && <CheckCircleIcon size={12} />}
-                          {pay.status === 'rejected' && <XCircleIcon size={12} />}
-                          {pay.status.charAt(0).toUpperCase() + pay.status.slice(1)}
+                        <span
+                          className={`inline-flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full ${
+                            pay.status === "pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : pay.status === "approved"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {pay.status === "pending" && <ClockIcon size={12} />}
+                          {pay.status === "approved" && (
+                            <CheckCircleIcon size={12} />
+                          )}
+                          {pay.status === "rejected" && (
+                            <XCircleIcon size={12} />
+                          )}
+                          {pay.status.charAt(0).toUpperCase() +
+                            pay.status.slice(1)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {pay.payment_evidence ? (
-                          <a 
-                            href={pay.payment_evidence} 
-                            target="_blank" 
+                          <a
+                            href={pay.payment_evidence}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:text-blue-900 text-sm font-medium hover:underline"
                           >
@@ -423,7 +508,7 @@ const PayDues: React.FC = () => {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {pay.status === 'approved' && pay.has_receipt ? (
+                        {pay.status === "approved" && pay.has_receipt ? (
                           <div className="flex space-x-2">
                             <button
                               onClick={() => handleViewReceipt(pay.id)}
@@ -458,9 +543,11 @@ const PayDues: React.FC = () => {
             <div className="bg-white border-t border-gray-200 px-6 py-4">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-700">
-                  Showing {startIndex + 1} to {Math.min(endIndex, filteredPayments.length)} of {filteredPayments.length} results
+                  Showing {startIndex + 1} to{" "}
+                  {Math.min(endIndex, filteredPayments.length)} of{" "}
+                  {filteredPayments.length} results
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
@@ -469,38 +556,47 @@ const PayDues: React.FC = () => {
                   >
                     <ChevronLeftIcon size={16} />
                   </button>
-                  
+
                   <div className="flex items-center space-x-1">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
-                      const isCurrentPage = page === currentPage;
-                      const isNearCurrentPage = Math.abs(page - currentPage) <= 2;
-                      const isFirstOrLast = page === 1 || page === totalPages;
-                      
-                      if (!isNearCurrentPage && !isFirstOrLast) {
-                        if (page === 2 || page === totalPages - 1) {
-                          return <span key={page} className="text-gray-400 px-2">...</span>;
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (page) => {
+                        const isCurrentPage = page === currentPage;
+                        const isNearCurrentPage =
+                          Math.abs(page - currentPage) <= 2;
+                        const isFirstOrLast = page === 1 || page === totalPages;
+
+                        if (!isNearCurrentPage && !isFirstOrLast) {
+                          if (page === 2 || page === totalPages - 1) {
+                            return (
+                              <span key={page} className="text-gray-400 px-2">
+                                ...
+                              </span>
+                            );
+                          }
+                          return null;
                         }
-                        return null;
-                      }
-                      
-                      return (
-                        <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
-                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                            isCurrentPage
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-100'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      );
-                    })}
+
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                              isCurrentPage
+                                ? "bg-blue-600 text-white"
+                                : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      },
+                    )}
                   </div>
-                  
+
                   <button
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    onClick={() =>
+                      setCurrentPage(Math.min(totalPages, currentPage + 1))
+                    }
                     disabled={currentPage === totalPages}
                     className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
@@ -512,8 +608,10 @@ const PayDues: React.FC = () => {
           )}
         </div>
       </div>
-      <br /><br /><br />
-      <ResidentBottomNav/>
+      <br />
+      <br />
+      <br />
+      <ResidentBottomNav />
     </ResidentLayout>
   );
 };
