@@ -256,7 +256,18 @@ def subscription_status(request):
         }, status=status.HTTP_200_OK)
 
     subscription = user.subscription
-    return Response({
+    
+    # DEBUG LOGGING
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.warning(f"[DEBUG] subscription_status for {user.email}")
+    logger.warning(f"[DEBUG] DB status: {subscription.status}")
+    logger.warning(f"[DEBUG] next_billing_date: {subscription.next_billing_date}")
+    logger.warning(f"[DEBUG] is_active(): {subscription.is_active()}")
+    logger.warning(f"[DEBUG] is_expired(): {subscription.is_expired()}")
+    logger.warning(f"[DEBUG] grace_period_active(): {subscription.grace_period_active()}")
+    
+    response_data = {
         'status': subscription.status,
         'next_billing_date': subscription.next_billing_date,
         'can_cancel': subscription.status == 'active',
@@ -271,7 +282,10 @@ def subscription_status(request):
             'amount': subscription.plan.amount,
             'interval': subscription.plan.interval
         }
-    }, status=status.HTTP_200_OK)
+    }
+    logger.warning(f"[DEBUG] Final response: {response_data}")
+    
+    return Response(response_data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
