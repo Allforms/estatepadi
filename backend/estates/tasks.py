@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives, send_mail
 from django.template.loader import render_to_string
 from .models import VisitorCode, UserSubscription, SubscriptionPlan, UserSubscriptionHistory
+from .subscriptions import normalize_paystack_status
 import requests
 from django.contrib.auth import get_user_model
 import logging
@@ -137,19 +138,28 @@ def sync_subscriptions_from_paystack():
         if not chosen_sub:
             chosen_sub = subs[0]  # fallback (likely cancelled)
 
+        # Log all subscription statuses from Paystack for this user
+        print(f"[SYNC] User {email} - All Paystack subscription statuses: {[s.get('status') for s in subs]}")
+        print(f"[SYNC] User {email} - Chosen subscription code: {chosen_sub.get('subscription_code')}, Status from Paystack: {chosen_sub.get('status')}")
+
         # map plan
         plan_code = chosen_sub.get("plan", {}).get("plan_code")
         plan = SubscriptionPlan.objects.filter(paystack_plan_code=plan_code).first() if plan_code else None
 
         # update main record with chosen sub
         # Use both user AND subscription_code to identify the correct subscription
+        paystack_status = chosen_sub.get("status")
+        
+        # Normalize Paystack status to valid model choice
+        normalized_status = normalize_paystack_status(paystack_status)
+        print(f"[SYNC] Normalized status from '{paystack_status}' to '{normalized_status}' for {email}")
         local_sub, _ = UserSubscription.objects.update_or_create(
             user=user,
             paystack_subscription_code=chosen_sub.get("subscription_code"),
             defaults={
                 "plan": plan,
                 "paystack_customer_code": chosen_sub.get("customer", {}).get("customer_code"),
-                "status": chosen_sub.get("status"),
+                "status": normalized_status,
                 "next_billing_date": chosen_sub.get("next_payment_date"),
                 "authorization_code": chosen_sub.get("authorization", {}).get("authorization_code"),
                 "email_token": chosen_sub.get("email_token"),

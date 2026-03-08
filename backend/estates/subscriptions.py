@@ -12,6 +12,28 @@ from .serializers import SubscriptionPlanSerializer
 
 paystack = Paystack(secret_key=settings.PAYSTACK_SECRET_KEY)
 
+def normalize_paystack_status(paystack_status):
+    """
+    Normalize Paystack subscription status to valid model choices.
+    Paystack may return non-standard statuses like 'attention' which need mapping.
+    
+    'attention' typically means the subscription is active but needs attention for renewal.
+    """
+    VALID_STATUSES = ['active', 'paused', 'cancelled', 'past_due']
+    
+    if paystack_status not in VALID_STATUSES:
+        print(f"[NORMALIZE] WARNING: Paystack returned non-standard status '{paystack_status}'")
+        # Map non-standard statuses to valid choices
+        if paystack_status == "attention":
+            # "attention" from Paystack = subscription active but flagged for attention
+            # This typically means subscription exists and can be used
+            return "active"
+        else:
+            # Default to active for any unknown statuses (assume subscription is valid)
+            return "active"
+    
+    return paystack_status
+
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def create_subscription(request):
@@ -87,6 +109,9 @@ def create_subscription(request):
         tz=datetime.timezone.utc
     )
 
+    # Normalize status from Paystack to valid model choice
+    normalized_status = normalize_paystack_status(subscription_data.get('status', 'active'))
+
     user_sub, _ = UserSubscription.objects.update_or_create(
         user=user,
         defaults={
@@ -94,7 +119,7 @@ def create_subscription(request):
             'paystack_subscription_code': subscription_data['subscription_code'],
             'authorization_code': authorization,
             'plan': plan,
-            'status': subscription_data.get('status', 'active'),
+            'status': normalized_status,
             'next_billing_date': next_date
         }
     )
@@ -415,6 +440,9 @@ def renew_subscription(request):
         tz=datetime.timezone.utc
     )
 
+    # Normalize status from Paystack to valid model choice
+    normalized_status = normalize_paystack_status(subscription_data.get('status', 'active'))
+
     user_sub, _ = UserSubscription.objects.update_or_create(
         user=user,
         defaults={
@@ -422,7 +450,7 @@ def renew_subscription(request):
             'paystack_subscription_code': subscription_data['subscription_code'],
             'authorization_code': authorization,
             'plan': plan,
-            'status': subscription_data.get('status', 'active'),
+            'status': normalized_status,
             'next_billing_date': next_date
         }
     )
